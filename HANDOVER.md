@@ -29,7 +29,9 @@ Reference: https://www.uafaccreditation.org/
 
 ## Current state (as of 2026-09-09)
 
-Phases 1–12 (all design phases) are approved. **Phase 13 (Development) is underway.** Milestones 1–5 (Project Setup, Design System, Public Layout, Homepage, Public Pages) are approved; Milestone 6 (Verification) is built and delivered for approval. See `PROGRESS.md`'s Phase 13 Milestone Tracker for the full 17-milestone list and `docs/phases/phase-13-development-log.md` for full build detail per milestone.
+Phases 1–12 (all design phases) are approved. **Phase 13 (Development) is underway.** Milestones 1–6 (Project Setup, Design System, Public Layout, Homepage, Public Pages, Verification) are approved; Milestone 7 (Authentication) is built and delivered for approval. See `PROGRESS.md`'s Phase 13 Milestone Tracker for the full 17-milestone list and `docs/phases/phase-13-development-log.md` for full build detail per milestone.
+
+**Demo login credentials** (seeded in `src/lib/auth/store.ts`, in-memory, resets on server restart): `applicant@example.com` / `assessor@example.com` / `admin@example.com`, all with password `Password123!`. Assessor and Admin will be forced into MFA setup on first login (real TOTP — scan the QR or enter the secret into any authenticator app); this is enforced by `src/middleware.ts`, not just described. The MFA-enrollment click-through itself hasn't been verified through an actual browser (no browser-automation tool in this environment) — worth trying it live if you get a chance.
 
 **Dev server runs on port 5000** (`npm run dev`/`npm run start` both default to `-p 5000` now, per the user's request) — open http://localhost:5000 to view it live. If a stale process is already holding port 5000 from a prior session, find it with `netstat -ano | grep ":5000"` and stop it (PowerShell `Stop-Process -Id <pid> -Force`) before restarting.
 
@@ -40,7 +42,8 @@ Phases 1–12 (all design phases) are approved. **Phase 13 (Development) is unde
 - `src/app/(public)/page.tsx` is the **real homepage** (Milestone 4) — all 10 Phase 5 sections, built from `src/components/home/*` and placeholder data in `src/lib/programs.ts`/`src/lib/news.ts`.
 - **26 internal public pages built (Milestone 5)**: About (3 pages), Accreditation (overview/process/programs index+detail/fees/apply), Resources (index+3 filtered views+detail), Training (index+detail), News (index+detail), Contact, FAQs, Complaints & Appeals, Report Fraud, Legal (3 pages), Become an Assessor. Placeholder data lives in `src/lib/resources.ts`/`training.ts`/`faqs.ts`.
 - **`/verify` and `/verify/[reference]` built (Milestone 6)** — the platform's core trust feature. Both `force-dynamic` (never long-TTL cached). All 4 real statuses (Active/Suspended/Withdrawn/Expired) plus a structurally-distinct Not Found state, per Phase 7. Placeholder data in `src/lib/verification-records.ts`. Real backend/rate-limiting still pending Milestone 12 (APIs).
-- The entire public site now resolves — **only `/login`, `/register`, and anything portal-related still 404** (Milestone 7+).
+- **Real authentication built (Milestone 7)**: Auth.js v5, bcrypt password hashing, real TOTP MFA, session-based RBAC middleware gating everything under `/portal`. `/login`, `/register`, `/forgot-password`, `/reset-password` are all live and functional. A minimal `/portal` shell with one placeholder dashboard per role proves the whole chain works — **real Applicant/Assessor/Admin dashboards are still Milestones 8–10.**
+- The entire public site plus the auth flow now resolve — only the real portal dashboards remain unbuilt.
 - A temporary, non-public preview route at `/design-system-preview` — remove or gate before production launch.
 - No `(portal)` route group yet — comes with auth (Milestone 7) and the portal milestones (8–10).
 - **Git is now initialized**, two commits so far (Phase 1–12 docs + Milestones 1–2; then Milestone 3). Standard git safety rules apply from here (never force-push, never skip hooks, new commits not amends, etc.) even though this is a solo/local repo so far.

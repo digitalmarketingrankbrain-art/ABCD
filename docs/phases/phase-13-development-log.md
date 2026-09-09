@@ -177,4 +177,35 @@ Builds on Phases 1–12 (all approved). This log records each development milest
 
 ---
 
-*(Milestone 7 onward will be appended here as they're built.)*
+## Milestone 7 — Authentication
+
+**Objective:** Build real login, registration, password recovery, MFA, and session management — the last milestone before any portal work, since Applicant/Assessor/Admin all sit behind it.
+
+**Stack decision:** Phase 11 left the auth provider as "vendor TBD" (WorkOS/Clerk). With no real vendor account available in this environment, built on **Auth.js (next-auth v5)** instead — a real, self-hosted, working implementation rather than a mock, and a legitimate option Phase 11 already flagged as satisfying the architecture. Swapping to a managed provider later is a contained change (the `authorize()` function and session shape are the integration surface, not scattered through the app) since RBAC/record-scoping was always going to be custom regardless of provider.
+
+**What was built:**
+- `src/lib/auth/store.ts` — in-memory placeholder Users table (stands in for Phase 12's `User` table until Milestone 11). One seeded demo account per role (`applicant@example.com` / `assessor@example.com` / `admin@example.com`, password `Password123!`), bcrypt-hashed. MFA deliberately left unenrolled on the Admin/Assessor seed accounts so the "required" enforcement is actually exercised on first login, not just declared. Also holds password-reset tokens (in-memory, 30-minute expiry).
+- `src/auth.ts` — Auth.js config: Credentials provider whose `authorize()` does the *complete* check (password, then MFA code if the account has MFA enabled) in one server-side call; JWT session strategy with `role`/`id`/`mfaEnabled` embedded in the token (`mfaEnabled` refreshed via the `trigger === "update"` path so enrolling in MFA doesn't require a full re-login). `verifyTotpCode()` here is the single source of truth for TOTP validation, reused by both the login provider and MFA enrollment confirmation.
+- `src/lib/auth/actions.ts` — Server Actions: `checkCredentials` (password-only pre-check used purely to decide whether the login form shows the MFA step — never creates a session, and is never trusted for the real sign-in decision), `registerApplicant`, `requestPasswordReset`/`resetPassword`, `startMfaEnrollment`/`confirmMfaEnrollment` (generates a real TOTP secret + scannable QR via `qrcode`).
+- `src/middleware.ts` — protects everything under `/portal`: no session → redirect to `/login?callbackUrl=`; wrong role for a subtree (e.g. Applicant hitting `/portal/admin`) → bounced back to their own role home; Admin/Assessor session without MFA enrolled → forced to `/portal/mfa-setup` before anything else. Explicitly set to run on the **Node.js middleware runtime** (`export const config = { runtime: "nodejs" }`), not the Edge default — see the bug note below.
+- `/login`, `/register`, `/forgot-password`, `/reset-password` (all under `(public)`), plus `/portal/mfa-setup` and a minimal `/portal` shell (`layout.tsx` + one placeholder dashboard per role, proving the chain end-to-end — real dashboards are Milestones 8–10).
+- `src/lib/auth/types.d.ts` — module augmentation adding `id`/`role`/`mfaEnabled` to Auth.js's `Session`/`User`/`JWT` types.
+- `.env.local` (real generated `AUTH_SECRET`, gitignored) and `.env.example` (documents required vars, including the still-pending Milestone 11+ ones).
+
+**Bug caught and fixed — Edge Runtime incompatibility:** the first build compiled but emitted warnings that `bcryptjs` (via `src/lib/auth/store.ts`) and `jose`'s WebCrypto compression helpers (pulled in by `next-auth` itself) use Node APIs (`crypto`, `setImmediate`, `CompressionStream`) not supported in the Edge Runtime that Next.js middleware uses by default. Comparing the build output before and after setting the middleware's `runtime` to `"nodejs"` confirmed this actually fixes it — the warnings disappeared entirely rather than just going quiet.
+
+**Testing performed — full functional pass, not just build/lint:**
+- `npm run build` — one real TypeScript strict-mode error along the way (`user.id` possibly `undefined` per Auth.js's own types), fixed with a guard. Clean after, plus the Edge Runtime fix above.
+- `npm run typecheck`, `npm run lint` — clean.
+- Verified the TOTP logic standalone with a Node script (`otpauth`'s `generate()`/`validate()`): a freshly generated code is accepted, an arbitrary wrong code is rejected — this is the exact function (`verifyTotpCode`) used by both login and MFA enrollment.
+- Extensive HTTP-level testing via `curl` with per-flow cookie jars (since Server Actions aren't practically curl-testable — Next's action-invocation protocol uses an internal action-id header/encoding not worth reverse-engineering just to test): unauthenticated `/portal` → redirects to `/login?callbackUrl=%2Fportal`; CSRF token fetch + credentials POST to `/api/auth/callback/credentials` correctly sets a session cookie; applicant login lands on `/portal/applicant` and `/api/auth/session` reflects the right role/mfaEnabled; applicant hitting `/portal/admin` bounces back to `/portal/applicant`, not an error page; admin login succeeds but is force-redirected to `/portal/mfa-setup` since MFA isn't enrolled yet; wrong password leaves the session `null`; a garbage `mfaCode` is correctly ignored when the account doesn't have MFA enabled yet (confirms the field isn't accidentally gating unrelated logins); logout via `/api/auth/signout` clears the session and `/portal` redirects to `/login` again afterward.
+- **Not verified**: the actual MFA-enrollment click-through (scan/enter secret → submit code → `useSession().update()` → redirect) wasn't exercised through a real browser, since no browser-automation tool is available in this environment — only its two halves (the TOTP crypto, and the page rendering the right "MFA required" copy) were verified independently. Flagged to the user, with an invitation to test it live on the running dev server.
+- No errors in the dev server log across the whole pass, aside from Auth.js's own expected `[auth][error] CredentialsSignin` log line on the deliberate wrong-password test — that's the framework's normal logging for a failed sign-in attempt, not a bug.
+
+**Known issues:** the MFA-enrollment browser click-through is untested (see above). Otherwise none new.
+
+**Not yet built:** real Applicant/Assessor/Admin dashboards (Milestones 8–10 — today's `/portal/{role}` pages are intentionally bare placeholders), the portal Security page (password change, active-session list — part of the Applicant/Assessor portal milestones), and swapping the in-memory user store for the real database (Milestone 11).
+
+---
+
+*(Milestone 8 onward will be appended here as they're built.)*
