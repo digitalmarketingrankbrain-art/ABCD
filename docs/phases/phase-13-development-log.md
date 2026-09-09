@@ -150,4 +150,31 @@ Builds on Phases 1–12 (all approved). This log records each development milest
 
 ---
 
-*(Milestone 6 onward will be appended here as they're built.)*
+## Milestone 6 — Verification
+
+**Objective:** Build the platform's single highest-trust feature per Phase 7 — the public search and the verification detail page, with 5 unambiguous status states.
+
+**What was built:**
+- `src/lib/verification-records.ts` — placeholder `VerificationRecord[]` (5 records covering all 4 real statuses, plus two organisations with similar names to exercise the ambiguous-search/results-list path), `STATUS_EXPLANATION` (the exact plain-language copy per status from Phase 7), and `findByReference`/`searchRecords` helpers.
+- `src/components/ui/status-badge.tsx` — extended with a `lg` size for the detail page's dominant top-of-page badge.
+- `src/components/verify/search-form.tsx` — client component, autofocused (only here, not on the homepage's embedded search per Phase 5), Accreditation Number / Organisation Name mode toggle, submits via `router.push` to `/verify?q=&mode=`.
+- `src/components/verify/results-list.tsx` — one row per match: org name, program, reference (mono), status badge.
+- `src/app/(public)/verify/page.tsx` — the search page. `force-dynamic`. Number-mode exact match calls `redirect()` straight to the detail page; otherwise renders the results list or a distinct `EmptyState` (with a Report Fraud link) for no matches.
+- `src/components/verify/verification-card.tsx` — the shared layout for the 4 real statuses: status badge (large, above the org name) → org name → reference → detail rows (program, linked back to its program page; effective/expiry/surveillance/renewal dates) → footer (copy-link, print, "Last verified" timestamp, certificate link or an honest "not publicly available" note).
+- `src/components/verify/not-found-card.tsx` — deliberately a separate component, not `VerificationCard` with a different color: no org header, no populated date fields, no reused badge shape. This is the core anti-fraud design decision from Phase 7 — a Not Found result must be structurally incapable of being mistaken for a valid one, including in a screenshot.
+- `src/components/verify/page-actions.tsx` — `CopyLinkButton` (clipboard, with a 2s "Link copied" confirmation state) and `PrintButton` (`window.print()`).
+- `src/app/(public)/verify/[reference]/page.tsx` — `force-dynamic`; looks up the record and renders `VerificationCard` or `NotFoundCard` — deliberately never calls Next's `notFound()`, since a Not Found *result* is a first-class, designed page state here, not a broken route.
+
+**Testing performed — this feature got a full functional pass, not just build/lint:**
+- `npm run build` — clean; confirmed in the route table that `/verify` and `/verify/[reference]` are marked `ƒ Dynamic` (server-rendered per request), not statically prerendered — directly verifies the Phase 11 "never long-TTL cache a verification page" decision actually took effect.
+- `npm run typecheck`, `npm run lint` — clean.
+- Restarted the dev server (had to `Stop-Process` a stale process squatting on port 5000 again — same recurring issue as Milestone 5).
+- Functional checks against the running server: search page loads; number-mode exact match returns a 307 redirect with `Cache-Control: no-store` confirmed via `curl -I`; all 4 statuses (`MAB-2026-00417` Active, `MAB-2025-00298` Suspended, `MAB-2022-00156` Withdrawn, `MAB-2020-00043` Expired) render their correct label and exact explanation copy; Not Found (`MAB-9999-99999`) returns HTTP 200 with the correct copy and — verified by grep — contains none of the success/warning/error badge CSS classes; both ambiguous-name searches ("Prairie", "Coastal") return exactly their 2 correct records, confirmed by counting unique `href` values rather than raw text occurrences (a naive text-count was inflated by Next's embedded RSC hydration payload duplicating visible strings — worth remembering for future verification passes); the program link on the detail page points to the correct program page; number-mode search with no match falls through to the same empty state as name-mode. No errors or warnings anywhere in the server log across the whole pass.
+
+**Known issues:** none new. Recurring minor friction: a dev server from an earlier milestone's testing keeps being left running and squatting on port 5000 between milestones — worth just reusing the already-running instance via a hard refresh instead of restarting each time, where possible.
+
+**Not yet built:** any real backend (search still runs against static in-memory data; a real implementation needs the rate-limiting/bot-protection from Phase 1/11, which requires the API layer built in Milestone 12), `/login`/`/register` and anything portal-related (Milestone 7+).
+
+---
+
+*(Milestone 7 onward will be appended here as they're built.)*
