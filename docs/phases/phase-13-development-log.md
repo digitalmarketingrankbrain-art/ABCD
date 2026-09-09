@@ -208,4 +208,33 @@ Builds on Phases 1–12 (all approved). This log records each development milest
 
 ---
 
-*(Milestone 8 onward will be appended here as they're built.)*
+## Milestone 8 — Applicant Portal
+
+**Objective:** Replace the Milestone 7 placeholder dashboard with the real Applicant portal from Phase 8: dashboard, application list/detail with the full lifecycle timeline, documents, messages, invoices, accreditation status, profile, security.
+
+**What was built:**
+- `src/lib/portal/applicant-data.ts` — in-memory placeholder Application/Invoice/Message data (stands in for Phase 12's tables until Milestone 11), scoped per user id. Two seeded applications for the demo applicant (one mid-lifecycle with an open information request, one still in Draft), two invoices, two messages. Accessor functions filter by `applicantUserId` so one applicant can never see another's data even at the placeholder-data level.
+- `src/lib/portal/applicant-actions.ts` — real Server Actions (`sendApplicationMessage`, `uploadApplicationDocument`, `startNewApplication`, `submitApplicationForReview`), each starting with a `requireApplicant()` auth check.
+- `src/components/portal/application-timeline.tsx` — the shared `ApplicationTimeline` component named in the project's reusability list. Deliberately reuses the same visual language (numbered circles, connecting line, checkmarks for completed steps) as the public "How Accreditation Works" stepper from Milestone 4, so an applicant recognises their own journey.
+- `src/components/ui/file-uploader.tsx` — the shared `FileUploader` component, drag-and-drop + browse, exact microcopy from the project brief ("PDF, DOCX or XLSX files up to 25 MB"), client-side size/type validation, calls a parent-supplied `onUpload`.
+- Dashboard, Applications (list + `[id]` detail with Overview/Documents/Assessment/Messages/Invoices tabs and an "Information Requested" banner), Invoices (list + detail), Accreditation, Messages (index into each application's own thread — case-scoped, never a general inbox), Profile, Security (real password change via a new `changeOwnPassword` action; MFA status + enroll link reusing Milestone 7's flow; active-session list explicitly documented as unavailable under JWT/stateless sessions rather than faked).
+- `src/components/portal/portal-sidebar.tsx` (generic, role-agnostic) + `applicant-sidebar.tsx` (Applicant's specific nav list) + `src/app/portal/applicant/layout.tsx`.
+
+**Bugs caught and fixed — two real, distinct classes:**
+1. **Icons crossing the server/client boundary.** The sidebar's nav item list (label/href/icon) was originally defined in the server `layout.tsx` and passed as a prop into the client `PortalSidebar`. lucide-react icons are function components, and functions can't be serialized across that boundary — same underlying rule as Milestone 5's `DataTable` columns bug, different surface. Fixed by moving the icon-bearing list into a new client component (`applicant-sidebar.tsx`) that owns it entirely, so nothing icon-shaped ever crosses the boundary.
+2. **A plain data constant imported from a `"use client"` module into a Server Component.** The invoice status label/tone mapping was defined and exported from `invoices-table.tsx` (a client component file) and imported into the server-rendered invoice detail page. This passed `npm run typecheck` cleanly but threw `Cannot read properties of undefined (reading 'tone')` at runtime — non-component exports from a `"use client"` module aren't reliably usable from a Server Component under the RSC model, even when the type signature says they should be fine. Fixed by extracting the constant into a new plain module with no `"use client"` directive (`src/lib/portal/invoice-status.ts`) that both the client table and the server detail page import from safely. This is a sharper, less obvious bug than #1 — worth remembering: **any plain data (not just functions) crossing from a `"use client"` file into server code is suspect, not just component/function props.**
+
+**Testing performed — full functional pass, caught real regressions along the way:**
+- `npm run build` — two straightforward fixes first (an unescaped apostrophe, a `noUncheckedIndexedAccess` undefined-guard), then hit bug #1 above at runtime (build itself succeeded; the error only appeared when actually hitting the pages, since Next's build doesn't execute Server Component render logic against real request data). Rebuilt clean after fixing both boundary bugs.
+- `npm run typecheck`, `npm run lint` — clean throughout, including after the invoice bug — which is exactly why the fix note above matters: type-cleanliness didn't catch it.
+- Logged in as the demo applicant via the same curl+cookie-jar approach as Milestone 7 and hit all 11 applicant routes. First pass surfaced two `500`s (dashboard/applications-list initially, then specifically the invoice detail page after the first round of fixes) — traced both to their root cause via the dev server log rather than guessing, fixed, and re-ran the full pass until all 11 returned `200` with correct content (dashboard's required-action alert and application reference; both applications listed with correct program names; application detail's info-requested banner, assessor name, and document review comment all present; invoice detail's amount/status; accreditation page correctly pulling `MAB-2026-00417` — the same record used in Milestone 6 — showing "Active"/"Northfield Testing Laboratories").
+- Re-confirmed RBAC + MFA-enforcement interaction still works correctly after the portal changes: an Assessor session hitting an Applicant route gets redirected to their own role home first, which itself then redirects to MFA setup on the very next request — a two-hop chain, not a broken redirect.
+- No errors in the dev server log at the end of the pass.
+
+**Known issues:** none new (all found issues were fixed and re-verified within this milestone).
+
+**Not yet built:** Assessor portal (Milestone 9), Admin portal (Milestone 10), real payment collection on the "Pay now" button (Milestone 15), real document storage behind uploads (Milestone 13), the real database behind all of this placeholder data (Milestone 11).
+
+---
+
+*(Milestone 9 onward will be appended here as they're built.)*
