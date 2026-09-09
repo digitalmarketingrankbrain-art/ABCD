@@ -91,4 +91,29 @@ Builds on Phases 1–12 (all approved). This log records each development milest
 
 ---
 
-*(Milestone 4 onward will be appended here as they're built.)*
+## Milestone 4 — Homepage
+
+**Objective:** Replace the placeholder with the real homepage from Phase 5's section-by-section spec, using Phase 3's copy and the Milestone 2/3 components throughout.
+
+**What was built (`src/components/home/`):**
+- `hero-motif.tsx` — abstract SVG reticle/grid graphic standing in for real photography (none exists yet), reused at two sizes (small below the CTAs on mobile, large beside the copy on desktop) per Phase 5's mobile-ordering rule.
+- `hero.tsx`, `trust-strip.tsx`, `programs-section.tsx`, `why-it-matters.tsx`, `how-it-works.tsx`, `verification-section.tsx`, `transparency-section.tsx`, `training-section.tsx`, `notices-section.tsx`, `final-cta.tsx` — one component per Phase 5 section, assembled in `src/app/(public)/page.tsx`.
+- `src/lib/programs.ts`, `src/lib/news.ts` — placeholder data (5 programs, 3 news items) built as the reusable source later milestones (program detail pages, news pages, eventually the admin CMS) will read from, rather than inlining content directly in the homepage components.
+
+**Notable implementation decisions:**
+- Verification section uses a real controlled `<input>` + client-side `router.push` to `/verify?q=...` — functional now, even though `/verify` itself doesn't exist until Milestone 6, so the interaction pattern is already correct rather than a static mockup to redo later.
+- Trust Strip's 4th slot is simply not rendered (3 items in the array), not rendered-then-hidden or placeheld, per Phase 5's explicit rule against a visible placeholder inside a trust signal.
+- Notices section tags the withdrawal-notice demo item as `STATUS_CHANGE` with a warning-toned badge, distinct from the two `ROUTINE` items, to exercise the "publish adverse notices too" trust principle from Phase 3 even in placeholder data.
+
+**Testing performed:**
+- `npm run build` initially failed with a stale-cache `MODULE_NOT_FOUND` error (`Cannot find module './611.js'`) unrelated to any new code — a leftover `.next` artifact from an earlier milestone's build. Cleared `.next` and rebuilt clean.
+- `npm run typecheck`, `npm run lint` — clean.
+- Dev server started; fetched `/` and grepped for all 10 section headings/markers — all present. Confirmed no server-side errors in the dev log (filtered out the same unrelated `/api/oldclients/...` environment noise seen in Milestone 3). Confirmed `/verify?q=test` still correctly 404s (expected — not built until Milestone 6).
+
+**Known issues:** none new.
+
+**Not yet built:** any of the pages the homepage links to (Programs, About, Resources, Verify, News, Training, Contact all still 404) — Milestones 5–6 build those.
+
+---
+
+*(Milestone 5 onward will be appended here as they're built.)*
