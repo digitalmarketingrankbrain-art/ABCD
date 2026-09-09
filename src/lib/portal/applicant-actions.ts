@@ -9,6 +9,8 @@ import {
   createDraftApplication,
   submitApplication,
 } from "./applicant-data";
+import { uploadDocumentForOwner } from "./document-data";
+import { MAX_UPLOAD_BYTES } from "@/lib/storage";
 import { PROGRAMS } from "@/lib/programs";
 
 async function requireApplicant() {
@@ -30,16 +32,34 @@ export async function sendApplicationMessage(applicationId: string, body: string
 }
 
 /**
- * No real storage backend exists yet (Milestone 13) — this records the
- * upload against the placeholder document-version history so the UI/UX
- * (status change, version increment) is real and testable, without a
- * durable file behind it.
+ * Real storage as of Milestone 13 — the file is genuinely saved (locally,
+ * as a stand-in for S3/R2 per Phase 11's architecture) and a real
+ * Document/DocumentVersion pair is created in Postgres, attributed to the
+ * real authenticated user. The in-memory `uploadDocumentVersion` call
+ * alongside it keeps the existing per-document status UI (NOT_UPLOADED ->
+ * UNDER_REVIEW, version count) working, since the Application/
+ * RequiredDocument checklist itself is still in-memory (remaining
+ * Milestone 12 work) — the real file storage didn't need to wait on that.
  */
-export async function uploadApplicationDocument(applicationId: string, documentId: string, filename: string) {
+export async function uploadApplicationDocument(applicationId: string, documentId: string, file: File) {
   const user = await requireApplicant();
   const app = getApplicationById(applicationId, user.id);
   if (!app) return { ok: false as const, error: "Application not found." };
-  uploadDocumentVersion(applicationId, documentId, filename);
+  if (file.size > MAX_UPLOAD_BYTES) {
+    return { ok: false as const, error: "That file is larger than 25 MB. Please upload a smaller file." };
+  }
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+  await uploadDocumentForOwner({
+    ownerType: "APPLICATION",
+    ownerId: applicationId,
+    documentKind: "REQUIRED_SUBMISSION",
+    buffer,
+    filename: file.name,
+    uploadedById: user.id,
+  });
+
+  uploadDocumentVersion(applicationId, documentId, file.name);
   revalidatePath(`/portal/applicant/applications/${applicationId}`);
   return { ok: true as const };
 }

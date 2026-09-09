@@ -49,7 +49,7 @@ function ApplicationDocumentsList({ application }: { application: Application })
             <FileUploader
               className="mt-3"
               onUpload={async (file) => {
-                const result = await uploadApplicationDocument(application.id, doc.id, file.name);
+                const result = await uploadApplicationDocument(application.id, doc.id, file);
                 router.refresh();
                 return result;
               }}

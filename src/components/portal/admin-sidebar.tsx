@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   Users,
   ScrollText,
+  FolderOpen,
 } from "lucide-react";
 import { PortalSidebar } from "./portal-sidebar";
 
@@ -17,6 +18,7 @@ const NAV_ITEMS = [
   { label: "Organisations", href: "/portal/admin/organisations", icon: Building2 },
   { label: "Assessors", href: "/portal/admin/assessors", icon: UserCog },
   { label: "Accreditation Records", href: "/portal/admin/accreditation-records", icon: ShieldCheck },
+  { label: "Documents", href: "/portal/admin/documents", icon: FolderOpen },
   { label: "Users", href: "/portal/admin/users", icon: Users },
   { label: "Audit Logs", href: "/portal/admin/audit-logs", icon: ScrollText },
 ];

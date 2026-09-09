@@ -12,6 +12,9 @@
 .env
 .env*.local
 
+# local private document storage (Milestone 13 — stand-in for S3/R2)
+/storage/
+
 # misc
 .impeccable/
 .DS_Store
