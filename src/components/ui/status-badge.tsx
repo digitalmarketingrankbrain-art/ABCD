@@ -30,9 +30,21 @@ const toneIcons: Record<StatusTone, LucideIcon> = {
 export interface StatusBadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   tone: StatusTone;
   label: string;
-  size?: "sm" | "md";
+  size?: "sm" | "md" | "lg";
   icon?: LucideIcon;
 }
+
+const sizeStyles: Record<NonNullable<StatusBadgeProps["size"]>, string> = {
+  sm: "px-2.5 py-0.5 text-xs",
+  md: "px-3 py-1 text-sm",
+  lg: "px-4 py-1.5 text-base",
+};
+
+const iconSizeStyles: Record<NonNullable<StatusBadgeProps["size"]>, string> = {
+  sm: "size-3.5",
+  md: "size-4",
+  lg: "size-5",
+};
 
 /**
  * Status is always colour + icon + label per Phase 4/7 — never colour alone.
@@ -51,12 +63,12 @@ function StatusBadge({
       className={cn(
         "inline-flex items-center gap-1.5 rounded-full font-sans font-medium",
         toneStyles[tone],
-        size === "sm" ? "px-2.5 py-0.5 text-xs" : "px-3 py-1 text-sm",
+        sizeStyles[size],
         className,
       )}
       {...props}
     >
-      <Icon className={size === "sm" ? "size-3.5" : "size-4"} strokeWidth={1.75} />
+      <Icon className={iconSizeStyles[size]} strokeWidth={1.75} />
       {label}
     </span>
   );
