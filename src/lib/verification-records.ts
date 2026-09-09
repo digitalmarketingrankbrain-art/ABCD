@@ -1,5 +1,13 @@
 export type VerificationStatus = "ACTIVE" | "SUSPENDED" | "WITHDRAWN" | "EXPIRED";
 
+export interface VerificationStatusHistoryEntry {
+  from: VerificationStatus;
+  to: VerificationStatus;
+  reason: string;
+  changedBy: string;
+  changedAt: string;
+}
+
 export interface VerificationRecord {
   /** Accreditation number — also the public URL slug at /verify/[reference]. */
   reference: string;
@@ -12,6 +20,12 @@ export interface VerificationRecord {
   lastSurveillanceDate: string | null;
   nextRenewalDate: string | null;
   certificateVisible: boolean;
+  /**
+   * Admin-controlled — unpublished renders NOT_FOUND on the public page
+   * regardless of the underlying record existing (Phase 10/12).
+   */
+  isPublished: boolean;
+  statusHistory: VerificationStatusHistoryEntry[];
 }
 
 /**
@@ -46,6 +60,8 @@ export const VERIFICATION_RECORDS: VerificationRecord[] = [
     lastSurveillanceDate: "2026-07-02",
     nextRenewalDate: "2029-01-13",
     certificateVisible: true,
+    isPublished: true,
+    statusHistory: [],
   },
   {
     reference: "MAB-2025-00298",
@@ -58,6 +74,16 @@ export const VERIFICATION_RECORDS: VerificationRecord[] = [
     lastSurveillanceDate: "2026-07-15",
     nextRenewalDate: "2028-06-01",
     certificateVisible: false,
+    isPublished: true,
+    statusHistory: [
+      {
+        from: "ACTIVE",
+        to: "SUSPENDED",
+        reason: "Non-conformance identified during surveillance assessment; corrective action pending.",
+        changedBy: "Meridian Admin",
+        changedAt: "2026-07-18",
+      },
+    ],
   },
   {
     reference: "MAB-2022-00156",
@@ -70,6 +96,16 @@ export const VERIFICATION_RECORDS: VerificationRecord[] = [
     lastSurveillanceDate: "2026-06-20",
     nextRenewalDate: null,
     certificateVisible: false,
+    isPublished: true,
+    statusHistory: [
+      {
+        from: "SUSPENDED",
+        to: "WITHDRAWN",
+        reason: "Non-conformance from surveillance assessment was not resolved within the corrective action period.",
+        changedBy: "Meridian Admin",
+        changedAt: "2026-07-30",
+      },
+    ],
   },
   {
     reference: "MAB-2020-00043",
@@ -82,6 +118,8 @@ export const VERIFICATION_RECORDS: VerificationRecord[] = [
     lastSurveillanceDate: "2023-05-11",
     nextRenewalDate: null,
     certificateVisible: false,
+    isPublished: true,
+    statusHistory: [],
   },
   {
     reference: "MAB-2024-00512",
@@ -94,12 +132,15 @@ export const VERIFICATION_RECORDS: VerificationRecord[] = [
     lastSurveillanceDate: "2026-05-10",
     nextRenewalDate: "2027-05-01",
     certificateVisible: true,
+    isPublished: true,
+    statusHistory: [],
   },
 ];
 
+/** Public-facing lookup — unpublished records are treated as not found. */
 export function findByReference(reference: string): VerificationRecord | undefined {
   return VERIFICATION_RECORDS.find(
-    (r) => r.reference.toLowerCase() === reference.toLowerCase(),
+    (r) => r.reference.toLowerCase() === reference.toLowerCase() && r.isPublished,
   );
 }
 
@@ -108,7 +149,45 @@ export function searchRecords(query: string): VerificationRecord[] {
   if (!q) return [];
   return VERIFICATION_RECORDS.filter(
     (r) =>
-      r.reference.toLowerCase().includes(q) ||
-      r.organisationName.toLowerCase().includes(q),
+      r.isPublished &&
+      (r.reference.toLowerCase().includes(q) || r.organisationName.toLowerCase().includes(q)),
   );
+}
+
+/** Admin-facing lookup — sees records regardless of publish state. */
+export function findByReferenceAdmin(reference: string): VerificationRecord | undefined {
+  return VERIFICATION_RECORDS.find((r) => r.reference.toLowerCase() === reference.toLowerCase());
+}
+
+export function updateVerificationStatus(
+  reference: string,
+  newStatus: VerificationStatus,
+  reason: string,
+  actorName: string,
+) {
+  const record = findByReferenceAdmin(reference);
+  if (!record) return false;
+  record.statusHistory.push({
+    from: record.status,
+    to: newStatus,
+    reason,
+    changedBy: actorName,
+    changedAt: new Date().toISOString().slice(0, 10),
+  });
+  record.status = newStatus;
+  return true;
+}
+
+export function setVerificationPublished(reference: string, published: boolean) {
+  const record = findByReferenceAdmin(reference);
+  if (!record) return false;
+  record.isPublished = published;
+  return true;
+}
+
+export function setCertificateVisible(reference: string, visible: boolean) {
+  const record = findByReferenceAdmin(reference);
+  if (!record) return false;
+  record.certificateVisible = visible;
+  return true;
 }

@@ -73,6 +73,9 @@ export interface Application {
   submittedAt: string | null;
   updatedAt: string;
   assessorName?: string;
+  decisionOutcome?: "ACCREDIT" | "DECLINE" | "REQUEST_MORE_INFO";
+  decisionRationale?: string;
+  decidedBy?: string;
   documents: RequiredDocument[];
   stageHistory: StageHistoryEntry[];
 }
@@ -315,4 +318,88 @@ export function submitApplication(applicationId: string) {
   app.submittedAt = new Date().toISOString().slice(0, 10);
   app.updatedAt = app.submittedAt;
   app.stageHistory.push({ stage: "SUBMITTED", changedAt: app.submittedAt });
+}
+
+// --- Admin accessors/mutators (see all applications, not scoped to one user) ---
+
+export function getAllApplications(): Application[] {
+  return applications;
+}
+
+export function getApplicationByIdAdmin(id: string): Application | undefined {
+  return applications.find((a) => a.id === id);
+}
+
+function today() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+export function advanceApplicationStage(applicationId: string, stage: ApplicationStage, note?: string) {
+  const app = getApplicationByIdAdmin(applicationId);
+  if (!app) return false;
+  app.stage = stage;
+  app.updatedAt = today();
+  app.stageHistory.push({ stage, changedAt: app.updatedAt, note });
+  return true;
+}
+
+export function setInfoRequested(applicationId: string, note: string) {
+  const app = getApplicationByIdAdmin(applicationId);
+  if (!app) return false;
+  app.infoRequested = true;
+  app.infoRequestNote = note;
+  app.updatedAt = today();
+  return true;
+}
+
+export function clearInfoRequested(applicationId: string) {
+  const app = getApplicationByIdAdmin(applicationId);
+  if (!app) return false;
+  app.infoRequested = false;
+  app.infoRequestNote = undefined;
+  app.updatedAt = today();
+  return true;
+}
+
+export function assignAssessorToApplication(applicationId: string, assessorName: string) {
+  const app = getApplicationByIdAdmin(applicationId);
+  if (!app) return false;
+  app.assessorName = assessorName;
+  if (app.stage === "DOCUMENT_REVIEW" || app.stage === "INITIAL_REVIEW" || app.stage === "SUBMITTED") {
+    app.stage = "ASSESSMENT";
+    app.stageHistory.push({ stage: "ASSESSMENT", changedAt: today() });
+  }
+  app.updatedAt = today();
+  return true;
+}
+
+/**
+ * Structurally distinct from the assessor's own recommendation — the
+ * decider is always the authenticated admin session, which can never be
+ * the same identity as the assigned assessor (Phase 6/10 governance rule),
+ * and the rationale is required, not optional.
+ */
+export function recordApplicationDecision(
+  applicationId: string,
+  outcome: "ACCREDIT" | "DECLINE" | "REQUEST_MORE_INFO",
+  rationale: string,
+  decidedBy: string,
+) {
+  const app = getApplicationByIdAdmin(applicationId);
+  if (!app) return false;
+  app.decisionOutcome = outcome;
+  app.decisionRationale = rationale;
+  app.decidedBy = decidedBy;
+  app.updatedAt = today();
+  if (outcome === "ACCREDIT") {
+    app.stage = "ACCREDITED";
+    app.stageHistory.push({ stage: "ACCREDITED", changedAt: app.updatedAt, note: rationale });
+  } else if (outcome === "DECLINE") {
+    app.stage = "DECLINED";
+    app.stageHistory.push({ stage: "DECLINED", changedAt: app.updatedAt, note: rationale });
+  } else {
+    app.infoRequested = true;
+    app.infoRequestNote = rationale;
+  }
+  return true;
 }

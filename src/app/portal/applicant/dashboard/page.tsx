@@ -15,14 +15,14 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { STAGE_LABEL } from "@/lib/portal/applicant-data";
 import { getApplicationsForUser, getInvoicesForUser } from "@/lib/portal/applicant-data";
-import { findByReference } from "@/lib/verification-records";
+import { findByReferenceAdmin } from "@/lib/verification-records";
 
 export default async function ApplicantDashboardPage() {
   const session = await auth();
   const userId = session!.user.id;
   const apps = getApplicationsForUser(userId);
   const userInvoices = getInvoicesForUser(userId);
-  const accreditation = findByReference("MAB-2026-00417"); // demo tie-in to the applicant's own org
+  const accreditation = findByReferenceAdmin("MAB-2026-00417"); // demo tie-in to the applicant's own org
 
   const requiredActions = [
     ...apps

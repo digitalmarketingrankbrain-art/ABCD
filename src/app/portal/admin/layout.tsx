@@ -1,0 +1,10 @@
+import { AdminSidebar } from "@/components/portal/admin-sidebar";
+
+export default function AdminPortalLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="mx-auto flex max-w-7xl">
+      <AdminSidebar />
+      <div className="min-w-0 flex-1">{children}</div>
+    </div>
+  );
+}

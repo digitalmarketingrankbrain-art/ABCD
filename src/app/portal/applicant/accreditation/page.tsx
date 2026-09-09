@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { StatusBadge, VERIFICATION_STATUS } from "@/components/ui/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { STATUS_EXPLANATION, findByReference } from "@/lib/verification-records";
+import { STATUS_EXPLANATION, findByReferenceAdmin } from "@/lib/verification-records";
 
 /**
  * Uses the identical status badge system as the public /verify page —
@@ -9,7 +9,7 @@ import { STATUS_EXPLANATION, findByReference } from "@/lib/verification-records"
  * public sees, not a different private truth (Phase 8).
  */
 export default async function AccreditationPage() {
-  const accreditation = findByReference("MAB-2026-00417");
+  const accreditation = findByReferenceAdmin("MAB-2026-00417");
 
   return (
     <div className="px-6 py-8">

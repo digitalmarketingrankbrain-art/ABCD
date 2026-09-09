@@ -197,6 +197,15 @@ export function getAssignmentsForUser(userId: string): Assignment[] {
   return assignments.filter((a) => a.assessorUserId === userId);
 }
 
+/** Admin cross-cutting view — every assignment, not scoped to one assessor. */
+export function getAllAssignments(): Assignment[] {
+  return assignments;
+}
+
+export function getAllCompetence(): CompetenceEntry[] {
+  return competenceEntries;
+}
+
 export function getAssignmentById(id: string, userId: string): Assignment | undefined {
   return assignments.find((a) => a.id === id && a.assessorUserId === userId);
 }
