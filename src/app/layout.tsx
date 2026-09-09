@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Source_Serif_4, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import { ToastProvider } from "@/components/ui/toast";
+import { AuthSessionProvider } from "@/components/auth/session-provider";
 import "./globals.css";
 
 const sourceSerif = Source_Serif_4({
@@ -37,7 +38,9 @@ export default function RootLayout({
       <body
         className={`${sourceSerif.variable} ${ibmPlexSans.variable} ${ibmPlexMono.variable} font-sans antialiased`}
       >
-        <ToastProvider>{children}</ToastProvider>
+        <AuthSessionProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </AuthSessionProvider>
       </body>
     </html>
   );
