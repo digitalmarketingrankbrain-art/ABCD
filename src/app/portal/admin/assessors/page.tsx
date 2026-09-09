@@ -2,7 +2,7 @@ import { AdminAssessorsTable } from "@/components/portal/admin-assessors-table";
 import { getAssessorSummaries } from "@/lib/portal/admin-data";
 
 export default async function AdminAssessorsPage() {
-  const assessors = getAssessorSummaries();
+  const assessors = await getAssessorSummaries();
 
   return (
     <div className="px-6 py-8">

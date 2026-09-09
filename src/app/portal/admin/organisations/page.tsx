@@ -2,7 +2,7 @@ import { AdminOrganisationsTable } from "@/components/portal/admin-organisations
 import { getOrganisations } from "@/lib/portal/admin-data";
 
 export default async function AdminOrganisationsPage() {
-  const organisations = getOrganisations();
+  const organisations = await getOrganisations();
 
   return (
     <div className="px-6 py-8">

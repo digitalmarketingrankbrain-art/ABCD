@@ -6,7 +6,7 @@ import { ApplicationTimeline } from "@/components/portal/application-timeline";
 import { AdminApplicationActions } from "@/components/portal/admin-application-actions";
 import { getApplicationByIdAdmin, STAGE_LABEL, type ApplicationStage } from "@/lib/portal/applicant-data";
 import { getUserOrgName } from "@/lib/portal/admin-data";
-import { users } from "@/lib/auth/store";
+import { getUsersByRoleSafe } from "@/lib/auth/store";
 import { getAuditLogForTarget } from "@/lib/portal/audit-log";
 
 const STAGE_TONE: Record<ApplicationStage, StatusTone> = {
@@ -29,8 +29,9 @@ export default async function AdminApplicationDetailPage({
   const application = getApplicationByIdAdmin(id);
   if (!application) notFound();
 
-  const orgName = getUserOrgName(application.applicantUserId);
-  const assessorOptions = users.filter((u) => u.role === "ASSESSOR").map((u) => u.name);
+  const orgName = await getUserOrgName(application.applicantUserId);
+  const assessorUsers = await getUsersByRoleSafe("ASSESSOR");
+  const assessorOptions = assessorUsers.map((u) => u.name);
   const auditEntries = getAuditLogForTarget("Application", application.id);
 
   return (

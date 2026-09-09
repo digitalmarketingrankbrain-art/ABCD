@@ -13,7 +13,7 @@ export default async function AdminOrganisationDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const org = getOrganisationByUserId(id);
+  const org = await getOrganisationByUserId(id);
   if (!org) notFound();
 
   const applications = getAllApplications().filter((a) => a.applicantUserId === id);

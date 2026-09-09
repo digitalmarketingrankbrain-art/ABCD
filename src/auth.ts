@@ -30,7 +30,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const mfaCode = credentials?.mfaCode as string | undefined;
         if (!email || !password) return null;
 
-        const user = findUserByEmail(email);
+        const user = await findUserByEmail(email);
         if (!user || user.status !== "ACTIVE") return null;
         if (!verifyPassword(user, password)) return null;
 
@@ -44,7 +44,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           id: user.id,
           email: user.email,
           name: user.name,
-          role: user.role,
+          role: user.primaryRole,
         };
       },
     }),
@@ -54,12 +54,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user) {
         token.role = (user as { role: Role }).role;
         token.id = user.id;
-        token.mfaEnabled = (user.id && findUserById(user.id)?.mfaEnabled) ?? false;
+        const dbUser = user.id ? await findUserById(user.id) : null;
+        token.mfaEnabled = dbUser?.mfaEnabled ?? false;
       }
       // Client calls useSession().update() after enrolling in MFA so the
       // token reflects the change without requiring a full re-login.
       if (trigger === "update") {
-        token.mfaEnabled = findUserById(token.id as string)?.mfaEnabled ?? false;
+        const dbUser = await findUserById(token.id as string);
+        token.mfaEnabled = dbUser?.mfaEnabled ?? false;
       }
       return token;
     },

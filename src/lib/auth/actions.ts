@@ -22,7 +22,7 @@ import {
  * password + MFA code together on the real signIn call).
  */
 export async function checkCredentials(email: string, password: string) {
-  const user = findUserByEmail(email);
+  const user = await findUserByEmail(email);
   if (!user || user.status !== "ACTIVE" || !verifyPassword(user, password)) {
     return { ok: false as const, mfaRequired: false };
   }
@@ -35,18 +35,18 @@ export async function registerApplicant(input: {
   name: string;
   organisationName: string;
 }) {
-  if (findUserByEmail(input.email)) {
+  if (await findUserByEmail(input.email)) {
     return { ok: false as const, error: "An account with this email already exists." };
   }
   if (input.password.length < 10) {
     return { ok: false as const, error: "Password must be at least 10 characters." };
   }
-  createApplicantUser(input);
+  await createApplicantUser(input);
   return { ok: true as const };
 }
 
 export async function requestPasswordReset(email: string) {
-  const user = findUserByEmail(email);
+  const user = await findUserByEmail(email);
   // Always respond the same way whether or not the account exists, so this
   // endpoint can't be used to enumerate registered emails.
   if (!user) return { ok: true as const, devToken: null };
@@ -59,12 +59,12 @@ export async function requestPasswordReset(email: string) {
 export async function resetPassword(token: string, newPassword: string) {
   const email = consumeResetToken(token);
   if (!email) return { ok: false as const, error: "This reset link is invalid or has expired." };
-  const user = findUserByEmail(email);
+  const user = await findUserByEmail(email);
   if (!user) return { ok: false as const, error: "This reset link is invalid or has expired." };
   if (newPassword.length < 10) {
     return { ok: false as const, error: "Password must be at least 10 characters." };
   }
-  setUserPassword(user.id, newPassword);
+  await setUserPassword(user.id, newPassword);
   return { ok: true as const };
 }
 
@@ -78,7 +78,7 @@ export async function startMfaEnrollment() {
     label: session.user.email ?? session.user.id,
     secret,
   });
-  setUserMfaSecret(session.user.id, secret.base32);
+  await setUserMfaSecret(session.user.id, secret.base32);
   const qrDataUrl = await QRCode.toDataURL(totp.toString());
   return { ok: true as const, secret: secret.base32, qrDataUrl };
 }
@@ -86,19 +86,19 @@ export async function startMfaEnrollment() {
 export async function confirmMfaEnrollment(code: string) {
   const session = await auth();
   if (!session?.user) return { ok: false as const, error: "Not signed in." };
-  const user = findUserById(session.user.id);
+  const user = await findUserById(session.user.id);
   if (!user?.mfaSecret) return { ok: false as const, error: "Start MFA setup again." };
   if (!verifyTotpCode(user.mfaSecret, code)) {
     return { ok: false as const, error: "That code didn't match. Check your authenticator app and try again." };
   }
-  enableUserMfa(session.user.id);
+  await enableUserMfa(session.user.id);
   return { ok: true as const };
 }
 
 export async function changeOwnPassword(currentPassword: string, newPassword: string) {
   const session = await auth();
   if (!session?.user) return { ok: false as const, error: "Not signed in." };
-  const user = findUserById(session.user.id);
+  const user = await findUserById(session.user.id);
   if (!user) return { ok: false as const, error: "Not signed in." };
   if (!verifyPassword(user, currentPassword)) {
     return { ok: false as const, error: "Current password is incorrect." };
@@ -106,6 +106,6 @@ export async function changeOwnPassword(currentPassword: string, newPassword: st
   if (newPassword.length < 10) {
     return { ok: false as const, error: "New password must be at least 10 characters." };
   }
-  setUserPassword(user.id, newPassword);
+  await setUserPassword(user.id, newPassword);
   return { ok: true as const };
 }

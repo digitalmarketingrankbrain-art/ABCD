@@ -1,4 +1,4 @@
-import { users, type AuthUser } from "@/lib/auth/store";
+import { getUsersByRoleSafe, getUserOrganisationName } from "@/lib/auth/store";
 import { getAllApplications } from "./applicant-data";
 import { getAllAssignments, getAllCompetence } from "./assessor-data";
 import { VERIFICATION_RECORDS } from "@/lib/verification-records";
@@ -11,20 +11,19 @@ export interface AssessorSummary {
   competenceCount: number;
 }
 
-export function getAssessorSummaries(): AssessorSummary[] {
+export async function getAssessorSummaries(): Promise<AssessorSummary[]> {
+  const assessorUsers = await getUsersByRoleSafe("ASSESSOR");
   const allAssignments = getAllAssignments();
   const allCompetence = getAllCompetence();
-  return users
-    .filter((u) => u.role === "ASSESSOR")
-    .map((u) => ({
-      userId: u.id,
-      name: u.name,
-      email: u.email,
-      activeAssignmentCount: allAssignments.filter(
-        (a) => a.assessorUserId === u.id && (a.status === "IN_PROGRESS" || a.status === "ACCEPTED" || a.status === "PENDING"),
-      ).length,
-      competenceCount: allCompetence.filter((c) => c.assessorUserId === u.id).length,
-    }));
+  return assessorUsers.map((u) => ({
+    userId: u.id,
+    name: u.name,
+    email: u.email,
+    activeAssignmentCount: allAssignments.filter(
+      (a) => a.assessorUserId === u.id && (a.status === "IN_PROGRESS" || a.status === "ACCEPTED" || a.status === "PENDING"),
+    ).length,
+    competenceCount: allCompetence.filter((c) => c.assessorUserId === u.id).length,
+  }));
 }
 
 export interface OrganisationSummary {
@@ -36,25 +35,32 @@ export interface OrganisationSummary {
   accreditationCount: number;
 }
 
-/** Organisations are derived from Applicant users — no separate table yet (Milestone 11 introduces one per Phase 12). */
-export function getOrganisations(): OrganisationSummary[] {
+/** Organisations are real (Prisma) as of Milestone 12; applications/accreditation records are still the in-memory placeholder stores until they're migrated too. */
+export async function getOrganisations(): Promise<OrganisationSummary[]> {
+  const applicantUsers = await getUsersByRoleSafe("APPLICANT");
   const applications = getAllApplications();
-  return users
-    .filter((u): u is AuthUser & { organisationName: string } => u.role === "APPLICANT" && !!u.organisationName)
-    .map((u) => ({
+
+  const summaries: OrganisationSummary[] = [];
+  for (const u of applicantUsers) {
+    const organisationName = await getUserOrganisationName(u.id);
+    if (organisationName === "—") continue;
+    summaries.push({
       userId: u.id,
-      organisationName: u.organisationName,
+      organisationName,
       contactName: u.name,
       contactEmail: u.email,
       applicationCount: applications.filter((a) => a.applicantUserId === u.id).length,
-      accreditationCount: VERIFICATION_RECORDS.filter((r) => r.organisationName === u.organisationName).length,
-    }));
+      accreditationCount: VERIFICATION_RECORDS.filter((r) => r.organisationName === organisationName).length,
+    });
+  }
+  return summaries;
 }
 
-export function getOrganisationByUserId(userId: string): OrganisationSummary | undefined {
-  return getOrganisations().find((o) => o.userId === userId);
+export async function getOrganisationByUserId(userId: string): Promise<OrganisationSummary | undefined> {
+  const organisations = await getOrganisations();
+  return organisations.find((o) => o.userId === userId);
 }
 
-export function getUserOrgName(userId: string): string {
-  return users.find((u) => u.id === userId)?.organisationName ?? "—";
+export async function getUserOrgName(userId: string): Promise<string> {
+  return getUserOrganisationName(userId);
 }

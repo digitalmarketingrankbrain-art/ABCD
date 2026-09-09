@@ -1,17 +1,16 @@
-import { AdminUsersTable, type AdminUserRow } from "@/components/portal/admin-users-table";
-import { users } from "@/lib/auth/store";
+import { AdminUsersTable } from "@/components/portal/admin-users-table";
+import { getAllUsersSafe } from "@/lib/auth/store";
 
+/**
+ * getAllUsersSafe() excludes passwordHash/mfaSecret at the Prisma query
+ * level (see src/lib/auth/store.ts) — sensitive fields never load into this
+ * Server Component's memory in the first place, not just never reach the
+ * client. Milestone 10 caught the "never pass full user records to a
+ * Client Component" version of this rule; this hardens it one layer
+ * earlier.
+ */
 export default async function AdminUsersPage() {
-  // Deliberately strip passwordHash/mfaSecret before this ever reaches a
-  // Client Component — see the note in admin-users-table.tsx.
-  const rows: AdminUserRow[] = users.map((u) => ({
-    id: u.id,
-    name: u.name,
-    email: u.email,
-    role: u.role,
-    mfaEnabled: u.mfaEnabled,
-    status: u.status,
-  }));
+  const rows = await getAllUsersSafe();
 
   return (
     <div className="px-6 py-8">

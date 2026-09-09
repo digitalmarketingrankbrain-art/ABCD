@@ -4,7 +4,9 @@ import { getUserOrgName } from "@/lib/portal/admin-data";
 
 export default async function AdminApplicationsPage() {
   const applications = getAllApplications();
-  const rows = applications.map((a) => ({ ...a, organisationName: getUserOrgName(a.applicantUserId) }));
+  const rows = await Promise.all(
+    applications.map(async (a) => ({ ...a, organisationName: await getUserOrgName(a.applicantUserId) })),
+  );
 
   return (
     <div className="px-6 py-8">

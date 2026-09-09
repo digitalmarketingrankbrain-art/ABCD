@@ -69,10 +69,16 @@ async function main() {
   }
 
   console.log("Seeding users...");
+  // Explicit, fixed IDs — matching what the still-in-memory portal stores
+  // (src/lib/portal/applicant-data.ts, assessor-data.ts) hardcode as
+  // applicantUserId/assessorUserId. Until those are migrated to Prisma too
+  // (remaining Milestone 12 work), the real authenticated user's id has to
+  // line up with those placeholder references or the whole portal breaks.
   const admin = await prisma.user.upsert({
     where: { email: "admin@example.com" },
     update: {},
     create: {
+      id: "user-admin-demo",
       email: "admin@example.com",
       name: "Jordan Admin",
       primaryRole: "ADMIN",
@@ -84,6 +90,7 @@ async function main() {
     where: { email: "assessor@example.com" },
     update: {},
     create: {
+      id: "user-assessor-demo",
       email: "assessor@example.com",
       name: "Sam Assessor",
       primaryRole: "ASSESSOR",
@@ -100,6 +107,7 @@ async function main() {
     where: { email: "applicant@example.com" },
     update: {},
     create: {
+      id: "user-applicant-demo",
       email: "applicant@example.com",
       name: "Alex Applicant",
       primaryRole: "APPLICANT",

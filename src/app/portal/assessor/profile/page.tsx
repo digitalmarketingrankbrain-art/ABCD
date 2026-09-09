@@ -5,7 +5,7 @@ import { findUserById } from "@/lib/auth/store";
 
 export default async function AssessorProfilePage() {
   const session = await auth();
-  const user = findUserById(session!.user.id);
+  const user = await findUserById(session!.user.id);
 
   return (
     <div className="max-w-md px-6 py-8">
@@ -18,9 +18,8 @@ export default async function AssessorProfilePage() {
           <Input id="email" defaultValue={user?.email} disabled />
         </FormField>
         <p className="font-sans text-xs text-text-muted">
-          [PLACEHOLDER — biography/qualifications editing, used internally for
-          assignment matching, wired up once the real Assessor table lands in
-          Milestone 11.]
+          [PLACEHOLDER — biography/qualifications editing form not built yet;
+          the underlying Assessor.bio field is real (Milestone 11).]
         </p>
       </form>
     </div>

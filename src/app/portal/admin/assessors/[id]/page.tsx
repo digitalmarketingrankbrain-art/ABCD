@@ -25,8 +25,8 @@ export default async function AdminAssessorDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const user = findUserById(id);
-  if (!user || user.role !== "ASSESSOR") notFound();
+  const user = await findUserById(id);
+  if (!user || user.primaryRole !== "ASSESSOR") notFound();
 
   const assignments = getAllAssignments().filter((a) => a.assessorUserId === id);
   const competence = getAllCompetence().filter((c) => c.assessorUserId === id);
