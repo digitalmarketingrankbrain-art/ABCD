@@ -28,7 +28,7 @@ This file is the single source of truth for phase status. Update the **Status**,
 | 10 | Admin Platform | Approved | 2026-09-09 | `docs/phases/phase-10-admin-platform.md` | Approved with 2 open questions carried forward |
 | 11 | Technical Architecture | Approved | 2026-09-09 | `docs/phases/phase-11-architecture.md` | Approved with 3 open questions carried forward |
 | 12 | Database & Data Model | Approved | 2026-09-09 | `docs/phases/phase-12-data-model.md` | Approved; all prior open questions resolved via schema defaults |
-| 13 | Development | In progress | 2026-09-09 | `docs/phases/phase-13-development-log.md` | Milestone 1 (Project Setup) delivered — awaiting approval; 16 milestones remain |
+| 13 | Development | In progress | 2026-09-09 | `docs/phases/phase-13-development-log.md` | Milestones 1-14 built (UX complete Milestones 1-10; DB, partial API rewiring, real document storage, real notifications for 11-14). Detailed per-milestone notes below; user has waived individual approval gates and asked to continue through all remaining phases. |
 
 ### Phase 13 Milestone Tracker
 
@@ -46,9 +46,9 @@ This file is the single source of truth for phase status. Update the **Status**,
 | 10 | Admin portal | Approved | Real dashboard/applications/organisations/assessors/accreditation-records/users/audit-logs built. Mandatory-reason-on-every-status-change + append-only audit log + verification curation panel implemented. One repeated boundary bug and one real security leak caught and fixed pre-test (see milestone notes). Full HTTP-level pass across all 13 routes, RBAC re-confirmed, sensitive-field leak confirmed absent via HTML grep. |
 | 11 | Database (Prisma schema + migrations) | Approved | Real Postgres 17 + Prisma schema (~34 tables, full Phase 12 model), migrated and seeded against a real local database (not simulated). Append-only audit_logs enforced via a dedicated least-privilege `app_user` DB role — verified by actually attempting a denied UPDATE/DELETE. Runtime connection tested end-to-end via Prisma Client including a joined query. |
 | 12 | APIs | Partial — auth done, rest in-memory | Auth (login/register/password/MFA) fully rewired to real Postgres via Prisma, tested end-to-end incl. a real MFA login and a real registration DB write. Caught and fixed a critical ID-mismatch (seed IDs vs. hardcoded in-memory references), a grants-wipe from `migrate reset`, and hardened a dev-only password-hash exposure. Applications/assignments/invoices/messages/competence/availability/verification-records remain on in-memory stores — full migration deferred as follow-up work given scope already covered. |
-| 13 | Document system | Not started | |
-| 14 | Notifications | Not started | |
-| 15 | Payments | Not started | |
+| 13 | Document system | Approved | Real private local filesystem storage (stand-in for S3/R2, same shape so swapping later doesn't change calling code) + real Document/DocumentVersion Prisma records + a session-authenticated download route (the signed-URL equivalent). Tested full save→DB→disk→read-back path and the actual HTTP download route (401 unauthenticated, 200 for owner/assigned assessor). |
+| 14 | Notifications | Approved | Real Notification rows in Postgres drive a real in-app bell in the portal header. No email provider configured (Stripe/Resend vendor-TBD from Phase 11) — EMAIL channel logs what would be sent instead of faking delivery. Wired 3 real trigger points incl. Phase 1's required security notifications on MFA-enable/password-change. Found and fixed a real (harmless) stale-return-value bug. |
+| 15 | Payments | Deferred — no real Stripe credentials | Real Stripe integration needs API keys not available in this environment (Phase 11 already flagged payment provider as vendor-TBD). Invoice/Payment data model is real in Postgres (Milestone 11); Invoices themselves are still in-memory pending the same migration as Applications/Assignments. Revisit once real Stripe keys are provided. |
 | 16 | Audit logging | Not started | |
 | 17 | Security hardening | Not started | |
 | 14 | Testing | Not started | | `docs/phases/phase-14-testing.md` | |
