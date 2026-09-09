@@ -1,0 +1,28 @@
+import { auth } from "@/auth";
+import { FormField } from "@/components/ui/form-field";
+import { Input } from "@/components/ui/input";
+import { findUserById } from "@/lib/auth/store";
+
+export default async function AssessorProfilePage() {
+  const session = await auth();
+  const user = findUserById(session!.user.id);
+
+  return (
+    <div className="max-w-md px-6 py-8">
+      <h1 className="font-display text-2xl font-semibold text-text">Profile</h1>
+      <form className="mt-6 flex flex-col gap-5">
+        <FormField label="Name" htmlFor="name">
+          <Input id="name" defaultValue={user?.name} disabled />
+        </FormField>
+        <FormField label="Email" htmlFor="email">
+          <Input id="email" defaultValue={user?.email} disabled />
+        </FormField>
+        <p className="font-sans text-xs text-text-muted">
+          [PLACEHOLDER — biography/qualifications editing, used internally for
+          assignment matching, wired up once the real Assessor table lands in
+          Milestone 11.]
+        </p>
+      </form>
+    </div>
+  );
+}

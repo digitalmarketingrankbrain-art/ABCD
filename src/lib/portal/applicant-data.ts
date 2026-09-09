@@ -260,12 +260,16 @@ export function getMessagesForApplication(applicationId: string): Message[] {
     .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 }
 
-export function addMessage(applicationId: string, body: string) {
+export function addMessage(
+  applicationId: string,
+  body: string,
+  sender: { name: string; role: Message["senderRole"] } = { name: "You", role: "APPLICANT" },
+) {
   messages.push({
     id: `msg-${Date.now()}`,
     applicationId,
-    senderName: "You",
-    senderRole: "APPLICANT",
+    senderName: sender.name,
+    senderRole: sender.role,
     body,
     createdAt: new Date().toISOString().slice(0, 10),
   });
