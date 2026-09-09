@@ -14,6 +14,7 @@ import {
   setUserMfaSecret,
   enableUserMfa,
 } from "./store";
+import { createNotification } from "@/lib/notifications";
 
 /**
  * Pre-check email/password only, without creating a session — lets the
@@ -65,6 +66,9 @@ export async function resetPassword(token: string, newPassword: string) {
     return { ok: false as const, error: "Password must be at least 10 characters." };
   }
   await setUserPassword(user.id, newPassword);
+  // Security notification on password change — Phase 1 requirement.
+  await createNotification({ userId: user.id, type: "password.changed", channel: "IN_APP" });
+  await createNotification({ userId: user.id, type: "password.changed", channel: "EMAIL" });
   return { ok: true as const };
 }
 
@@ -92,6 +96,9 @@ export async function confirmMfaEnrollment(code: string) {
     return { ok: false as const, error: "That code didn't match. Check your authenticator app and try again." };
   }
   await enableUserMfa(session.user.id);
+  // Security notification on a privileged action — Phase 1 requirement.
+  await createNotification({ userId: session.user.id, type: "mfa.enabled", channel: "IN_APP" });
+  await createNotification({ userId: session.user.id, type: "mfa.enabled", channel: "EMAIL" });
   return { ok: true as const };
 }
 
@@ -107,5 +114,8 @@ export async function changeOwnPassword(currentPassword: string, newPassword: st
     return { ok: false as const, error: "New password must be at least 10 characters." };
   }
   await setUserPassword(user.id, newPassword);
+  // Security notification on password change — Phase 1 requirement.
+  await createNotification({ userId: user.id, type: "password.changed", channel: "IN_APP" });
+  await createNotification({ userId: user.id, type: "password.changed", channel: "EMAIL" });
   return { ok: true as const };
 }

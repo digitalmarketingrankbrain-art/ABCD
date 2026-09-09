@@ -18,6 +18,7 @@ import {
   type VerificationStatus,
 } from "@/lib/verification-records";
 import { logAction } from "./audit-log";
+import { createNotification } from "@/lib/notifications";
 
 async function requireAdmin() {
   const session = await auth();
@@ -56,6 +57,20 @@ export async function requestApplicationInfo(applicationId: string, note: string
     targetType: "Application",
     targetId: applicationId,
     reason: note.trim(),
+  });
+  await createNotification({
+    userId: app.applicantUserId,
+    type: "application.information_requested",
+    relatedType: "Application",
+    relatedId: applicationId,
+    channel: "IN_APP",
+  });
+  await createNotification({
+    userId: app.applicantUserId,
+    type: "application.information_requested",
+    relatedType: "Application",
+    relatedId: applicationId,
+    channel: "EMAIL",
   });
   revalidatePath(`/portal/admin/applications/${applicationId}`);
   return { ok: true as const };
@@ -117,6 +132,21 @@ export async function recordDecision(
     targetType: "Application",
     targetId: applicationId,
     reason: rationale.trim(),
+  });
+  const notificationType = `application.decision_recorded.${outcome.toLowerCase()}`;
+  await createNotification({
+    userId: app.applicantUserId,
+    type: notificationType,
+    relatedType: "Application",
+    relatedId: applicationId,
+    channel: "IN_APP",
+  });
+  await createNotification({
+    userId: app.applicantUserId,
+    type: notificationType,
+    relatedType: "Application",
+    relatedId: applicationId,
+    channel: "EMAIL",
   });
   revalidatePath(`/portal/admin/applications/${applicationId}`);
   revalidatePath("/portal/admin/applications");
