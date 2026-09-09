@@ -32,7 +32,7 @@ export default async function AdminApplicationDetailPage({
   const orgName = await getUserOrgName(application.applicantUserId);
   const assessorUsers = await getUsersByRoleSafe("ASSESSOR");
   const assessorOptions = assessorUsers.map((u) => u.name);
-  const auditEntries = getAuditLogForTarget("Application", application.id);
+  const auditEntries = await getAuditLogForTarget("Application", application.id);
 
   return (
     <div className="px-6 py-8">

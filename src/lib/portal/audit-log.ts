@@ -1,3 +1,6 @@
+import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
+
 export interface AuditLogEntry {
   id: string;
   actorName: string;
@@ -12,40 +15,63 @@ export interface AuditLogEntry {
 }
 
 /**
- * Append-only in-memory log — stands in for the Phase 12 AuditLog table
- * (INSERT-only DB grant) until Milestone 11. Every admin mutation writes
- * here; nothing in this module ever deletes or edits an entry.
+ * Real Postgres audit_logs table (Milestone 16) — the append-only guarantee
+ * is enforced at the database grant level (Milestone 11's app_user role has
+ * SELECT/INSERT but no UPDATE/DELETE on this table, verified by actually
+ * attempting both and confirming "permission denied"), not just by this
+ * module's own discipline of never calling update/delete.
  */
-const entries: AuditLogEntry[] = [];
-
-export function logAction(input: {
-  actorName: string;
+export async function logAction(input: {
+  actorUserId: string | null;
   actorRole: string;
   action: string;
   targetType: string;
   targetId: string;
   reason?: string | null;
-  before?: string | null;
-  after?: string | null;
+  before?: unknown;
+  after?: unknown;
 }) {
-  entries.push({
-    id: `audit-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-    actorName: input.actorName,
-    actorRole: input.actorRole,
-    action: input.action,
-    targetType: input.targetType,
-    targetId: input.targetId,
-    reason: input.reason ?? null,
-    before: input.before ?? null,
-    after: input.after ?? null,
-    timestamp: new Date().toISOString(),
+  await prisma.auditLog.create({
+    data: {
+      actorUserId: input.actorUserId,
+      actorRole: input.actorRole,
+      action: input.action,
+      targetType: input.targetType,
+      targetId: input.targetId,
+      reason: input.reason ?? null,
+      before: (input.before ?? undefined) as Prisma.InputJsonValue | undefined,
+      after: (input.after ?? undefined) as Prisma.InputJsonValue | undefined,
+    },
   });
 }
 
-export function getAuditLog(): AuditLogEntry[] {
-  return [...entries].sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+type AuditLogRow = Awaited<ReturnType<typeof prisma.auditLog.findMany<{ include: { actor: true } }>>>[number];
+
+function mapRow(row: AuditLogRow): AuditLogEntry {
+  return {
+    id: row.id,
+    actorName: row.actor?.name ?? row.actorRole,
+    actorRole: row.actorRole,
+    action: row.action,
+    targetType: row.targetType,
+    targetId: row.targetId,
+    reason: row.reason,
+    before: row.before ? JSON.stringify(row.before) : null,
+    after: row.after ? JSON.stringify(row.after) : null,
+    timestamp: row.createdAt.toISOString(),
+  };
 }
 
-export function getAuditLogForTarget(targetType: string, targetId: string): AuditLogEntry[] {
-  return getAuditLog().filter((e) => e.targetType === targetType && e.targetId === targetId);
+export async function getAuditLog(): Promise<AuditLogEntry[]> {
+  const rows = await prisma.auditLog.findMany({ include: { actor: true }, orderBy: { createdAt: "desc" } });
+  return rows.map(mapRow);
+}
+
+export async function getAuditLogForTarget(targetType: string, targetId: string): Promise<AuditLogEntry[]> {
+  const rows = await prisma.auditLog.findMany({
+    where: { targetType, targetId },
+    include: { actor: true },
+    orderBy: { createdAt: "desc" },
+  });
+  return rows.map(mapRow);
 }

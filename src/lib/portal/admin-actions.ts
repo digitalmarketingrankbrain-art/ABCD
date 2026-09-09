@@ -33,8 +33,8 @@ export async function markInitialReviewComplete(applicationId: string) {
   const app = getApplicationByIdAdmin(applicationId);
   if (!app) return { ok: false as const, error: "Application not found." };
   advanceApplicationStage(applicationId, "DOCUMENT_REVIEW");
-  logAction({
-    actorName: admin.name ?? admin.email ?? "Admin",
+  await logAction({
+    actorUserId: admin.id,
     actorRole: "ADMIN",
     action: "application.initial_review_completed",
     targetType: "Application",
@@ -50,8 +50,8 @@ export async function requestApplicationInfo(applicationId: string, note: string
   const app = getApplicationByIdAdmin(applicationId);
   if (!app) return { ok: false as const, error: "Application not found." };
   setInfoRequested(applicationId, note.trim());
-  logAction({
-    actorName: admin.name ?? admin.email ?? "Admin",
+  await logAction({
+    actorUserId: admin.id,
     actorRole: "ADMIN",
     action: "application.information_requested",
     targetType: "Application",
@@ -81,8 +81,8 @@ export async function clearApplicationInfoRequest(applicationId: string) {
   const app = getApplicationByIdAdmin(applicationId);
   if (!app) return { ok: false as const, error: "Application not found." };
   clearInfoRequested(applicationId);
-  logAction({
-    actorName: admin.name ?? admin.email ?? "Admin",
+  await logAction({
+    actorUserId: admin.id,
     actorRole: "ADMIN",
     action: "application.information_request_cleared",
     targetType: "Application",
@@ -98,8 +98,8 @@ export async function assignAssessor(applicationId: string, assessorName: string
   const app = getApplicationByIdAdmin(applicationId);
   if (!app) return { ok: false as const, error: "Application not found." };
   assignAssessorToApplication(applicationId, assessorName);
-  logAction({
-    actorName: admin.name ?? admin.email ?? "Admin",
+  await logAction({
+    actorUserId: admin.id,
     actorRole: "ADMIN",
     action: "application.assessor_assigned",
     targetType: "Application",
@@ -125,8 +125,8 @@ export async function recordDecision(
   const app = getApplicationByIdAdmin(applicationId);
   if (!app) return { ok: false as const, error: "Application not found." };
   recordApplicationDecision(applicationId, outcome, rationale.trim(), admin.name ?? admin.email ?? "Admin");
-  logAction({
-    actorName: admin.name ?? admin.email ?? "Admin",
+  await logAction({
+    actorUserId: admin.id,
     actorRole: "ADMIN",
     action: `application.decision_recorded.${outcome.toLowerCase()}`,
     targetType: "Application",
@@ -160,8 +160,8 @@ export async function changeAccreditationStatus(reference: string, newStatus: Ve
   if (!record) return { ok: false as const, error: "Record not found." };
   const before = record.status;
   updateVerificationStatus(reference, newStatus, reason.trim(), admin.name ?? admin.email ?? "Admin");
-  logAction({
-    actorName: admin.name ?? admin.email ?? "Admin",
+  await logAction({
+    actorUserId: admin.id,
     actorRole: "ADMIN",
     action: "accreditation.status_changed",
     targetType: "AccreditationRecord",
@@ -179,8 +179,8 @@ export async function toggleVerificationPublished(reference: string, published: 
   const admin = await requireAdmin();
   const ok = setVerificationPublished(reference, published);
   if (!ok) return { ok: false as const, error: "Record not found." };
-  logAction({
-    actorName: admin.name ?? admin.email ?? "Admin",
+  await logAction({
+    actorUserId: admin.id,
     actorRole: "ADMIN",
     action: published ? "verification.published" : "verification.unpublished",
     targetType: "VerificationRecord",
@@ -195,8 +195,8 @@ export async function toggleCertificateVisible(reference: string, visible: boole
   const admin = await requireAdmin();
   const ok = setCertificateVisible(reference, visible);
   if (!ok) return { ok: false as const, error: "Record not found." };
-  logAction({
-    actorName: admin.name ?? admin.email ?? "Admin",
+  await logAction({
+    actorUserId: admin.id,
     actorRole: "ADMIN",
     action: visible ? "verification.certificate_made_visible" : "verification.certificate_hidden",
     targetType: "VerificationRecord",

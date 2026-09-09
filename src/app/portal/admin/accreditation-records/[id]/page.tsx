@@ -15,10 +15,13 @@ export default async function AdminAccreditationRecordDetailPage({
   const record = findByReferenceAdmin(reference);
   if (!record) notFound();
 
-  const auditEntries = [
-    ...getAuditLogForTarget("AccreditationRecord", reference),
-    ...getAuditLogForTarget("VerificationRecord", reference),
-  ].sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+  const [recordEntries, verificationEntries] = await Promise.all([
+    getAuditLogForTarget("AccreditationRecord", reference),
+    getAuditLogForTarget("VerificationRecord", reference),
+  ]);
+  const auditEntries = [...recordEntries, ...verificationEntries].sort((a, b) =>
+    b.timestamp.localeCompare(a.timestamp),
+  );
 
   return (
     <div className="px-6 py-8">

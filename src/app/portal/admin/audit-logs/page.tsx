@@ -3,17 +3,18 @@ import { getAuditLog } from "@/lib/portal/audit-log";
 
 /**
  * Read-only, immutable display — the log itself is never editable through
- * the UI (Phase 10), matching the append-only INSERT-only DB grant this
- * store simulates.
+ * the UI, matching the real append-only INSERT-only DB grant on the
+ * audit_logs table (app_user has no UPDATE/DELETE, enforced at the Postgres
+ * grant level and verified in Milestone 11).
  */
 export default async function AdminAuditLogsPage() {
-  const entries = getAuditLog();
+  const entries = await getAuditLog();
 
   return (
     <div className="px-6 py-8">
       <h1 className="font-display text-2xl font-semibold text-text">Audit Logs</h1>
       <p className="mt-1 font-sans text-sm text-text-muted">
-        Every state-changing admin action, in order, most recent first. This session&apos;s log resets when the server restarts (Milestone 11 makes it durable).
+        Every state-changing admin action, in order, most recent first.
       </p>
       <div className="mt-6">
         {entries.length === 0 ? (
