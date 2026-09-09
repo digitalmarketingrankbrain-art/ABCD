@@ -94,3 +94,18 @@ export async function confirmMfaEnrollment(code: string) {
   enableUserMfa(session.user.id);
   return { ok: true as const };
 }
+
+export async function changeOwnPassword(currentPassword: string, newPassword: string) {
+  const session = await auth();
+  if (!session?.user) return { ok: false as const, error: "Not signed in." };
+  const user = findUserById(session.user.id);
+  if (!user) return { ok: false as const, error: "Not signed in." };
+  if (!verifyPassword(user, currentPassword)) {
+    return { ok: false as const, error: "Current password is incorrect." };
+  }
+  if (newPassword.length < 10) {
+    return { ok: false as const, error: "New password must be at least 10 characters." };
+  }
+  setUserPassword(user.id, newPassword);
+  return { ok: true as const };
+}
