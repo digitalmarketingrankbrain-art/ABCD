@@ -237,4 +237,37 @@ Builds on Phases 1–12 (all approved). This log records each development milest
 
 ---
 
-*(Milestone 9 onward will be appended here as they're built.)*
+## Milestone 9 — Assessor Portal
+
+**Objective:** Build the real Assessor portal from Phase 9: dashboard, structured competence records, availability, assignments, and the checklist-driven assessment workspace, with access strictly confined to the assessor's own assignments.
+
+**What was built:**
+- `src/lib/portal/assessor-data.ts` — placeholder Assignment/CompetenceEntry/AvailabilityBlackout data. Three seeded assignments spanning the interesting states (`asg-1` in progress with a recorded non-conformance, `asg-2` pending response, `asg-3` report already submitted). Every accessor function (`getAssignmentsForUser`, `getAssignmentById`, etc.) filters by `assessorUserId`, matching Phase 9's access-scope rule at the data layer, not just the UI.
+- `src/lib/portal/assessor-actions.ts` — Server Actions (`acceptAssignment`, `declineAssignment`, `saveFinding`, `submitReport`, `addAvailabilityBlackout`/`removeAvailabilityBlackout`, `sendAssignmentMessage`), each gated by a `requireAssessor()` check.
+- Dashboard, Competence (structured status badges — Current/Expiring soon/Expired), Availability (`AvailabilityManager` client component — add/remove blackout date ranges), Assignments list (`AssignmentsTable` with status-filter buttons), Assignment detail (`assignments/[id]/page.tsx`) — the core of this milestone: a persistent context sidebar (org/scope/reference/due date/status) next to a 7-tab workspace.
+- `AssignmentAcceptDecline` — Accept is one click; Decline opens a `Modal` requiring a reason, per Phase 9's "closes the loop for admin, supports impartiality disclosure" rationale.
+- `AssignmentChecklist` — one `CriterionRow` per requirement, each with a status select, a conditional severity select (only shown for Non-conformance), a notes field, and its own Save action — autosave-adjacent but explicit per item, distinct from the whole-report submission.
+- Findings and Evidence tabs are **derived views**, not separate data entry — they filter the same `findings` record for non-conforming/observation items and populated evidence notes respectively, so there's no risk of the two views disagreeing with the checklist.
+- `SubmitReportButton` — a two-step confirm (click → "Submit this report? This can't be undone" → confirm), deliberately more friction than the per-item Save, since this is the action that hands the case to Decision.
+- **Cross-portal continuity**: `asg-1.linkedApplicationId = "app-1"` ties this assignment to the exact applicant demo application from Milestone 8. The assessor's Messages tab and index page read/write through `getMessagesForApplication`/`addMessage` from `src/lib/portal/applicant-data.ts` (extended `addMessage` to accept an explicit sender instead of hardcoding "You"/APPLICANT, so an assessor-sent message is correctly attributed) — so a message sent from either portal shows up in both.
+
+**Bugs caught and fixed:**
+- 6 instances of the same `noUncheckedIndexedAccess` strict-mode pattern: `record[computedKey] && record[computedKey].someProp` doesn't narrow the way `if (x) x.prop` does when the index is a variable — TypeScript re-evaluates the indexed access fresh each time rather than remembering the truthy check. All fixed with optional chaining (`record[computedKey]?.someProp`). Worth remembering for Milestone 10, which will have similar lookup-table patterns.
+- One invalid `Alert` `tone="neutral"` — the component only supports success/warning/error/info; switched to `info` for the "assignment declined" notice.
+- No server/client boundary bugs this time — applied the Milestone 8 lesson proactively (checked every new cross-file import before running the build) rather than discovering it at runtime again.
+
+**Testing performed:**
+- `npm run build`/`typecheck`/`lint` — all 7 type errors above caught and fixed at build time.
+- To reach the assessor pages at all required a real login, and Phase 1 mandates MFA for the Assessor role — so rather than skip testing the portal itself, temporarily pre-enrolled the demo assessor's MFA in `src/lib/auth/store.ts` with a freshly generated real TOTP secret, logged in with a real generated 6-digit code (via the same `otpauth` library the app itself uses), ran the full test pass, then reverted the seed change and confirmed with `git diff` that the file matched HEAD exactly before committing. This incidentally exercised the MFA-enrollment/verification path end-to-end for the first time since Milestone 7 flagged it as unverified through a real browser — confirms that path genuinely works.
+- Full HTTP-level pass: all 9 assessor routes return 200 with correct content (dashboard's pending-assignment alert and active-assignment list; assignment detail's status, org name, reference, and — for `asg-1` — the recorded Quality Manual non-conformance; `asg-2`'s Accept/Decline buttons present since it's still Pending; competence statuses; availability blackout date; messages index showing the Northfield Testing Laboratories thread shared with the applicant side).
+- Re-confirmed RBAC: an assessor session hitting `/portal/applicant/dashboard` or `/portal/admin` bounces back to `/portal/assessor` both times.
+- No errors in the dev server log across the whole pass.
+- **Not verified**: the interactive Server Action mutations themselves (accept/decline, save a finding, submit a report, add a blackout date) weren't exercised via actual clicks — Next.js Server Actions use an internal action-id + React Flight body encoding that isn't practically reproducible with curl (same limitation noted in Milestone 7). Confidence here comes from: a clean type-checked build, code review, and the fact that Milestone 8 already proved the identical `requireRole()` → mutate → `revalidatePath()` shape works correctly end-to-end for equivalent actions (`sendApplicationMessage`, `uploadApplicationDocument`).
+
+**Known issues:** the Server-Action click-through gap above (consistent with the same gap noted for MFA enrollment in Milestone 7, now also true for this milestone's mutations — worth the user trying these live).
+
+**Not yet built:** Admin Platform (Milestone 10 — will need to see and manage these same assignments from the other side), real document storage, real database.
+
+---
+
+*(Milestone 10 onward will be appended here as they're built.)*
