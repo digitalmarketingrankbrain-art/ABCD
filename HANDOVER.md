@@ -29,13 +29,16 @@ Reference: https://www.uafaccreditation.org/
 
 ## Current state (as of 2026-09-09)
 
-Phases 1–12 (all design phases) are approved. **Phase 13 (Development) is underway.** Milestones 1–3 (Project Setup, Design System, Public Layout) are approved; Milestone 4 (Homepage) is built and delivered for approval. See `PROGRESS.md`'s Phase 13 Milestone Tracker for the full 17-milestone list and `docs/phases/phase-13-development-log.md` for full build detail per milestone.
+Phases 1–12 (all design phases) are approved. **Phase 13 (Development) is underway.** Milestones 1–4 (Project Setup, Design System, Public Layout, Homepage) are approved; Milestone 5 (Public Pages) is built and delivered for approval. See `PROGRESS.md`'s Phase 13 Milestone Tracker for the full 17-milestone list and `docs/phases/phase-13-development-log.md` for full build detail per milestone.
+
+**Dev server runs on port 5000** (`npm run dev`/`npm run start` both default to `-p 5000` now, per the user's request) — open http://localhost:5000 to view it live. If a stale process is already holding port 5000 from a prior session, find it with `netstat -ano | grep ":5000"` and stop it (PowerShell `Stop-Process -Id <pid> -Force`) before restarting.
 
 **What exists in the repo right now:**
 - Working Next.js 15.5.25 (App Router) + TypeScript + Tailwind CSS v4 scaffold, Phase 4 design tokens as CSS variables, self-hosted fonts.
 - A full reusable UI component library in `src/components/ui/` (Button, StatusBadge, Card, Input, Select, FormField, Alert, Breadcrumbs, Pagination, EmptyState, ErrorState, Modal, Tabs, Accordion, Toast, DataTable) plus `src/lib/utils.ts`'s `cn()` helper. **Every later milestone should import and reuse these rather than writing new one-off UI.**
 - `src/components/layout/header.tsx` + `footer.tsx` — the real Header (mega menu, mobile nav, Verify as a distinct link) and Footer (five-column, Complaints & Appeals / Report Fraud kept non-buried) from Phase 5, driven by `src/lib/nav.ts`. Wired via `src/app/(public)/layout.tsx`.
-- `src/app/(public)/page.tsx` is now the **real homepage** (Milestone 4) — all 10 Phase 5 sections, built from `src/components/home/*` and placeholder data in `src/lib/programs.ts`/`src/lib/news.ts`. Every page it *links to* (Programs, About, Resources, Verify, News, Training, Contact) still 404s — Milestones 5–6 build those.
+- `src/app/(public)/page.tsx` is the **real homepage** (Milestone 4) — all 10 Phase 5 sections, built from `src/components/home/*` and placeholder data in `src/lib/programs.ts`/`src/lib/news.ts`.
+- **26 internal public pages built (Milestone 5)**: About (3 pages), Accreditation (overview/process/programs index+detail/fees/apply), Resources (index+3 filtered views+detail), Training (index+detail), News (index+detail), Contact, FAQs, Complaints & Appeals, Report Fraud, Legal (3 pages), Become an Assessor. Placeholder data lives in `src/lib/resources.ts`/`training.ts`/`faqs.ts`. Everything the homepage/header/footer link to on the public site now resolves — **only `/verify`, `/verify/[reference]`, `/login`, `/register`, and anything portal-related still 404** (Milestones 6–7+).
 - A temporary, non-public preview route at `/design-system-preview` — remove or gate before production launch.
 - No `(portal)` route group yet — comes with auth (Milestone 7) and the portal milestones (8–10).
 - **Git is now initialized**, two commits so far (Phase 1–12 docs + Milestones 1–2; then Milestone 3). Standard git safety rules apply from here (never force-push, never skip hooks, new commits not amends, etc.) even though this is a solo/local repo so far.

@@ -116,4 +116,38 @@ Builds on Phases 1–12 (all approved). This log records each development milest
 
 ---
 
-*(Milestone 5 onward will be appended here as they're built.)*
+## Milestone 5 — Public Pages
+
+**Objective:** Build every internal public page the header/footer/homepage link to, per Phase 6's layout/content/trust-element spec.
+
+**What was built:**
+- `src/components/layout/page-header.tsx` — shared breadcrumbs + title + description + optional CTA-row block, reused by every page in this milestone.
+- `src/components/layout/legal-page.tsx` — structural template for Privacy Policy / Terms of Use (Accessibility Statement kept as its own page instead, since its content — a real conformance target and honestly-listed limitations — needed to be explicit, not templated).
+- About: `who-we-are`, `governance` (with a visible "Last reviewed" date), `impartiality-and-ethics`.
+- Accreditation: overview page, `how-it-works` (full 7-stage process including the "if declined" path with anchor-linkable stages), `programs` index, `programs/[slug]` dynamic detail (sticky in-page section nav: Overview/Eligibility/Criteria/Process/Fees/Documents), `fees`, `apply` (routing page to auth, not a form).
+- Resources: index + `policies`/`procedures`/`forms` filtered views + `[slug]` dynamic detail, via a shared `ResourceTable` component. `src/lib/resources.ts` holds 6 placeholder documents, each with a version and effective date per Phase 6's rule.
+- Training: index + `[slug]` dynamic detail. `src/lib/training.ts` holds 2 placeholder courses.
+- News: index + `[slug]` dynamic detail, reusing `src/lib/news.ts` from Milestone 4.
+- `contact` — `ContactForm` client component: selecting "Complaint" or "Fraud" in the category dropdown shows an inline `Alert` linking to the dedicated page instead of silently accepting a misrouted message, per Phase 6.
+- `faqs` — audience-tabbed (`Tabs`) accordion, backed by `src/lib/faqs.ts` (4 audiences).
+- `complaints-and-appeals` — 5-step numbered process.
+- `report-fraud` — `FraudReportForm` client component, anonymous-friendly (contact info optional), shows an honest post-submit message ("we may not be able to share investigation outcomes, but every report is logged and reviewed").
+- `legal/privacy-policy`, `legal/terms-of-use` (via `LegalPage`), `legal/accessibility-statement` (bespoke, states a WCAG 2.1 AA target).
+- `assessors/become-an-assessor` — expression-of-interest framing, explicit that this isn't a full application.
+
+**Bugs caught and fixed:**
+1. Two `react/no-unescaped-entities` lint errors (raw apostrophes in JSX text) — fixed with `&apos;`.
+2. A real server/client boundary violation: `resources/fees` and the resource-listing pages originally built their `DataTable` `columns` config (which contains `render` callback *functions*) inside server-component pages and passed it into the client `DataTable`. Next.js correctly rejects this at build time — functions can't be serialized across the server/client boundary. Fixed by extracting `ResourceTable` and a new `FeesTable` as `"use client"` components that own their column definitions internally, so only plain data (the resources/programs arrays) crosses the boundary.
+
+**Testing performed:**
+- `npm run build` — hit and fixed both issues above; final build succeeds with 43 total routes, including statically-generated dynamic pages for every program/news/training slug (`generateStaticParams`).
+- `npm run typecheck`, `npm run lint` — clean.
+- Restarted the dev server (had to free port 5000 first — a stale process from the prior session's `npm run dev` was still holding it; identified via `netstat` and stopped via PowerShell `Stop-Process`) and curl-tested all 26 new routes: all return 200. Verified two intentionally-invalid dynamic slugs (`/accreditation/programs/not-a-real-program`, `/resources/not-a-real-resource`) correctly 404 rather than crashing. Spot-checked real content strings on 3 pages (FAQs, Report Fraud, Governance) to confirm actual copy renders, not just a 200 status. No errors in the dev server log.
+
+**Known issues:** none new.
+
+**Not yet built:** `/verify` and `/verify/[reference]` (Milestone 6 — the platform's highest-trust feature), `/login`/`/register` and anything portal-related (Milestone 7+).
+
+---
+
+*(Milestone 6 onward will be appended here as they're built.)*
