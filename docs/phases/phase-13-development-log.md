@@ -66,4 +66,29 @@ Builds on Phases 1–12 (all approved). This log records each development milest
 
 ---
 
-*(Milestone 3 onward will be appended here as they're built.)*
+## Milestone 3 — Public Layout
+
+**Objective:** Build the real Header and Footer from Phase 5's spec, on top of the Milestone 2 component library, and wrap the public site in them via a route group.
+
+**What was built:**
+- `src/lib/nav.ts` — single source of truth for header mega-menu groups, the two simple header links (News, Contact), and the five footer link groups (Accreditation, About, Resources, Trust & Legal, Contact), derived from Phase 2's sitemap.
+- `src/components/layout/header.tsx` — sticky header, click-triggered (not hover-only, for touch/accessibility parity per Phase 5) mega menu with one-line descriptions per link, "Verify" rendered as a visually distinct single link rather than folded into a dropdown, closes on outside-click/Escape. Desktop right side: "Log In" text link + primary "Verify an Accreditation" button. Full-screen mobile nav (hamburger-triggered) with the same descriptive-link groups and Log In/Verify pinned at the bottom, per Phase 5's mobile spec.
+- `src/components/layout/footer.tsx` — five structured link columns on the dark `primary` surface (the deliberate large use of the dark colour per Phase 4), with Complaints & Appeals and Report Fraud kept as first-class links rather than nested under Contact. Collapses to an accordion per group on mobile.
+- `src/app/(public)/layout.tsx` — wraps `children` with Header + Footer; `src/app/(public)/page.tsx` — the placeholder homepage moved here (still a placeholder; real homepage is Milestone 4).
+
+**Bug caught and fixed:** the first draft of the header used `<Button asChild><Link>...</Link></Button>` to make button-styled links — `asChild` doesn't exist on this project's hand-built `Button` (no Radix Slot), and nesting a `Link` inside a `button` element is invalid HTML regardless. Fixed by exporting `buttonVariants` from `button.tsx` and applying the resulting classes directly to `Link` elements.
+
+**Testing performed:**
+- `npm run build`, `typecheck`, `lint` — all clean.
+- Dev server started; fetched `/` and confirmed the header and footer both render with the expected content (mega menu groups, "Verify an Accreditation" CTA present, footer's "Complaints & Appeals" and "Report Fraud" links present). Confirmed `/design-system-preview` still renders correctly (unaffected — it sits outside the `(public)` route group). Confirmed an unbuilt route (`/accreditation`) correctly 404s rather than crashing.
+- Noted unrelated `/api/oldclients/drive/sync/status` 404 requests appearing in the dev server log during testing — grepped the codebase and confirmed nothing in this project references that path; it's external network noise from something else in the environment probing the local port, not a bug in this app.
+
+**Known issues:** same two carried from Milestones 1–2 (postcss advisory; git — now resolved, see below).
+
+**Git:** initialized this milestone (previously flagged twice with no direct answer; treated the session-wide "continue → proceed with stated default" pattern as covering this too). First commit captured all Phase 1–12 docs plus Milestone 1–2 code; second commit captures Milestone 3.
+
+**Not yet built:** actual content for any nav destination (About, Accreditation, Resources, etc. all still 404) — those arrive in Milestones 4–6.
+
+---
+
+*(Milestone 4 onward will be appended here as they're built.)*

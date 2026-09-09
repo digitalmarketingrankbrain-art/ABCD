@@ -29,22 +29,22 @@ Reference: https://www.uafaccreditation.org/
 
 ## Current state (as of 2026-09-09)
 
-Phases 1–12 (all design phases) are approved. **Phase 13 (Development) is underway.** Milestone 1 (Project Setup) is approved; Milestone 2 (Design System component library) is built and delivered for approval. See `PROGRESS.md`'s Phase 13 Milestone Tracker for the full 17-milestone list and `docs/phases/phase-13-development-log.md` for full build detail per milestone.
+Phases 1–12 (all design phases) are approved. **Phase 13 (Development) is underway.** Milestones 1 (Project Setup) and 2 (Design System) are approved; Milestone 3 (Public Layout) is built and delivered for approval. See `PROGRESS.md`'s Phase 13 Milestone Tracker for the full 17-milestone list and `docs/phases/phase-13-development-log.md` for full build detail per milestone.
 
 **What exists in the repo right now:**
-- Working Next.js 15.5.25 (App Router) + TypeScript + Tailwind CSS v4 scaffold. Phase 4's design tokens wired as CSS variables in `src/app/globals.css`; fonts (Source Serif 4 / IBM Plex Sans / IBM Plex Mono) self-hosted via `next/font/google` in `src/app/layout.tsx`.
-- A full reusable UI component library in `src/components/ui/` (Button, StatusBadge, Card, Input, Select, FormField, Alert, Breadcrumbs, Pagination, EmptyState, ErrorState, Modal, Tabs, Accordion, Toast, DataTable) plus `src/lib/utils.ts`'s `cn()` helper. `ToastProvider` is wired into the root layout. **Every later milestone should import and reuse these rather than writing new one-off UI** — that's the entire point of building them now.
-- A temporary, non-public preview route at `/design-system-preview` showing every component together — useful for visual regression-checking as the design system evolves, should be removed or gated before production launch.
-- `src/app/page.tsx` is still a temporary placeholder, **not** the real homepage — that's Milestone 4.
-- No `(public)`/`(portal)` route groups exist yet — Milestone 3 (public layout: header/footer/nav) is next.
+- Working Next.js 15.5.25 (App Router) + TypeScript + Tailwind CSS v4 scaffold, Phase 4 design tokens as CSS variables, self-hosted fonts.
+- A full reusable UI component library in `src/components/ui/` (Button, StatusBadge, Card, Input, Select, FormField, Alert, Breadcrumbs, Pagination, EmptyState, ErrorState, Modal, Tabs, Accordion, Toast, DataTable) plus `src/lib/utils.ts`'s `cn()` helper. **Every later milestone should import and reuse these rather than writing new one-off UI.**
+- `src/components/layout/header.tsx` + `footer.tsx` — the real Header (mega menu, mobile nav, Verify as a distinct link) and Footer (five-column, Complaints & Appeals / Report Fraud kept non-buried) from Phase 5, driven by `src/lib/nav.ts`. Wired via `src/app/(public)/layout.tsx`.
+- `src/app/(public)/page.tsx` is still a placeholder, **not** the real homepage — that's Milestone 4. Every other nav destination (About, Accreditation, Resources, etc.) still 404s — Milestones 4–6 build that content.
+- A temporary, non-public preview route at `/design-system-preview` — remove or gate before production launch.
+- No `(portal)` route group yet — comes with auth (Milestone 7) and the portal milestones (8–10).
+- **Git is now initialized**, two commits so far (Phase 1–12 docs + Milestones 1–2; then Milestone 3). Standard git safety rules apply from here (never force-push, never skip hooks, new commits not amends, etc.) even though this is a solo/local repo so far.
 
-**Known issues carried forward:**
-1. One moderate/high `npm audit` finding (postcss, bundled inside Next's own internal build tooling) — no non-breaking fix; revisit at Phase 14 or when Next 16 is separately evaluated.
-2. **No git repository has been initialized.** Asked the user once (end of Milestone 1); they said "continue" without addressing it, so it's still not set up. Worth asking again before too much more code accumulates uncommitted.
+**Known issue carried forward:** one moderate/high `npm audit` finding (postcss, bundled inside Next's own internal build tooling) — no non-breaking fix; revisit at Phase 14 or when Next 16 is separately evaluated.
 
-Working name in use throughout the codebase: "Meridian Accreditation Board" (MAB) — still a placeholder; a name change at this point is a straightforward find-and-replace, not a rebuild.
+Working name in use throughout the codebase: "Meridian Accreditation Board" (MAB) — still a placeholder; a name change at this point is a straightforward find-and-replace.
 
-The user has been approving every phase/milestone via a bare "continue" without answering accumulated open questions (real org name/scopes/jurisdiction, vendor preferences, git setup — full list in `PROGRESS.md`). All have safe, reversible defaults in place. **How to resume development if this session ends:** read `PROGRESS.md`'s Phase 13 Milestone Tracker for the current milestone, then continue building the next Not-Started one in order — don't skip ahead. Later milestones (portals, verification, public pages) are meant to import components from `src/components/ui/` rather than reinvent them, so building out of order defeats the point of Milestone 2.
+The user has been approving every phase/milestone via a bare "continue" without answering accumulated open questions (real org name/scopes/jurisdiction, vendor preferences — full list in `PROGRESS.md`). All have safe, reversible defaults in place, and that same "continue = proceed with the stated default" pattern was used to decide the git-init question after it was flagged twice. **How to resume development if this session ends:** read `PROGRESS.md`'s Phase 13 Milestone Tracker for the current milestone, then continue building the next Not-Started one in order — don't skip ahead, since later milestones are meant to import from `src/components/ui/` and `src/components/layout/` rather than reinvent them.
 
 ## How to resume this project in a new session
 
