@@ -64,6 +64,8 @@ model User {
   applicationStageChanges      ApplicationStageHistory[]
   accreditationStatusChanges   AccreditationStatusHistory[]
   assignmentsMade              Assignment[]                 @relation("AssignmentAssignedBy")
+  nonConformitiesRaised        NonConformity[]              @relation("NcRaisedBy")
+  nonConformitiesLed           NonConformity[]              @relation("NcTeamLead")
 
   @@map("users")
 }
@@ -92,6 +94,10 @@ model OrganisationMembership {
   userId         String         @map("user_id")
   user           User           @relation(fields: [userId], references: [id])
   membershipRole MembershipRole @map("membership_role")
+  /**
+   * Display title shown on the CB's Team Members list, e.g. "Certification Manager" — separate from the PRIMARY_CONTACT/MEMBER access-level enum above.
+   */
+  title          String?
 
   @@unique([organisationId, userId])
   @@map("organisation_memberships")
@@ -107,12 +113,73 @@ model Organisation {
   address            String?
   createdAt          DateTime @default(now()) @map("created_at")
 
+  // CAB Info — Basic Details (Milestone 18: CB Dashboard)
+  shortCode            String? @map("short_code")
+  cabNumber            String? @unique @map("cab_number")
+  website              String?
+  director             String?
+  certificationManager String? @map("certification_manager")
+  addressLine2         String? @map("address_line_2")
+  city                 String?
+  state                String?
+  postalCode           String? @map("postal_code")
+  country              String?
+  contactFirstName     String? @map("contact_first_name")
+  contactLastName      String? @map("contact_last_name")
+  contactEmail         String? @map("contact_email")
+  contactPhone         String? @map("contact_phone")
+
   memberships          OrganisationMembership[]
   applications         Application[]
   accreditationRecords AccreditationRecord[]
   invoices             Invoice[]
+  locations            OrganisationLocation[]
+  countries            OrganisationCountry[]
+  nonConformities      NonConformity[]
 
   @@map("organisations")
+}
+
+enum LocationType {
+  HEAD_OFFICE
+  KEY_LOCATION
+  OTHER
+}
+
+model OrganisationLocation {
+  id             String       @id @default(cuid())
+  organisationId String       @map("organisation_id")
+  organisation   Organisation @relation(fields: [organisationId], references: [id])
+  contactPerson  String?      @map("contact_person")
+  mobile         String?
+  address        String
+  city           String?
+  state          String?
+  country        String?
+  postalCode     String?      @map("postal_code")
+  locationType   LocationType @default(OTHER) @map("location_type")
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  @@map("organisation_locations")
+}
+
+enum CountryStatus {
+  APPLIED
+  APPROVED
+}
+
+model OrganisationCountry {
+  id             String        @id @default(cuid())
+  organisationId String        @map("organisation_id")
+  organisation   Organisation  @relation(fields: [organisationId], references: [id])
+  countryCode    String        @map("country_code")
+  countryName    String        @map("country_name")
+  status         CountryStatus @default(APPLIED)
+  appliedAt      DateTime      @default(now()) @map("applied_at")
+  approvedAt     DateTime?     @map("approved_at")
+
+  @@unique([organisationId, countryCode, status])
+  @@map("organisation_countries")
 }
 
 model Program {
@@ -171,23 +238,37 @@ enum ApplicationStage {
   DECLINED
 }
 
+enum ApplicationType {
+  INITIAL_ACCREDITATION
+  SCOPE_EXTENSION
+}
+
 model Application {
-  id              String           @id @default(cuid())
-  referenceNumber String           @unique @map("reference_number")
-  organisationId  String           @map("organisation_id")
-  organisation    Organisation     @relation(fields: [organisationId], references: [id])
-  applicantUserId String           @map("applicant_user_id")
-  applicant       User             @relation("ApplicantApplications", fields: [applicantUserId], references: [id])
-  programId       String           @map("program_id")
-  program         Program          @relation(fields: [programId], references: [id])
-  stage           ApplicationStage @default(DRAFT)
-  infoRequested   Boolean          @default(false) @map("info_requested")
-  infoRequestNote String?          @map("info_request_note")
-  assessorUserId  String?          @map("assessor_user_id")
-  assessor        User?            @relation("AssessorAssignedApplications", fields: [assessorUserId], references: [id])
-  submittedAt     DateTime?        @map("submitted_at")
-  createdAt       DateTime         @default(now()) @map("created_at")
-  updatedAt       DateTime         @updatedAt @map("updated_at")
+  id                   String           @id @default(cuid())
+  referenceNumber      String           @unique @map("reference_number")
+  organisationId       String           @map("organisation_id")
+  organisation         Organisation     @relation(fields: [organisationId], references: [id])
+  applicantUserId      String           @map("applicant_user_id")
+  applicant            User             @relation("ApplicantApplications", fields: [applicantUserId], references: [id])
+  programId            String           @map("program_id")
+  program              Program          @relation(fields: [programId], references: [id])
+  applicationType      ApplicationType  @default(INITIAL_ACCREDITATION) @map("application_type")
+  /**
+   * Extra scheme slugs selected on a Scope Extension application, beyond the primary `programId`.
+   */
+  additionalScopeSlugs String[]         @default([]) @map("additional_scope_slugs")
+  /**
+   * In-progress wizard answers (existing-accreditation info, etc.) for a DRAFT Scope Extension application, cleared on submit.
+   */
+  draftData            Json?            @map("draft_data")
+  stage                ApplicationStage @default(DRAFT)
+  infoRequested        Boolean          @default(false) @map("info_requested")
+  infoRequestNote      String?          @map("info_request_note")
+  assessorUserId       String?          @map("assessor_user_id")
+  assessor             User?            @relation("AssessorAssignedApplications", fields: [assessorUserId], references: [id])
+  submittedAt          DateTime?        @map("submitted_at")
+  createdAt            DateTime         @default(now()) @map("created_at")
+  updatedAt            DateTime         @updatedAt @map("updated_at")
 
   stageHistory        ApplicationStageHistory[]
   decision            Decision?
@@ -294,21 +375,37 @@ enum AssignmentStatus {
   COMPLETED
 }
 
-model Assignment {
-  id            String           @id @default(cuid())
-  applicationId String           @map("application_id")
-  application   Application      @relation(fields: [applicationId], references: [id])
-  assessorId    String           @map("assessor_id")
-  assessor      Assessor         @relation(fields: [assessorId], references: [id])
-  status        AssignmentStatus @default(PENDING)
-  assignedById  String           @map("assigned_by_user_id")
-  assignedBy    User             @relation("AssignmentAssignedBy", fields: [assignedById], references: [id])
-  assignedAt    DateTime         @default(now()) @map("assigned_at")
-  respondedAt   DateTime?        @map("responded_at")
-  declineReason String?          @map("decline_reason")
-  dueDate       DateTime         @map("due_date")
+enum AssessmentType {
+  WITNESS_ASSESSMENT
+  OFFICE_ASSESSMENT
+  DOCUMENT_REVIEW
+}
 
-  assessment Assessment?
+model Assignment {
+  id               String           @id @default(cuid())
+  applicationId    String           @map("application_id")
+  application      Application      @relation(fields: [applicationId], references: [id])
+  assessorId       String           @map("assessor_id")
+  assessor         Assessor         @relation(fields: [assessorId], references: [id])
+  status           AssignmentStatus @default(PENDING)
+  assignedById     String           @map("assigned_by_user_id")
+  assignedBy       User             @relation("AssignmentAssignedBy", fields: [assignedById], references: [id])
+  assignedAt       DateTime         @default(now()) @map("assigned_at")
+  respondedAt      DateTime?        @map("responded_at")
+  declineReason    String?          @map("decline_reason")
+  dueDate          DateTime         @map("due_date")
+  /**
+   * CB-facing assessment reference (e.g. "26-133-707") and type — surfaced on the CB Dashboard's Assessments tab.
+   */
+  assessmentNumber String?          @unique @map("assessment_number")
+  assessmentType   AssessmentType   @default(WITNESS_ASSESSMENT) @map("assessment_type")
+  /**
+   * Scheme slugs this assessment event covers — an assessment can span multiple schemes at once.
+   */
+  schemeSlugs      String[]         @default([]) @map("scheme_slugs")
+
+  assessment      Assessment?
+  nonConformities NonConformity[]
 
   @@map("assignments")
 }
@@ -352,6 +449,43 @@ model AssessmentFinding {
   @@map("assessment_findings")
 }
 
+enum NcSeverity {
+  MINOR
+  MAJOR
+  OBSERVATION
+}
+
+enum NcStatus {
+  OPEN
+  CLOSED
+}
+
+/**
+ * Non-conformity raised against a CB during an assessment — CB Dashboard's "NC" tab.
+ */
+model NonConformity {
+  id                String       @id @default(cuid())
+  ncNumber          String       @unique @map("nc_number")
+  organisationId    String       @map("organisation_id")
+  organisation      Organisation @relation(fields: [organisationId], references: [id])
+  assignmentId      String?      @map("assignment_id")
+  assignment        Assignment?  @relation(fields: [assignmentId], references: [id])
+  category          NcSeverity
+  standardReference String       @map("standard_reference")
+  status            NcStatus     @default(OPEN)
+  progressStage     String       @map("progress_stage")
+  raisedById        String?      @map("raised_by_user_id")
+  raisedBy          User?        @relation("NcRaisedBy", fields: [raisedById], references: [id])
+  teamLeadId        String?      @map("team_lead_user_id")
+  teamLead          User?        @relation("NcTeamLead", fields: [teamLeadId], references: [id])
+  finding           String
+  correctiveAction  String?      @map("corrective_action")
+  raisedAt          DateTime     @default(now()) @map("raised_at")
+  closedAt          DateTime?    @map("closed_at")
+
+  @@map("non_conformities")
+}
+
 // --- 5. Documents ---
 
 enum DocumentOwnerType {
@@ -366,6 +500,10 @@ enum DocumentKind {
   EVIDENCE
   CREDENTIAL
   CERTIFICATE
+  /**
+   * General CB-uploaded file not tied to a specific application checklist item — the CB Dashboard's org-level Documents tab.
+   */
+  GENERAL
 }
 
 model Document {
@@ -411,6 +549,22 @@ model DocumentVersion {
 
   @@unique([documentId, versionNumber])
   @@map("document_versions")
+}
+
+/**
+ * AB-issued reference material (checklists/forms/guidance) visible to every CB — the "UAF"/AB tab under CB Documents. Not organisation-scoped.
+ */
+model ReferenceDocument {
+  id          String   @id @default(cuid())
+  description String
+  filename    String
+  storageKey  String   @map("storage_key")
+  mimeType    String   @map("mime_type")
+  sizeBytes   Int      @map("size_bytes")
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("reference_documents")
 }
 
 // --- 6. Accreditation & Verification ---

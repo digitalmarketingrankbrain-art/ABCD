@@ -16,12 +16,23 @@ import { Button } from "@/components/ui/button";
 import { STAGE_LABEL } from "@/lib/portal/applicant-data";
 import { getApplicationsForUser, getInvoicesForUser } from "@/lib/portal/applicant-data";
 import { findByReferenceAdmin } from "@/lib/verification-records";
+import { getCertificationSummary } from "@/lib/portal/cb-dashboard-data";
+import { getNonConformitiesForUser } from "@/lib/portal/nc-data";
+import { getAssessmentsForUser } from "@/lib/portal/cb-assessments-data";
 
 export default async function ApplicantDashboardPage() {
   const session = await auth();
   const userId = session!.user.id;
-  const [apps, userInvoices] = await Promise.all([getApplicationsForUser(userId), getInvoicesForUser(userId)]);
+  const [apps, userInvoices, certSummary, nonConformities, assessments] = await Promise.all([
+    getApplicationsForUser(userId),
+    getInvoicesForUser(userId),
+    getCertificationSummary(userId),
+    getNonConformitiesForUser(userId),
+    getAssessmentsForUser(userId),
+  ]);
   const accreditation = findByReferenceAdmin("MAB-2026-00417"); // demo tie-in to the applicant's own org
+  const openNcs = nonConformities.filter((n) => n.status === "OPEN");
+  const upcomingAssessments = assessments.filter((a) => a.status === "SCHEDULED" || a.status === "IN_PROGRESS");
 
   const requiredActions = [
     ...apps
@@ -36,6 +47,10 @@ export default async function ApplicantDashboardPage() {
         text: `Invoice ${i.invoiceNumber} is due ${i.dueAt}`,
         href: `/portal/applicant/invoices/${i.id}`,
       })),
+    ...openNcs.map((n) => ({
+      text: `NC ${n.ncNumber} (${n.standardReference}) is still open`,
+      href: `/portal/applicant/profile/nc/${n.id}`,
+    })),
   ];
 
   if (apps.length === 0) {
@@ -141,6 +156,23 @@ export default async function ApplicantDashboardPage() {
 
         <Card>
           <CardHeader>
+            <ShieldCheck className="mb-1 size-5 text-secondary" strokeWidth={1.5} />
+            <CardTitle>Assessments</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-text-muted">
+              {upcomingAssessments.length === 0 ? "Nothing scheduled." : `${upcomingAssessments.length} scheduled or in progress`}
+            </p>
+          </CardContent>
+          <CardFooter>
+            <Link href="/portal/applicant/profile?tab=assessments" className="text-sm font-medium text-secondary hover:underline">
+              View all →
+            </Link>
+          </CardFooter>
+        </Card>
+
+        <Card>
+          <CardHeader>
             <Receipt className="mb-1 size-5 text-secondary" strokeWidth={1.5} />
             <CardTitle>Payments</CardTitle>
           </CardHeader>
@@ -184,6 +216,74 @@ export default async function ApplicantDashboardPage() {
           </Card>
         )}
       </div>
+
+      {certSummary.total > 0 && (
+        <div className="mt-8">
+          <h2 className="font-display text-lg font-semibold text-text">Certification Status</h2>
+
+          <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-5">
+            {[
+              { label: "Total", value: certSummary.total },
+              { label: "Active", value: certSummary.active },
+              { label: "Suspended", value: certSummary.suspended },
+              { label: "Withdrawn", value: certSummary.withdrawn },
+              { label: "Expired", value: certSummary.expired },
+            ].map((s) => (
+              <div key={s.label} className="rounded-lg border border-border bg-surface p-4 text-center">
+                <p className="font-mono text-2xl font-semibold text-text">{s.value}</p>
+                <p className="mt-1 font-sans text-xs uppercase tracking-[0.02em] text-text-muted">{s.label}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div className="rounded-lg border border-border">
+              <div className="border-b border-border bg-background-portal px-4 py-3">
+                <h3 className="font-sans text-sm font-semibold text-text">Certificate List</h3>
+              </div>
+              <table className="w-full border-collapse text-sm">
+                <thead>
+                  <tr>
+                    {["Program", "Active", "Suspended", "Withdrawn"].map((h, i) => (
+                      <th key={h} className={`border-b border-border px-4 py-2 font-sans text-xs font-medium uppercase tracking-[0.02em] text-text-muted ${i === 0 ? "text-left" : "text-right"}`}>
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {certSummary.byProgram.map((p) => (
+                    <tr key={p.programName} className="border-b border-border last:border-b-0">
+                      <td className="px-4 py-2 text-text">{p.programName}</td>
+                      <td className="px-4 py-2 text-right font-mono text-text">{p.active}</td>
+                      <td className="px-4 py-2 text-right font-mono text-text">{p.suspended}</td>
+                      <td className="px-4 py-2 text-right font-mono text-text">{p.withdrawn}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="rounded-lg border border-border">
+              <div className="border-b border-border bg-background-portal px-4 py-3">
+                <h3 className="font-sans text-sm font-semibold text-text">Certificates Expiring in Next 6 Months</h3>
+              </div>
+              {certSummary.expiringSoon.length === 0 ? (
+                <p className="px-4 py-6 text-center font-sans text-sm text-text-muted">Nothing expiring soon.</p>
+              ) : (
+                <ul className="divide-y divide-border">
+                  {certSummary.expiringSoon.map((c) => (
+                    <li key={c.accreditationNumber} className="flex items-center justify-between px-4 py-2.5">
+                      <span className="font-sans text-sm text-text">{c.programName}</span>
+                      <span className="font-mono text-xs text-text-muted">{c.expiryDate}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {requiredActions.length === 0 && (
         <p className="mt-8 flex items-center gap-2 font-sans text-sm text-text-muted">

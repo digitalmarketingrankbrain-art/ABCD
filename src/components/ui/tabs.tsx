@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 export interface TabItem {
@@ -13,14 +14,46 @@ export interface TabsProps {
   items: TabItem[];
   defaultValue?: string;
   className?: string;
+  /** When set, the tab whose value matches this URL query param (e.g. ?tab=invoices) opens initially — lets other pages deep-link to a specific tab. */
+  queryParam?: string;
+}
+
+/**
+ * `useSearchParams` is only invoked (via `QuerySync` below, inside its own
+ * Suspense boundary) when `queryParam` is actually passed — most `Tabs`
+ * usages don't set it, and keeping the hook out of their render path avoids
+ * forcing every page that uses Tabs to add a Suspense boundary just to stay
+ * statically prerenderable.
+ */
+function QuerySync({
+  queryParam,
+  values,
+  onResolve,
+}: {
+  queryParam: string;
+  values: string[];
+  onResolve: (value: string) => void;
+}) {
+  const searchParams = useSearchParams();
+  const fromQuery = searchParams.get(queryParam);
+  React.useEffect(() => {
+    if (fromQuery && values.includes(fromQuery)) onResolve(fromQuery);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fromQuery]);
+  return null;
 }
 
 /** Plain underline-style tabs, not pill/button tabs — Phase 4. */
-function Tabs({ items, defaultValue, className }: TabsProps) {
+function Tabs({ items, defaultValue, className, queryParam }: TabsProps) {
   const [active, setActive] = React.useState(defaultValue ?? items[0]?.value);
 
   return (
     <div className={className}>
+      {queryParam && (
+        <React.Suspense fallback={null}>
+          <QuerySync queryParam={queryParam} values={items.map((i) => i.value)} onResolve={setActive} />
+        </React.Suspense>
+      )}
       <div role="tablist" className="flex gap-6 border-b border-border">
         {items.map((item) => {
           const isActive = item.value === active;

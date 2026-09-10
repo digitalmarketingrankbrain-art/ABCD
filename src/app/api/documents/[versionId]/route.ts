@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { getDocumentVersionForDownload } from "@/lib/portal/document-data";
 import { readDocumentFile, documentFileExists } from "@/lib/storage";
 import { getApplicationByIdAdmin } from "@/lib/portal/applicant-data";
+import { getUserOrganisationId } from "@/lib/auth/store";
 
 /**
  * Never a public URL — Phase 1's document-security requirement. This route
@@ -52,6 +53,13 @@ async function isAuthorizedForDocument(
   ownerType: string,
 ): Promise<boolean> {
   if (role === "ADMIN") return true;
+
+  if (ownerType === "ORGANISATION") {
+    if (role !== "APPLICANT") return false;
+    const organisationId = await getUserOrganisationId(userId);
+    return organisationId === ownerId;
+  }
+
   if (ownerType !== "APPLICATION") return false;
 
   const application = await getApplicationByIdAdmin(ownerId);

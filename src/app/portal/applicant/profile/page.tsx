@@ -1,35 +1,131 @@
 import { auth } from "@/auth";
-import { FormField } from "@/components/ui/form-field";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { findUserById, getUserOrganisationName } from "@/lib/auth/store";
+import { BadgeCheck } from "lucide-react";
+import { Tabs } from "@/components/ui/tabs";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { findUserById, getUserOrganisationId } from "@/lib/auth/store";
+import {
+  getCabDetails,
+  getAppliedSchemes,
+  getAwardedSchemes,
+  getLocations,
+  getCountryLists,
+  getTeamMembers,
+} from "@/lib/portal/cab-info-data";
+import { getInvoicesForUser } from "@/lib/portal/applicant-data";
+import { getAssessmentsForUser } from "@/lib/portal/cb-assessments-data";
+import { getNonConformitiesForUser } from "@/lib/portal/nc-data";
+import { getDocumentsForOwner } from "@/lib/portal/document-data";
+import { getReferenceDocuments } from "@/lib/portal/reference-documents";
+import { CabOverview } from "@/components/portal/cab-overview";
+import { CabInfoTabs } from "@/components/portal/cab-info-tabs";
+import { InvoicesTable } from "@/components/portal/invoices-table";
+import { CbAssessmentsTable } from "@/components/portal/cb-assessments-table";
+import { NcTable } from "@/components/portal/nc-table";
+import { CbDocumentsTabs, type OrgDocumentEntry } from "@/components/portal/cb-documents-tabs";
 
 export default async function ProfilePage() {
   const session = await auth();
-  const user = await findUserById(session!.user.id);
-  const organisationName = await getUserOrganisationName(session!.user.id);
+  const userId = session!.user.id;
+
+  const [user, organisationId, details, appliedSchemes, awardedSchemes, locations, countryLists, teamMembers, invoices, assessments, nonConformities, referenceDocuments] =
+    await Promise.all([
+      findUserById(userId),
+      getUserOrganisationId(userId),
+      getCabDetails(userId),
+      getAppliedSchemes(userId),
+      getAwardedSchemes(userId),
+      getLocations(userId),
+      getCountryLists(userId),
+      getTeamMembers(userId),
+      getInvoicesForUser(userId),
+      getAssessmentsForUser(userId),
+      getNonConformitiesForUser(userId),
+      getReferenceDocuments(),
+    ]);
+
+  const orgDocumentRows = organisationId ? await getDocumentsForOwner("ORGANISATION", organisationId) : [];
+  const orgDocuments: OrgDocumentEntry[] = orgDocumentRows
+    .filter((d) => d.currentVersion)
+    .map((d) => ({
+      id: d.id,
+      filename: d.currentVersion!.filename,
+      sizeBytes: d.currentVersion!.sizeBytes,
+      uploadedAt: d.currentVersion!.uploadedAt.toISOString().slice(0, 10),
+      currentVersionId: d.currentVersion!.id,
+    }));
+
+  const isApproved = awardedSchemes.length > 0;
 
   return (
-    <div className="max-w-md px-6 py-8">
-      <h1 className="font-display text-2xl font-semibold text-text">Profile</h1>
-      <form className="mt-6 flex flex-col gap-5">
-        <FormField label="Organisation name" htmlFor="org">
-          <Input id="org" defaultValue={organisationName} disabled />
-        </FormField>
-        <FormField label="Your name" htmlFor="name">
-          <Input id="name" defaultValue={user?.name} disabled />
-        </FormField>
-        <FormField label="Email" htmlFor="email">
-          <Input id="email" defaultValue={user?.email} disabled />
-        </FormField>
-        <p className="font-sans text-xs text-text-muted">
-          Editing your profile isn&apos;t available yet — contact an administrator if you need to update
-          this information.
-        </p>
-        <Button variant="secondary" disabled className="self-start">
-          Save changes
-        </Button>
-      </form>
+    <div className="px-6 py-8">
+      <div className="rounded-lg border border-border bg-surface p-6">
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="font-display text-2xl font-semibold text-text">{details.displayName}</h1>
+          {isApproved && <BadgeCheck className="size-5 text-accent" strokeWidth={1.75} />}
+        </div>
+        <p className="mt-1 font-sans text-sm text-text-muted">{user?.email}</p>
+        <div className="mt-3">
+          <StatusBadge
+            tone={isApproved ? "success" : "info"}
+            label={isApproved ? "Approved" : "Pending Approval"}
+            size="sm"
+          />
+        </div>
+      </div>
+
+      <div className="mt-6">
+        <Tabs
+          queryParam="tab"
+          items={[
+            {
+              value: "overview",
+              label: "Overview",
+              content: (
+                <CabOverview
+                  details={details}
+                  appliedSchemes={appliedSchemes}
+                  awardedSchemes={awardedSchemes}
+                  appliedCountries={countryLists.applied}
+                  approvedCountries={countryLists.approved}
+                />
+              ),
+            },
+            {
+              value: "documents",
+              label: "Documents",
+              content: <CbDocumentsTabs orgDocuments={orgDocuments} referenceDocuments={referenceDocuments} />,
+            },
+            {
+              value: "cab-info",
+              label: "CAB Info",
+              content: (
+                <CabInfoTabs
+                  details={details}
+                  locations={locations}
+                  appliedCountries={countryLists.applied}
+                  approvedCountries={countryLists.approved}
+                  teamMembers={teamMembers}
+                />
+              ),
+            },
+            {
+              value: "invoices",
+              label: "Invoices",
+              content: <InvoicesTable invoices={invoices} />,
+            },
+            {
+              value: "assessments",
+              label: "Assessments",
+              content: <CbAssessmentsTable items={assessments} basePath="/portal/applicant/profile/assessments" />,
+            },
+            {
+              value: "nc",
+              label: "NC",
+              content: <NcTable items={nonConformities} basePath="/portal/applicant/profile/nc" />,
+            },
+          ]}
+        />
+      </div>
     </div>
   );
 }

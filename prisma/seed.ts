@@ -169,11 +169,72 @@ async function main() {
       data: { legalName: "Northfield Testing Laboratories", displayName: "Northfield Testing Laboratories" },
     });
   }
+  // CAB Info — Basic Details (Milestone 18: CB Dashboard). Safe to re-run: always sets the same demo values.
+  organisation = await prisma.organisation.update({
+    where: { id: organisation.id },
+    data: {
+      shortCode: "NTL",
+      cabNumber: "133",
+      website: "https://northfieldtesting.example.com/",
+      director: "R. K. Ashford",
+      certificationManager: "Priya Menon",
+      address: "1450 Industrial Parkway",
+      addressLine2: "Suite 220",
+      city: "Northfield",
+      state: "Minnesota",
+      postalCode: "55057",
+      country: "US",
+      contactFirstName: "Priya",
+      contactLastName: "Menon",
+      contactEmail: "info@northfieldtesting.example.com",
+      contactPhone: "+1 (507) 555-0148",
+    },
+  });
   await prisma.organisationMembership.upsert({
     where: { organisationId_userId: { organisationId: organisation.id, userId: applicantUser.id } },
-    update: {},
-    create: { organisationId: organisation.id, userId: applicantUser.id, membershipRole: "PRIMARY_CONTACT" },
+    update: { title: "Certification Manager" },
+    create: { organisationId: organisation.id, userId: applicantUser.id, membershipRole: "PRIMARY_CONTACT", title: "Certification Manager" },
   });
+
+  console.log("Seeding CAB locations + countries...");
+  if ((await prisma.organisationLocation.count({ where: { organisationId: organisation.id } })) === 0) {
+    await prisma.organisationLocation.createMany({
+      data: [
+        {
+          organisationId: organisation.id,
+          contactPerson: "Priya Menon",
+          mobile: "+1 (507) 555-0148",
+          address: "1450 Industrial Parkway, Suite 220",
+          city: "Northfield",
+          state: "Minnesota",
+          country: "US",
+          postalCode: "55057",
+          locationType: "HEAD_OFFICE",
+        },
+        {
+          organisationId: organisation.id,
+          contactPerson: "David Okafor",
+          mobile: "+1 (507) 555-0177",
+          address: "22 Riverside Way",
+          city: "Faribault",
+          state: "Minnesota",
+          country: "US",
+          postalCode: "55021",
+          locationType: "OTHER",
+        },
+      ],
+    });
+  }
+  if ((await prisma.organisationCountry.count({ where: { organisationId: organisation.id } })) === 0) {
+    await prisma.organisationCountry.createMany({
+      data: [
+        { organisationId: organisation.id, countryCode: "US", countryName: "United States", status: "APPLIED" },
+        { organisationId: organisation.id, countryCode: "CA", countryName: "Canada", status: "APPLIED" },
+        { organisationId: organisation.id, countryCode: "MX", countryName: "Mexico", status: "APPLIED" },
+        { organisationId: organisation.id, countryCode: "US", countryName: "United States", status: "APPROVED", approvedAt: new Date("2026-01-14") },
+      ],
+    });
+  }
 
   console.log("Seeding assessor competence...");
   await prisma.assessorCompetence.createMany({
@@ -308,6 +369,7 @@ async function main() {
 
   console.log("Seeding assignment + assessment...");
   let assignment = await prisma.assignment.findFirst({ where: { applicationId: application.id, assessorId: assessor.id } });
+  const isNewAssignment = !assignment;
   if (!assignment) {
     assignment = await prisma.assignment.create({
       data: {
@@ -318,8 +380,22 @@ async function main() {
         assignedAt: new Date("2026-06-01"),
         respondedAt: new Date("2026-06-02"),
         dueDate: new Date("2026-09-30"),
+        assessmentNumber: "26-133-661",
+        assessmentType: "OFFICE_ASSESSMENT",
+        schemeSlugs: ["inspection-bodies"],
       },
     });
+  }
+  // Backfills CB-facing assessment fields (Milestone 18) onto an assignment
+  // created by an earlier seed run, before these columns existed — same
+  // "nested inside an existing guard" idempotency gap flagged in Milestone 12.
+  if (!isNewAssignment && !assignment.assessmentNumber) {
+    assignment = await prisma.assignment.update({
+      where: { id: assignment.id },
+      data: { assessmentNumber: "26-133-661", assessmentType: "OFFICE_ASSESSMENT", schemeSlugs: ["inspection-bodies"] },
+    });
+  }
+  if (isNewAssignment) {
     const assessment = await prisma.assessment.create({
       data: { assignmentId: assignment.id, startedAt: new Date("2026-06-02") },
     });
@@ -430,6 +506,65 @@ async function main() {
     const hasLineItem = (await prisma.invoiceLineItem.count({ where: { invoiceId: invoice.id } })) > 0;
     if (!hasLineItem) {
       await prisma.invoiceLineItem.create({ data: { invoiceId: invoice.id, description, amount: invoice.amount } });
+    }
+  }
+
+  console.log("Seeding non-conformities...");
+  if ((await prisma.nonConformity.count({ where: { organisationId: organisation.id } })) === 0) {
+    await prisma.nonConformity.createMany({
+      data: [
+        {
+          ncNumber: "1/26-133-661",
+          organisationId: organisation.id,
+          assignmentId: assignment.id,
+          category: "MINOR",
+          standardReference: "ISO/IEC 17021-1:2015 clause 9.1.2.1(d)",
+          status: "CLOSED",
+          progressStage: "Closed",
+          raisedById: assessorUser.id,
+          teamLeadId: assessorUser.id,
+          finding: "Internal audit schedule did not cover all management system clauses within the planned 12-month cycle.",
+          correctiveAction: "Revised internal audit schedule submitted and verified covering all clauses.",
+          raisedAt: new Date("2026-05-20"),
+          closedAt: new Date("2026-06-10"),
+        },
+        {
+          ncNumber: "2/26-133-661",
+          organisationId: organisation.id,
+          assignmentId: assignment.id,
+          category: "OBSERVATION",
+          standardReference: "ISO/IEC 17021-1:2015 clause 9.4.6",
+          status: "OPEN",
+          progressStage: "Corrective action under review",
+          raisedById: assessorUser.id,
+          teamLeadId: assessorUser.id,
+          finding: "Records of assessor competence evaluation were not consistently dated.",
+          raisedAt: new Date("2026-07-13"),
+        },
+      ],
+    });
+  }
+
+  console.log("Seeding AB reference documents...");
+  if ((await prisma.referenceDocument.count()) === 0) {
+    const refDocs = [
+      { description: "Other AB Report Details", filename: "Other_AB_reports_details.xlsx", content: "Demo AB report details template." },
+      { description: "Checklist — ISO/IEC 17021-1:2015", filename: "MAB-F-031A_V00_Checklist_for_ISO-IEC_17021-1_2015.docx", content: "Demo checklist content." },
+      { description: "Checklist — Testing & Calibration Laboratories", filename: "MAB-F-031A_V00_Checklist_Testing_Calibration_Labs.docx", content: "Demo checklist content." },
+    ];
+    let sortOrder = 0;
+    for (const d of refDocs) {
+      const { storageKey, sizeBytes } = await seedDemoFile(`seed-refdoc-${d.filename}`, d.content);
+      await prisma.referenceDocument.create({
+        data: {
+          description: d.description,
+          filename: d.filename,
+          storageKey,
+          mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          sizeBytes,
+          sortOrder: sortOrder++,
+        },
+      });
     }
   }
 
