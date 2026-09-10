@@ -28,8 +28,9 @@ export default async function AdminAssessorDetailPage({
   const user = await findUserById(id);
   if (!user || user.primaryRole !== "ASSESSOR") notFound();
 
-  const assignments = getAllAssignments().filter((a) => a.assessorUserId === id);
-  const competence = getAllCompetence().filter((c) => c.assessorUserId === id);
+  const [allAssignments, allCompetence] = await Promise.all([getAllAssignments(), getAllCompetence()]);
+  const assignments = allAssignments.filter((a) => a.assessorUserId === id);
+  const competence = allCompetence.filter((c) => c.assessorUserId === id);
 
   return (
     <div className="px-6 py-8">

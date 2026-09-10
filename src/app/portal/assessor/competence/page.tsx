@@ -15,7 +15,7 @@ const STATUS_STYLE: Record<string, { tone: StatusTone; label: string }> = {
  */
 export default async function CompetencePage() {
   const session = await auth();
-  const entries = getCompetenceForUser(session!.user.id);
+  const entries = await getCompetenceForUser(session!.user.id);
 
   return (
     <div className="px-6 py-8">

@@ -4,7 +4,7 @@ import { getBlackoutsForUser } from "@/lib/portal/assessor-data";
 
 export default async function AvailabilityPage() {
   const session = await auth();
-  const blackouts = getBlackoutsForUser(session!.user.id);
+  const blackouts = await getBlackoutsForUser(session!.user.id);
 
   return (
     <div className="px-6 py-8">

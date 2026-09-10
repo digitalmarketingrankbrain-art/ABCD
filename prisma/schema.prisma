@@ -352,6 +352,7 @@ model AssessorCompetence {
   expiryDate      DateTime?        @map("expiry_date")
   status          CompetenceStatus @default(CURRENT)
 
+  @@unique([assessorId, programId])
   @@map("assessor_competence")
 }
 

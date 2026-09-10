@@ -259,6 +259,13 @@ async function main() {
     skipDuplicates: true,
   });
 
+  console.log("Seeding assessor availability...");
+  if ((await prisma.assessorAvailability.count({ where: { assessorId: assessor.id } })) === 0) {
+    await prisma.assessorAvailability.create({
+      data: { assessorId: assessor.id, startDate: new Date("2026-10-05"), endDate: new Date("2026-10-19"), note: "Annual leave" },
+    });
+  }
+
   console.log("Seeding application...");
   let application = await prisma.application.findUnique({ where: { referenceNumber: "MAB-APP-2026-0091" } });
   if (!application) {

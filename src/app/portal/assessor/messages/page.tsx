@@ -6,7 +6,7 @@ import { getMessagesForApplicationByReference } from "@/lib/portal/applicant-dat
 
 export default async function AssessorMessagesIndexPage() {
   const session = await auth();
-  const myAssignments = getAssignmentsForUser(session!.user.id);
+  const myAssignments = await getAssignmentsForUser(session!.user.id);
   const threads = (
     await Promise.all(
       myAssignments

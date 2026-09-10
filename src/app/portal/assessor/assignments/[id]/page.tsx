@@ -32,7 +32,7 @@ export default async function AssignmentDetailPage({
 }) {
   const { id } = await params;
   const session = await auth();
-  const assignment = getAssignmentById(id, session!.user.id);
+  const assignment = await getAssignmentById(id, session!.user.id);
   if (!assignment) notFound();
 
   const messages = assignment.linkedApplicationId

@@ -13,8 +13,7 @@ export interface AssessorSummary {
 
 export async function getAssessorSummaries(): Promise<AssessorSummary[]> {
   const assessorUsers = await getUsersByRoleSafe("ASSESSOR");
-  const allAssignments = getAllAssignments();
-  const allCompetence = getAllCompetence();
+  const [allAssignments, allCompetence] = await Promise.all([getAllAssignments(), getAllCompetence()]);
   return assessorUsers.map((u) => ({
     userId: u.id,
     name: u.name,

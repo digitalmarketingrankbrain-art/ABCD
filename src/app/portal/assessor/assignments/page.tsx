@@ -5,7 +5,7 @@ import { getAssignmentsForUser } from "@/lib/portal/assessor-data";
 
 export default async function AssignmentsListPage() {
   const session = await auth();
-  const myAssignments = getAssignmentsForUser(session!.user.id);
+  const myAssignments = await getAssignmentsForUser(session!.user.id);
 
   return (
     <div className="px-6 py-8">

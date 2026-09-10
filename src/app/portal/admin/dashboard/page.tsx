@@ -10,7 +10,7 @@ const today = new Date().toISOString().slice(0, 10);
 export default async function AdminDashboardPage() {
   const applications = await getAllApplications();
   const invoices = await getAllInvoices();
-  const allAssignments = getAllAssignments();
+  const allAssignments = await getAllAssignments();
 
   const awaitingAction = applications
     .filter((a) => a.stage !== "ACCREDITED" && a.stage !== "DECLINED" && a.stage !== "DRAFT")

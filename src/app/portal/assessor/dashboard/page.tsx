@@ -8,8 +8,7 @@ import { getAssignmentsForUser, getCompetenceForUser } from "@/lib/portal/assess
 export default async function AssessorDashboardPage() {
   const session = await auth();
   const userId = session!.user.id;
-  const myAssignments = getAssignmentsForUser(userId);
-  const competence = getCompetenceForUser(userId);
+  const [myAssignments, competence] = await Promise.all([getAssignmentsForUser(userId), getCompetenceForUser(userId)]);
 
   const pending = myAssignments.filter((a) => a.status === "PENDING");
   const active = myAssignments
