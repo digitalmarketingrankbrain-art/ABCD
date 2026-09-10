@@ -19,13 +19,15 @@ import {
 } from "@/lib/verification-records";
 import { logAction } from "./audit-log";
 import { createNotification } from "@/lib/notifications";
+import { getClientIp } from "@/lib/request-ip";
 
 async function requireAdmin() {
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") {
     throw new Error("Not authorised.");
   }
-  return session.user;
+  const ip = await getClientIp();
+  return { ...session.user, ip };
 }
 
 export async function markInitialReviewComplete(applicationId: string) {
@@ -36,6 +38,7 @@ export async function markInitialReviewComplete(applicationId: string) {
   await logAction({
     actorUserId: admin.id,
     actorRole: "ADMIN",
+    ipAddress: admin.ip,
     action: "application.initial_review_completed",
     targetType: "Application",
     targetId: applicationId,
@@ -53,6 +56,7 @@ export async function requestApplicationInfo(applicationId: string, note: string
   await logAction({
     actorUserId: admin.id,
     actorRole: "ADMIN",
+    ipAddress: admin.ip,
     action: "application.information_requested",
     targetType: "Application",
     targetId: applicationId,
@@ -84,6 +88,7 @@ export async function clearApplicationInfoRequest(applicationId: string) {
   await logAction({
     actorUserId: admin.id,
     actorRole: "ADMIN",
+    ipAddress: admin.ip,
     action: "application.information_request_cleared",
     targetType: "Application",
     targetId: applicationId,
@@ -101,6 +106,7 @@ export async function assignAssessor(applicationId: string, assessorName: string
   await logAction({
     actorUserId: admin.id,
     actorRole: "ADMIN",
+    ipAddress: admin.ip,
     action: "application.assessor_assigned",
     targetType: "Application",
     targetId: applicationId,
@@ -128,6 +134,7 @@ export async function recordDecision(
   await logAction({
     actorUserId: admin.id,
     actorRole: "ADMIN",
+    ipAddress: admin.ip,
     action: `application.decision_recorded.${outcome.toLowerCase()}`,
     targetType: "Application",
     targetId: applicationId,
@@ -163,6 +170,7 @@ export async function changeAccreditationStatus(reference: string, newStatus: Ve
   await logAction({
     actorUserId: admin.id,
     actorRole: "ADMIN",
+    ipAddress: admin.ip,
     action: "accreditation.status_changed",
     targetType: "AccreditationRecord",
     targetId: reference,
@@ -182,6 +190,7 @@ export async function toggleVerificationPublished(reference: string, published: 
   await logAction({
     actorUserId: admin.id,
     actorRole: "ADMIN",
+    ipAddress: admin.ip,
     action: published ? "verification.published" : "verification.unpublished",
     targetType: "VerificationRecord",
     targetId: reference,
@@ -198,6 +207,7 @@ export async function toggleCertificateVisible(reference: string, visible: boole
   await logAction({
     actorUserId: admin.id,
     actorRole: "ADMIN",
+    ipAddress: admin.ip,
     action: visible ? "verification.certificate_made_visible" : "verification.certificate_hidden",
     targetType: "VerificationRecord",
     targetId: reference,

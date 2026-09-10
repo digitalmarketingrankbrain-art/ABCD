@@ -29,6 +29,7 @@ export default async function AdminAuditLogsPage() {
                   <th className="border-b border-border px-4 py-3 text-left font-sans text-xs font-medium uppercase tracking-[0.02em] text-text-muted">Action</th>
                   <th className="border-b border-border px-4 py-3 text-left font-sans text-xs font-medium uppercase tracking-[0.02em] text-text-muted">Target</th>
                   <th className="border-b border-border px-4 py-3 text-left font-sans text-xs font-medium uppercase tracking-[0.02em] text-text-muted">Reason</th>
+                  <th className="border-b border-border px-4 py-3 text-left font-sans text-xs font-medium uppercase tracking-[0.02em] text-text-muted">IP</th>
                 </tr>
               </thead>
               <tbody>
@@ -39,6 +40,7 @@ export default async function AdminAuditLogsPage() {
                     <td className="px-4 py-3 font-mono text-xs text-text">{e.action}</td>
                     <td className="px-4 py-3 text-text-muted">{e.targetType} · {e.targetId}</td>
                     <td className="px-4 py-3 text-text-muted">{e.reason ?? "—"}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-text-muted">{e.ipAddress ?? "—"}</td>
                   </tr>
                 ))}
               </tbody>

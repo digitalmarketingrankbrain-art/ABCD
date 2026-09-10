@@ -15,14 +15,24 @@ import {
   enableUserMfa,
 } from "./store";
 import { createNotification } from "@/lib/notifications";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { getClientIp } from "@/lib/request-ip";
 
 /**
  * Pre-check email/password only, without creating a session — lets the
  * login form know whether to show the MFA code step, without ever trusting
  * that client-reported result for the actual sign-in (auth.ts re-verifies
- * password + MFA code together on the real signIn call).
+ * password + MFA code together on the real signIn call, and enforces its
+ * own rate limit independently since this pre-check can be bypassed by
+ * calling the NextAuth endpoint directly).
  */
 export async function checkCredentials(email: string, password: string) {
+  const ip = await getClientIp();
+  const limit = checkRateLimit(`login:${ip}:${email.toLowerCase()}`, 10, 15 * 60 * 1000);
+  if (!limit.allowed) {
+    return { ok: false as const, mfaRequired: false, rateLimited: true as const };
+  }
+
   const user = await findUserByEmail(email);
   if (!user || user.status !== "ACTIVE" || !verifyPassword(user, password)) {
     return { ok: false as const, mfaRequired: false };
@@ -36,6 +46,11 @@ export async function registerApplicant(input: {
   name: string;
   organisationName: string;
 }) {
+  const ip = await getClientIp();
+  const limit = checkRateLimit(`register:${ip}`, 5, 60 * 60 * 1000);
+  if (!limit.allowed) {
+    return { ok: false as const, error: "Too many attempts. Try again later." };
+  }
   if (await findUserByEmail(input.email)) {
     return { ok: false as const, error: "An account with this email already exists." };
   }
@@ -47,6 +62,11 @@ export async function registerApplicant(input: {
 }
 
 export async function requestPasswordReset(email: string) {
+  const ip = await getClientIp();
+  const limit = checkRateLimit(`reset:${ip}:${email.toLowerCase()}`, 5, 60 * 60 * 1000);
+  // Same "always respond the same way" response even when rate-limited, so
+  // this can't be used to distinguish a real account from a rate-limited one.
+  if (!limit.allowed) return { ok: true as const, devToken: null };
   const user = await findUserByEmail(email);
   // Always respond the same way whether or not the account exists, so this
   // endpoint can't be used to enumerate registered emails.
@@ -90,6 +110,10 @@ export async function startMfaEnrollment() {
 export async function confirmMfaEnrollment(code: string) {
   const session = await auth();
   if (!session?.user) return { ok: false as const, error: "Not signed in." };
+  const limit = checkRateLimit(`mfa-confirm:${session.user.id}`, 8, 10 * 60 * 1000);
+  if (!limit.allowed) {
+    return { ok: false as const, error: "Too many attempts. Wait a few minutes and try again." };
+  }
   const user = await findUserById(session.user.id);
   if (!user?.mfaSecret) return { ok: false as const, error: "Start MFA setup again." };
   if (!verifyTotpCode(user.mfaSecret, code)) {
@@ -105,6 +129,10 @@ export async function confirmMfaEnrollment(code: string) {
 export async function changeOwnPassword(currentPassword: string, newPassword: string) {
   const session = await auth();
   if (!session?.user) return { ok: false as const, error: "Not signed in." };
+  const limit = checkRateLimit(`change-password:${session.user.id}`, 8, 15 * 60 * 1000);
+  if (!limit.allowed) {
+    return { ok: false as const, error: "Too many attempts. Wait a few minutes and try again." };
+  }
   const user = await findUserById(session.user.id);
   if (!user) return { ok: false as const, error: "Not signed in." };
   if (!verifyPassword(user, currentPassword)) {

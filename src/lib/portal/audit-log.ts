@@ -11,6 +11,7 @@ export interface AuditLogEntry {
   reason: string | null;
   before: string | null;
   after: string | null;
+  ipAddress: string | null;
   timestamp: string;
 }
 
@@ -30,6 +31,7 @@ export async function logAction(input: {
   reason?: string | null;
   before?: unknown;
   after?: unknown;
+  ipAddress?: string | null;
 }) {
   await prisma.auditLog.create({
     data: {
@@ -41,6 +43,7 @@ export async function logAction(input: {
       reason: input.reason ?? null,
       before: (input.before ?? undefined) as Prisma.InputJsonValue | undefined,
       after: (input.after ?? undefined) as Prisma.InputJsonValue | undefined,
+      ipAddress: input.ipAddress ?? null,
     },
   });
 }
@@ -58,6 +61,7 @@ function mapRow(row: AuditLogRow): AuditLogEntry {
     reason: row.reason,
     before: row.before ? JSON.stringify(row.before) : null,
     after: row.after ? JSON.stringify(row.after) : null,
+    ipAddress: row.ipAddress,
     timestamp: row.createdAt.toISOString(),
   };
 }

@@ -7,6 +7,7 @@ import {
   verifyPassword,
   type Role,
 } from "@/lib/auth/store";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export function verifyTotpCode(secret: string, code: string): boolean {
   const totp = new TOTP({ secret: Secret.fromBase32(secret), digits: 6, period: 30 });
@@ -24,11 +25,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: {},
         mfaCode: {},
       },
-      async authorize(credentials) {
+      async authorize(credentials, request) {
         const email = credentials?.email as string | undefined;
         const password = credentials?.password as string | undefined;
         const mfaCode = credentials?.mfaCode as string | undefined;
         if (!email || !password) return null;
+
+        // The real trust boundary for login — rate-limited independently of
+        // the client-side pre-check (src/lib/auth/actions.ts:checkCredentials),
+        // since this endpoint can be called directly, bypassing that pre-check.
+        const forwardedFor = request.headers.get("x-forwarded-for");
+        const ip = forwardedFor ? forwardedFor.split(",")[0]!.trim() : "unknown";
+        const limit = checkRateLimit(`login-authorize:${ip}:${email.toLowerCase()}`, 10, 15 * 60 * 1000);
+        if (!limit.allowed) return null;
 
         const user = await findUserByEmail(email);
         if (!user || user.status !== "ACTIVE") return null;

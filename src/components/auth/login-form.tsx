@@ -32,7 +32,11 @@ function LoginForm() {
     setLoading(false);
 
     if (!result.ok) {
-      setError("Incorrect email or password.");
+      setError(
+        "rateLimited" in result && result.rateLimited
+          ? "Too many sign-in attempts. Wait 15 minutes and try again."
+          : "Incorrect email or password.",
+      );
       return;
     }
     if (result.mfaRequired) {
