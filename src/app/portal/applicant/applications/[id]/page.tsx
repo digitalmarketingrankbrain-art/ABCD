@@ -12,10 +12,10 @@ import { SubmitApplicationButton } from "@/components/portal/submit-application-
 import {
   getApplicationById,
   getMessagesForApplication,
+  getInvoicesForUser,
   STAGE_LABEL,
   type Application,
 } from "@/lib/portal/applicant-data";
-import { invoices } from "@/lib/portal/applicant-data";
 
 const STAGE_TONE: Record<string, "success" | "warning" | "info" | "neutral"> = {
   DRAFT: "neutral",
@@ -103,10 +103,13 @@ export default async function ApplicationDetailPage({
 }) {
   const { id } = await params;
   const session = await auth();
-  const application = getApplicationById(id, session!.user.id);
+  const application = await getApplicationById(id, session!.user.id);
   if (!application) notFound();
 
-  const messages = getMessagesForApplication(application.id);
+  const [messages, userInvoices] = await Promise.all([
+    getMessagesForApplication(application.id),
+    getInvoicesForUser(session!.user.id),
+  ]);
 
   return (
     <div className="px-6 py-8">
@@ -150,7 +153,7 @@ export default async function ApplicationDetailPage({
             {
               value: "invoices",
               label: "Invoices",
-              content: <ApplicationInvoicesTab invoices={invoices.filter((i) => i.applicationId === application.id)} />,
+              content: <ApplicationInvoicesTab invoices={userInvoices.filter((i) => i.applicationId === application.id)} />,
             },
           ]}
         />

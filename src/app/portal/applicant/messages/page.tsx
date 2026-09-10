@@ -10,10 +10,10 @@ import { getApplicationsForUser, getMessagesForApplication } from "@/lib/portal/
  */
 export default async function MessagesIndexPage() {
   const session = await auth();
-  const apps = getApplicationsForUser(session!.user.id);
-  const threads = apps
-    .map((a) => ({ application: a, messages: getMessagesForApplication(a.id) }))
-    .filter((t) => t.messages.length > 0);
+  const apps = await getApplicationsForUser(session!.user.id);
+  const threads = (
+    await Promise.all(apps.map(async (a) => ({ application: a, messages: await getMessagesForApplication(a.id) })))
+  ).filter((t) => t.messages.length > 0);
 
   return (
     <div className="px-6 py-8">

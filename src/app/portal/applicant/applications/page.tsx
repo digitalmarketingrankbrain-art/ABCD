@@ -6,7 +6,7 @@ import { getApplicationsForUser } from "@/lib/portal/applicant-data";
 
 export default async function ApplicationsListPage() {
   const session = await auth();
-  const apps = getApplicationsForUser(session!.user.id);
+  const apps = await getApplicationsForUser(session!.user.id);
 
   return (
     <div className="px-6 py-8">

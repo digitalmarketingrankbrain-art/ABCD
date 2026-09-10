@@ -14,7 +14,7 @@ import {
   FINDING_STATUS_LABEL,
   type AssignmentStatus,
 } from "@/lib/portal/assessor-data";
-import { getMessagesForApplication } from "@/lib/portal/applicant-data";
+import { getMessagesForApplicationByReference } from "@/lib/portal/applicant-data";
 
 const STATUS_TONE: Record<AssignmentStatus, StatusTone> = {
   PENDING: "warning",
@@ -34,6 +34,10 @@ export default async function AssignmentDetailPage({
   const session = await auth();
   const assignment = getAssignmentById(id, session!.user.id);
   if (!assignment) notFound();
+
+  const messages = assignment.linkedApplicationId
+    ? await getMessagesForApplicationByReference(assignment.linkedApplicationId)
+    : [];
 
   const checklistComplete =
     assignment.criteria.length > 0 &&
@@ -170,10 +174,7 @@ export default async function AssignmentDetailPage({
                 value: "messages",
                 label: "Messages",
                 content: (
-                  <AssignmentMessagesThread
-                    assignmentId={assignment.id}
-                    messages={assignment.linkedApplicationId ? getMessagesForApplication(assignment.linkedApplicationId) : []}
-                  />
+                  <AssignmentMessagesThread assignmentId={assignment.id} messages={messages} />
                 ),
               },
               {

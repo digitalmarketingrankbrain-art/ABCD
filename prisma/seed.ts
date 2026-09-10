@@ -7,10 +7,24 @@
  * carries through unchanged.
  */
 import { PrismaClient } from "@prisma/client";
+import { mkdir, writeFile } from "fs/promises";
+import path from "path";
 
 const prisma = new PrismaClient();
 
 const DEMO_PASSWORD_HASH = "$2b$10$gfixhPAnYYhLd.ZJNJ2N4u1dNQNBCEDStlrQwjiye8dG8.G/eGx/W"; // "Password123!"
+
+// Mirrors src/lib/storage.ts's layout (storage/documents/<key>) without
+// importing app code with a "@/" alias into this script — seed.ts is
+// intentionally excluded from the app's tsconfig (see Milestone 11).
+const STORAGE_ROOT = path.join(process.cwd(), "storage", "documents");
+
+async function seedDemoFile(key: string, content: string): Promise<{ storageKey: string; sizeBytes: number }> {
+  await mkdir(STORAGE_ROOT, { recursive: true });
+  const buffer = Buffer.from(content, "utf-8");
+  await writeFile(path.join(STORAGE_ROOT, key), buffer);
+  return { storageKey: key, sizeBytes: buffer.byteLength };
+}
 
 async function main() {
   console.log("Seeding programs...");
@@ -66,6 +80,39 @@ async function main() {
     const program = programs[slug];
     if (!program) throw new Error(`Seed error: program "${slug}" was not created above.`);
     return program;
+  }
+
+  console.log("Seeding required document types...");
+  const requiredDocTypes: Record<string, { id: string; name: string }[]> = {};
+  for (const p of programsData) {
+    const existing = await prisma.requiredDocumentType.findMany({ where: { programId: getProgram(p.slug).id } });
+    if (existing.length > 0) {
+      requiredDocTypes[p.slug] = existing;
+      continue;
+    }
+    const defs =
+      p.slug === "testing-calibration-laboratories"
+        ? [
+            { name: "Application Form", isMandatory: true },
+            { name: "Quality Manual", isMandatory: true },
+            { name: "Scope of Accreditation Request", isMandatory: true },
+            { name: "Staff Competence Records", isMandatory: false },
+          ]
+        : [
+            { name: "Application Form", isMandatory: true },
+            { name: "Scope of Accreditation Request", isMandatory: true },
+          ];
+    const created: { id: string; name: string }[] = [];
+    for (const d of defs) {
+      const row = await prisma.requiredDocumentType.create({ data: { programId: getProgram(p.slug).id, ...d } });
+      created.push(row);
+    }
+    requiredDocTypes[p.slug] = created;
+  }
+  function getRequiredDocType(slug: string, name: string) {
+    const rdt = requiredDocTypes[slug]?.find((r) => r.name === name);
+    if (!rdt) throw new Error(`Seed error: required document type "${name}" not found for program "${slug}".`);
+    return rdt;
   }
 
   console.log("Seeding users...");
@@ -179,6 +226,86 @@ async function main() {
     });
   }
 
+  const hasDemoDocuments = (await prisma.document.count({ where: { applicationId: application.id } })) > 0;
+  if (!hasDemoDocuments) {
+    console.log("Seeding demo documents for the application...");
+    const slug = "testing-calibration-laboratories";
+    const docsToSeed: { typeName: string; filename: string; content: string; reviewStatus: "APPROVED" | "NEEDS_REVISION"; reviewComment?: string; uploadedAt: string }[] = [
+      { typeName: "Application Form", filename: "application-form.pdf", content: "Demo application form content.", reviewStatus: "APPROVED", uploadedAt: "2026-03-01" },
+      { typeName: "Quality Manual", filename: "quality-manual-v1.pdf", content: "Demo quality manual content (Section 4.2 references an outdated calibration procedure).", reviewStatus: "NEEDS_REVISION", reviewComment: "References an outdated calibration procedure (Section 4.2). Please update and re-upload.", uploadedAt: "2026-03-01" },
+      { typeName: "Scope of Accreditation Request", filename: "scope-request.pdf", content: "Demo scope of accreditation request content.", reviewStatus: "APPROVED", uploadedAt: "2026-03-01" },
+    ];
+    for (const d of docsToSeed) {
+      const rdt = getRequiredDocType(slug, d.typeName);
+      const { storageKey, sizeBytes } = await seedDemoFile(`seed-${application.id}-${rdt.id}`, d.content);
+      const doc = await prisma.document.create({
+        data: {
+          ownerType: "APPLICATION",
+          ownerId: application.id,
+          applicationId: application.id,
+          documentKind: "REQUIRED_SUBMISSION",
+          requiredDocumentTypeId: rdt.id,
+        },
+      });
+      const version = await prisma.documentVersion.create({
+        data: {
+          documentId: doc.id,
+          versionNumber: 1,
+          storageKey,
+          filename: d.filename,
+          mimeType: "application/pdf",
+          sizeBytes,
+          uploadedById: applicantUser.id,
+          uploadedAt: new Date(d.uploadedAt),
+          reviewStatus: d.reviewStatus,
+          reviewComment: d.reviewComment,
+        },
+      });
+      await prisma.document.update({ where: { id: doc.id }, data: { currentVersionId: version.id } });
+    }
+  }
+
+  const existingThread = await prisma.messageThread.findUnique({ where: { applicationId: application.id } });
+  if (!existingThread) {
+    console.log("Seeding demo messages for the application...");
+    const thread = await prisma.messageThread.create({
+      data: { contextType: "APPLICATION", applicationId: application.id },
+    });
+    await prisma.message.createMany({
+      data: [
+        {
+          threadId: thread.id,
+          senderUserId: admin.id,
+          body: "Your application has moved to Document Review. We'll be in touch if anything further is needed.",
+          createdAt: new Date("2026-03-18"),
+        },
+        {
+          threadId: thread.id,
+          senderUserId: assessorUser.id,
+          body: "I've been assigned as your assessor and will be reviewing your Quality Manual revision once uploaded.",
+          createdAt: new Date("2026-06-02"),
+        },
+      ],
+    });
+  }
+
+  console.log("Seeding a second, still-draft application...");
+  const draftApplication = await prisma.application.findUnique({ where: { referenceNumber: "MAB-APP-2026-0102" } });
+  if (!draftApplication) {
+    const draftApp = await prisma.application.create({
+      data: {
+        referenceNumber: "MAB-APP-2026-0102",
+        organisationId: organisation.id,
+        applicantUserId: applicantUser.id,
+        programId: getProgram("inspection-bodies").id,
+        stage: "DRAFT",
+      },
+    });
+    await prisma.applicationStageHistory.create({
+      data: { applicationId: draftApp.id, toStage: "DRAFT", changedById: applicantUser.id, changedAt: new Date("2026-08-28") },
+    });
+  }
+
   console.log("Seeding assignment + assessment...");
   let assignment = await prisma.assignment.findFirst({ where: { applicationId: application.id, assessorId: assessor.id } });
   if (!assignment) {
@@ -265,33 +392,45 @@ async function main() {
   }
 
   console.log("Seeding invoices...");
-  const existingInvoice = await prisma.invoice.findUnique({ where: { invoiceNumber: "MAB-INV-2026-0143" } });
-  if (!existingInvoice) {
-    await prisma.invoice.create({
-      data: {
-        invoiceNumber: "MAB-INV-2026-0143",
-        organisationId: organisation.id,
-        applicationId: application.id,
-        status: "PAID",
-        amount: 2500,
-        currency: "USD",
-        issuedAt: new Date("2026-03-02"),
-        dueAt: new Date("2026-03-16"),
-        paidAt: new Date("2026-03-09"),
-      },
-    });
-    await prisma.invoice.create({
-      data: {
-        invoiceNumber: "MAB-INV-2026-0311",
-        organisationId: organisation.id,
-        applicationId: application.id,
-        status: "ISSUED",
-        amount: 4200,
-        currency: "USD",
-        issuedAt: new Date("2026-08-15"),
-        dueAt: new Date("2026-09-15"),
-      },
-    });
+  const invoice1 = await prisma.invoice.upsert({
+    where: { invoiceNumber: "MAB-INV-2026-0143" },
+    update: {},
+    create: {
+      invoiceNumber: "MAB-INV-2026-0143",
+      organisationId: organisation.id,
+      applicationId: application.id,
+      status: "PAID",
+      amount: 2500,
+      currency: "USD",
+      issuedAt: new Date("2026-03-02"),
+      dueAt: new Date("2026-03-16"),
+      paidAt: new Date("2026-03-09"),
+    },
+  });
+  const invoice2 = await prisma.invoice.upsert({
+    where: { invoiceNumber: "MAB-INV-2026-0311" },
+    update: {},
+    create: {
+      invoiceNumber: "MAB-INV-2026-0311",
+      organisationId: organisation.id,
+      applicationId: application.id,
+      status: "ISSUED",
+      amount: 4200,
+      currency: "USD",
+      issuedAt: new Date("2026-08-15"),
+      dueAt: new Date("2026-09-15"),
+    },
+  });
+  // Backfills line items for invoices seeded before InvoiceLineItem existed
+  // in this script, as well as creating them fresh on a first run.
+  for (const [invoice, description] of [
+    [invoice1, "Application fee — Testing & Calibration Laboratories"],
+    [invoice2, "Assessment fee — Testing & Calibration Laboratories"],
+  ] as const) {
+    const hasLineItem = (await prisma.invoiceLineItem.count({ where: { invoiceId: invoice.id } })) > 0;
+    if (!hasLineItem) {
+      await prisma.invoiceLineItem.create({ data: { invoiceId: invoice.id, description, amount: invoice.amount } });
+    }
   }
 
   console.log("Seed complete.");

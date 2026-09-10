@@ -1,3 +1,7 @@
+import { prisma } from "@/lib/prisma";
+import { getUserOrganisationId } from "@/lib/auth/store";
+import type { Prisma, Role } from "@prisma/client";
+
 export type ApplicationStage =
   | "DRAFT"
   | "SUBMITTED"
@@ -73,6 +77,8 @@ export interface Application {
   submittedAt: string | null;
   updatedAt: string;
   assessorName?: string;
+  /** Real FK, added alongside assessorName so authorization checks (e.g. the document download route) don't have to match on a display name. */
+  assessorUserId?: string;
   decisionOutcome?: "ACCREDIT" | "DECLINE" | "REQUEST_MORE_INFO";
   decisionRationale?: string;
   decidedBy?: string;
@@ -97,279 +103,276 @@ export interface Invoice {
 }
 
 /**
- * Placeholder, in-memory, per-demo-user data — stands in for the real
- * Application/Document/Invoice/Message tables until Milestone 11. Only the
- * seeded demo applicant (user-applicant-demo) has data; a freshly registered
- * applicant correctly sees the Phase 8 "brand new applicant" empty state.
+ * Real Postgres-backed Application/Document/Invoice/Message data (Milestone
+ * 12, continued) — replaces the in-memory placeholder store used since
+ * Milestone 8. Public type shapes above are kept identical to the old
+ * in-memory versions on purpose, so the ~25 consuming pages/components only
+ * needed `await` added at call sites rather than a rewrite.
  */
-export const applications: Application[] = [
-  {
-    id: "app-1",
-    referenceNumber: "MAB-APP-2026-0091",
-    applicantUserId: "user-applicant-demo",
-    programSlug: "testing-calibration-laboratories",
-    programName: "Testing & Calibration Laboratories",
-    stage: "ASSESSMENT",
-    infoRequested: true,
-    infoRequestNote:
-      "Your uploaded Quality Manual references an outdated calibration procedure. Please upload a revised version reflecting your current procedure.",
-    submittedAt: "2026-03-02",
-    updatedAt: "2026-08-20",
-    assessorName: "Sam Assessor",
-    documents: [
-      {
-        id: "doc-1",
-        name: "Application Form",
-        mandatory: true,
-        status: "APPROVED",
-        versions: [{ version: 1, filename: "application-form.pdf", uploadedAt: "2026-03-01" }],
-      },
-      {
-        id: "doc-2",
-        name: "Quality Manual",
-        mandatory: true,
-        status: "NEEDS_REVISION",
-        versions: [
-          {
-            version: 1,
-            filename: "quality-manual-v1.pdf",
-            uploadedAt: "2026-03-01",
-            reviewComment: "References an outdated calibration procedure (Section 4.2). Please update and re-upload.",
-          },
-        ],
-      },
-      {
-        id: "doc-3",
-        name: "Scope of Accreditation Request",
-        mandatory: true,
-        status: "APPROVED",
-        versions: [{ version: 1, filename: "scope-request.pdf", uploadedAt: "2026-03-01" }],
-      },
-      {
-        id: "doc-4",
-        name: "Staff Competence Records",
-        mandatory: false,
-        status: "NOT_UPLOADED",
-        versions: [],
-      },
-    ],
-    stageHistory: [
-      { stage: "DRAFT", changedAt: "2026-02-20" },
-      { stage: "SUBMITTED", changedAt: "2026-03-02" },
-      { stage: "INITIAL_REVIEW", changedAt: "2026-03-10" },
-      { stage: "DOCUMENT_REVIEW", changedAt: "2026-03-18", note: "Revision requested on Quality Manual." },
-      { stage: "ASSESSMENT", changedAt: "2026-06-01" },
-    ],
-  },
-  {
-    id: "app-2",
-    referenceNumber: "MAB-APP-2026-0102",
-    applicantUserId: "user-applicant-demo",
-    programSlug: "inspection-bodies",
-    programName: "Inspection Bodies",
-    stage: "DRAFT",
-    infoRequested: false,
-    submittedAt: null,
-    updatedAt: "2026-08-28",
-    documents: [
-      {
-        id: "doc-5",
-        name: "Application Form",
-        mandatory: true,
-        status: "NOT_UPLOADED",
-        versions: [],
-      },
-      {
-        id: "doc-6",
-        name: "Scope of Accreditation Request",
-        mandatory: true,
-        status: "NOT_UPLOADED",
-        versions: [],
-      },
-    ],
-    stageHistory: [{ stage: "DRAFT", changedAt: "2026-08-28" }],
-  },
-];
 
-export const invoices: Invoice[] = [
-  {
-    id: "inv-1",
-    invoiceNumber: "MAB-INV-2026-0143",
-    applicantUserId: "user-applicant-demo",
-    applicationId: "app-1",
-    description: "Application fee — Testing & Calibration Laboratories",
-    amount: 2500,
-    currency: "USD",
-    status: "PAID",
-    issuedAt: "2026-03-02",
-    dueAt: "2026-03-16",
-    paidAt: "2026-03-09",
-  },
-  {
-    id: "inv-2",
-    invoiceNumber: "MAB-INV-2026-0311",
-    applicantUserId: "user-applicant-demo",
-    applicationId: "app-1",
-    description: "Assessment fee — Testing & Calibration Laboratories",
-    amount: 4200,
-    currency: "USD",
-    status: "ISSUED",
-    issuedAt: "2026-08-15",
-    dueAt: "2026-09-15",
-    paidAt: null,
-  },
-];
+function fmtDate(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
 
-export const messages: Message[] = [
-  {
-    id: "msg-1",
-    applicationId: "app-1",
-    senderName: "Meridian Admin",
-    senderRole: "ADMIN",
-    body: "Your application has moved to Document Review. We'll be in touch if anything further is needed.",
-    createdAt: "2026-03-18",
-  },
-  {
-    id: "msg-2",
-    applicationId: "app-1",
-    senderName: "Sam Assessor",
-    senderRole: "ASSESSOR",
-    body: "I've been assigned as your assessor and will be reviewing your Quality Manual revision once uploaded.",
-    createdAt: "2026-06-02",
-  },
-];
+function senderRoleFor(role: Role): Message["senderRole"] {
+  if (role === "ADMIN") return "ADMIN";
+  if (role === "ASSESSOR") return "ASSESSOR";
+  return "APPLICANT";
+}
+
+async function buildDocumentChecklist(programId: string, applicationId: string): Promise<RequiredDocument[]> {
+  const [types, docs] = await Promise.all([
+    prisma.requiredDocumentType.findMany({ where: { programId }, orderBy: { name: "asc" } }),
+    prisma.document.findMany({
+      where: { ownerType: "APPLICATION", ownerId: applicationId },
+      include: { versions: { orderBy: { versionNumber: "asc" } } },
+    }),
+  ]);
+
+  return types.map((t) => {
+    const doc = docs.find((d) => d.requiredDocumentTypeId === t.id);
+    if (!doc || doc.versions.length === 0) {
+      return { id: t.id, name: t.name, mandatory: t.isMandatory, status: "NOT_UPLOADED" as DocumentStatus, versions: [] };
+    }
+    const versions: DocumentVersion[] = doc.versions.map((v) => ({
+      version: v.versionNumber,
+      filename: v.filename,
+      uploadedAt: fmtDate(v.uploadedAt),
+      reviewComment: v.reviewComment ?? undefined,
+    }));
+    const latest = doc.versions[doc.versions.length - 1]!;
+    return { id: t.id, name: t.name, mandatory: t.isMandatory, status: latest.reviewStatus, versions };
+  });
+}
+
+const APPLICATION_INCLUDE = {
+  program: true,
+  assessor: { select: { id: true, name: true } },
+  stageHistory: { orderBy: { changedAt: "asc" } },
+  decision: { include: { decidedBy: { select: { name: true } } } },
+} satisfies Prisma.ApplicationInclude;
+
+type ApplicationRow = Prisma.ApplicationGetPayload<{ include: typeof APPLICATION_INCLUDE }>;
+
+async function mapApplication(row: ApplicationRow): Promise<Application> {
+  const documents = await buildDocumentChecklist(row.programId, row.id);
+  return {
+    id: row.id,
+    referenceNumber: row.referenceNumber,
+    applicantUserId: row.applicantUserId,
+    programSlug: row.program.slug,
+    programName: row.program.name,
+    stage: row.stage,
+    infoRequested: row.infoRequested,
+    infoRequestNote: row.infoRequestNote ?? undefined,
+    submittedAt: row.submittedAt ? fmtDate(row.submittedAt) : null,
+    updatedAt: fmtDate(row.updatedAt),
+    assessorName: row.assessor?.name,
+    assessorUserId: row.assessor?.id,
+    decisionOutcome: row.decision?.outcome,
+    decisionRationale: row.decision?.rationale,
+    decidedBy: row.decision?.decidedBy.name,
+    documents,
+    stageHistory: row.stageHistory.map((h) => ({
+      stage: h.toStage,
+      changedAt: fmtDate(h.changedAt),
+      note: h.reason ?? undefined,
+    })),
+  };
+}
 
 // --- Accessors ---
 
-export function getApplicationsForUser(userId: string): Application[] {
-  return applications.filter((a) => a.applicantUserId === userId);
-}
-
-export function getApplicationById(id: string, userId: string): Application | undefined {
-  return applications.find((a) => a.id === id && a.applicantUserId === userId);
-}
-
-export function getInvoicesForUser(userId: string): Invoice[] {
-  return invoices.filter((i) => i.applicantUserId === userId);
-}
-
-export function getInvoiceById(id: string, userId: string): Invoice | undefined {
-  return invoices.find((i) => i.id === id && i.applicantUserId === userId);
-}
-
-export function getMessagesForApplication(applicationId: string): Message[] {
-  return messages
-    .filter((m) => m.applicationId === applicationId)
-    .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
-}
-
-export function addMessage(
-  applicationId: string,
-  body: string,
-  sender: { name: string; role: Message["senderRole"] } = { name: "You", role: "APPLICANT" },
-) {
-  messages.push({
-    id: `msg-${Date.now()}`,
-    applicationId,
-    senderName: sender.name,
-    senderRole: sender.role,
-    body,
-    createdAt: new Date().toISOString().slice(0, 10),
+export async function getApplicationsForUser(userId: string): Promise<Application[]> {
+  const rows = await prisma.application.findMany({
+    where: { applicantUserId: userId },
+    include: APPLICATION_INCLUDE,
+    orderBy: { updatedAt: "desc" },
   });
+  return Promise.all(rows.map(mapApplication));
 }
 
-export function uploadDocumentVersion(applicationId: string, documentId: string, filename: string) {
-  const app = applications.find((a) => a.id === applicationId);
-  const doc = app?.documents.find((d) => d.id === documentId);
-  if (!doc) return;
-  doc.versions.push({
-    version: doc.versions.length + 1,
-    filename,
-    uploadedAt: new Date().toISOString().slice(0, 10),
+export async function getApplicationById(id: string, userId: string): Promise<Application | undefined> {
+  const row = await prisma.application.findFirst({
+    where: { id, applicantUserId: userId },
+    include: APPLICATION_INCLUDE,
   });
-  doc.status = "UNDER_REVIEW";
+  return row ? mapApplication(row) : undefined;
 }
 
-export function createDraftApplication(userId: string, programSlug: string, programName: string): Application {
-  const app: Application = {
-    id: `app-${Date.now()}`,
-    referenceNumber: `MAB-APP-2026-${Math.floor(1000 + Math.random() * 9000)}`,
-    applicantUserId: userId,
-    programSlug,
-    programName,
-    stage: "DRAFT",
-    infoRequested: false,
-    submittedAt: null,
-    updatedAt: new Date().toISOString().slice(0, 10),
-    documents: [
-      { id: `doc-${Date.now()}-1`, name: "Application Form", mandatory: true, status: "NOT_UPLOADED", versions: [] },
-      { id: `doc-${Date.now()}-2`, name: "Scope of Accreditation Request", mandatory: true, status: "NOT_UPLOADED", versions: [] },
-    ],
-    stageHistory: [{ stage: "DRAFT", changedAt: new Date().toISOString().slice(0, 10) }],
+export async function getInvoicesForUser(userId: string): Promise<Invoice[]> {
+  const organisationId = await getUserOrganisationId(userId);
+  if (!organisationId) return [];
+  const rows = await prisma.invoice.findMany({
+    where: { organisationId },
+    include: { lineItems: true },
+    orderBy: { issuedAt: "desc" },
+  });
+  return rows.map((r) => mapInvoice(r, userId));
+}
+
+/** Admin cross-cutting view — every invoice, not scoped to one applicant. */
+export async function getAllInvoices(): Promise<Invoice[]> {
+  const rows = await prisma.invoice.findMany({
+    include: { lineItems: true, organisation: { include: { memberships: { take: 1 } } } },
+    orderBy: { issuedAt: "desc" },
+  });
+  return rows.map((r) => mapInvoice(r, r.organisation.memberships[0]?.userId ?? ""));
+}
+
+export async function getInvoiceById(id: string, userId: string): Promise<Invoice | undefined> {
+  const organisationId = await getUserOrganisationId(userId);
+  if (!organisationId) return undefined;
+  const row = await prisma.invoice.findFirst({
+    where: { id, organisationId },
+    include: { lineItems: true },
+  });
+  return row ? mapInvoice(row, userId) : undefined;
+}
+
+function mapInvoice(row: Prisma.InvoiceGetPayload<{ include: { lineItems: true } }>, applicantUserId: string): Invoice {
+  return {
+    id: row.id,
+    invoiceNumber: row.invoiceNumber,
+    applicantUserId,
+    applicationId: row.applicationId,
+    description: row.lineItems[0]?.description ?? "",
+    amount: Number(row.amount),
+    currency: row.currency,
+    status: row.status,
+    issuedAt: row.issuedAt ? fmtDate(row.issuedAt) : "",
+    dueAt: row.dueAt ? fmtDate(row.dueAt) : "",
+    paidAt: row.paidAt ? fmtDate(row.paidAt) : null,
   };
-  applications.push(app);
-  return app;
 }
 
-export function submitApplication(applicationId: string) {
-  const app = applications.find((a) => a.id === applicationId);
-  if (!app || app.stage !== "DRAFT") return;
-  app.stage = "SUBMITTED";
-  app.submittedAt = new Date().toISOString().slice(0, 10);
-  app.updatedAt = app.submittedAt;
-  app.stageHistory.push({ stage: "SUBMITTED", changedAt: app.submittedAt });
+export async function getMessagesForApplication(applicationId: string): Promise<Message[]> {
+  const thread = await prisma.messageThread.findUnique({
+    where: { applicationId },
+    include: { messages: { include: { sender: true }, orderBy: { createdAt: "asc" } } },
+  });
+  if (!thread) return [];
+  return thread.messages.map((m) => ({
+    id: m.id,
+    applicationId,
+    senderName: m.sender.name,
+    senderRole: senderRoleFor(m.sender.primaryRole),
+    body: m.body,
+    createdAt: fmtDate(m.createdAt),
+  }));
+}
+
+/** For the assessor side, which links to an application by reference number rather than id (see assessor-data.ts's linkedApplicationId). */
+export async function getMessagesForApplicationByReference(reference: string): Promise<Message[]> {
+  const id = await getApplicationIdByReference(reference);
+  if (!id) return [];
+  return getMessagesForApplication(id);
+}
+
+export async function getApplicationIdByReference(reference: string): Promise<string | null> {
+  const row = await prisma.application.findUnique({ where: { referenceNumber: reference }, select: { id: true } });
+  return row?.id ?? null;
+}
+
+export async function addMessage(applicationId: string, body: string, senderUserId: string): Promise<void> {
+  let thread = await prisma.messageThread.findUnique({ where: { applicationId } });
+  if (!thread) {
+    thread = await prisma.messageThread.create({ data: { contextType: "APPLICATION", applicationId } });
+  }
+  await prisma.message.create({ data: { threadId: thread.id, senderUserId, body: body.trim() } });
+}
+
+export async function createDraftApplication(userId: string, programSlug: string): Promise<{ id: string }> {
+  const program = await prisma.program.findUnique({ where: { slug: programSlug } });
+  if (!program) throw new Error(`Unknown program: ${programSlug}`);
+  const organisationId = await getUserOrganisationId(userId);
+  if (!organisationId) throw new Error("No organisation found for this applicant.");
+
+  const referenceNumber = `MAB-APP-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+  const app = await prisma.application.create({
+    data: { referenceNumber, organisationId, applicantUserId: userId, programId: program.id, stage: "DRAFT" },
+  });
+  await prisma.applicationStageHistory.create({
+    data: { applicationId: app.id, toStage: "DRAFT", changedById: userId },
+  });
+  return { id: app.id };
+}
+
+export async function submitApplication(applicationId: string, actorUserId: string): Promise<boolean> {
+  const app = await prisma.application.findUnique({ where: { id: applicationId } });
+  if (!app || app.stage !== "DRAFT") return false;
+  const now = new Date();
+  await prisma.application.update({ where: { id: applicationId }, data: { stage: "SUBMITTED", submittedAt: now } });
+  await prisma.applicationStageHistory.create({
+    data: { applicationId, fromStage: "DRAFT", toStage: "SUBMITTED", changedById: actorUserId, changedAt: now },
+  });
+  return true;
 }
 
 // --- Admin accessors/mutators (see all applications, not scoped to one user) ---
 
-export function getAllApplications(): Application[] {
-  return applications;
+export async function getAllApplications(): Promise<Application[]> {
+  const rows = await prisma.application.findMany({ include: APPLICATION_INCLUDE, orderBy: { updatedAt: "desc" } });
+  return Promise.all(rows.map(mapApplication));
 }
 
-export function getApplicationByIdAdmin(id: string): Application | undefined {
-  return applications.find((a) => a.id === id);
+export async function getApplicationByIdAdmin(id: string): Promise<Application | undefined> {
+  const row = await prisma.application.findUnique({ where: { id }, include: APPLICATION_INCLUDE });
+  return row ? mapApplication(row) : undefined;
 }
 
-function today() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-export function advanceApplicationStage(applicationId: string, stage: ApplicationStage, note?: string) {
-  const app = getApplicationByIdAdmin(applicationId);
+export async function advanceApplicationStage(
+  applicationId: string,
+  stage: ApplicationStage,
+  actorUserId: string,
+  note?: string,
+): Promise<boolean> {
+  const app = await prisma.application.findUnique({ where: { id: applicationId } });
   if (!app) return false;
-  app.stage = stage;
-  app.updatedAt = today();
-  app.stageHistory.push({ stage, changedAt: app.updatedAt, note });
+  await prisma.application.update({ where: { id: applicationId }, data: { stage } });
+  await prisma.applicationStageHistory.create({
+    data: { applicationId, fromStage: app.stage, toStage: stage, changedById: actorUserId, reason: note },
+  });
   return true;
 }
 
-export function setInfoRequested(applicationId: string, note: string) {
-  const app = getApplicationByIdAdmin(applicationId);
-  if (!app) return false;
-  app.infoRequested = true;
-  app.infoRequestNote = note;
-  app.updatedAt = today();
-  return true;
+export async function setInfoRequested(applicationId: string, note: string): Promise<boolean> {
+  const res = await prisma.application.updateMany({
+    where: { id: applicationId },
+    data: { infoRequested: true, infoRequestNote: note },
+  });
+  return res.count > 0;
 }
 
-export function clearInfoRequested(applicationId: string) {
-  const app = getApplicationByIdAdmin(applicationId);
-  if (!app) return false;
-  app.infoRequested = false;
-  app.infoRequestNote = undefined;
-  app.updatedAt = today();
-  return true;
+export async function clearInfoRequested(applicationId: string): Promise<boolean> {
+  const res = await prisma.application.updateMany({
+    where: { id: applicationId },
+    data: { infoRequested: false, infoRequestNote: null },
+  });
+  return res.count > 0;
 }
 
-export function assignAssessorToApplication(applicationId: string, assessorName: string) {
-  const app = getApplicationByIdAdmin(applicationId);
+export async function assignAssessorToApplication(
+  applicationId: string,
+  assessorUserId: string,
+  actorUserId: string,
+): Promise<boolean> {
+  const app = await prisma.application.findUnique({ where: { id: applicationId } });
   if (!app) return false;
-  app.assessorName = assessorName;
-  if (app.stage === "DOCUMENT_REVIEW" || app.stage === "INITIAL_REVIEW" || app.stage === "SUBMITTED") {
-    app.stage = "ASSESSMENT";
-    app.stageHistory.push({ stage: "ASSESSMENT", changedAt: today() });
+
+  const movesToAssessment =
+    app.stage === "DOCUMENT_REVIEW" || app.stage === "INITIAL_REVIEW" || app.stage === "SUBMITTED";
+
+  await prisma.application.update({
+    where: { id: applicationId },
+    data: { assessorUserId, ...(movesToAssessment ? { stage: "ASSESSMENT" as const } : {}) },
+  });
+
+  if (movesToAssessment) {
+    await prisma.applicationStageHistory.create({
+      data: { applicationId, fromStage: app.stage, toStage: "ASSESSMENT", changedById: actorUserId },
+    });
   }
-  app.updatedAt = today();
   return true;
 }
 
@@ -379,27 +382,36 @@ export function assignAssessorToApplication(applicationId: string, assessorName:
  * the same identity as the assigned assessor (Phase 6/10 governance rule),
  * and the rationale is required, not optional.
  */
-export function recordApplicationDecision(
+export async function recordApplicationDecision(
   applicationId: string,
   outcome: "ACCREDIT" | "DECLINE" | "REQUEST_MORE_INFO",
   rationale: string,
-  decidedBy: string,
-) {
-  const app = getApplicationByIdAdmin(applicationId);
+  decidedByUserId: string,
+): Promise<boolean> {
+  const app = await prisma.application.findUnique({ where: { id: applicationId } });
   if (!app) return false;
-  app.decisionOutcome = outcome;
-  app.decisionRationale = rationale;
-  app.decidedBy = decidedBy;
-  app.updatedAt = today();
+
+  await prisma.decision.upsert({
+    where: { applicationId },
+    create: { applicationId, decidedById: decidedByUserId, outcome, rationale },
+    update: { decidedById: decidedByUserId, outcome, rationale, decidedAt: new Date() },
+  });
+
   if (outcome === "ACCREDIT") {
-    app.stage = "ACCREDITED";
-    app.stageHistory.push({ stage: "ACCREDITED", changedAt: app.updatedAt, note: rationale });
+    await prisma.application.update({ where: { id: applicationId }, data: { stage: "ACCREDITED" } });
+    await prisma.applicationStageHistory.create({
+      data: { applicationId, fromStage: app.stage, toStage: "ACCREDITED", changedById: decidedByUserId, reason: rationale },
+    });
   } else if (outcome === "DECLINE") {
-    app.stage = "DECLINED";
-    app.stageHistory.push({ stage: "DECLINED", changedAt: app.updatedAt, note: rationale });
+    await prisma.application.update({ where: { id: applicationId }, data: { stage: "DECLINED" } });
+    await prisma.applicationStageHistory.create({
+      data: { applicationId, fromStage: app.stage, toStage: "DECLINED", changedById: decidedByUserId, reason: rationale },
+    });
   } else {
-    app.infoRequested = true;
-    app.infoRequestNote = rationale;
+    await prisma.application.update({
+      where: { id: applicationId },
+      data: { infoRequested: true, infoRequestNote: rationale },
+    });
   }
   return true;
 }

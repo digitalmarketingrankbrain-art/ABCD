@@ -3,7 +3,6 @@ import { auth } from "@/auth";
 import { getDocumentVersionForDownload } from "@/lib/portal/document-data";
 import { readDocumentFile, documentFileExists } from "@/lib/storage";
 import { getApplicationByIdAdmin } from "@/lib/portal/applicant-data";
-import { findUserById } from "@/lib/auth/store";
 
 /**
  * Never a public URL — Phase 1's document-security requirement. This route
@@ -55,17 +54,9 @@ async function isAuthorizedForDocument(
   if (role === "ADMIN") return true;
   if (ownerType !== "APPLICATION") return false;
 
-  const application = getApplicationByIdAdmin(ownerId);
+  const application = await getApplicationByIdAdmin(ownerId);
   if (!application) return false;
   if (role === "APPLICANT") return application.applicantUserId === userId;
-  if (role === "ASSESSOR") {
-    // Application.assessorName is currently a name string, not a user id
-    // (the assignment/application data hasn't been migrated to Prisma yet —
-    // remaining Milestone 12 work), so the comparison has to go through the
-    // assessor's own name rather than a direct id match.
-    if (!application.assessorName) return false;
-    const assessorUser = await findUserById(userId);
-    return assessorUser?.name === application.assessorName;
-  }
+  if (role === "ASSESSOR") return application.assessorUserId === userId;
   return false;
 }

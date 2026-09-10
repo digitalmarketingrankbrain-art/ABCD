@@ -20,6 +20,7 @@ import {
 import { logAction } from "./audit-log";
 import { createNotification } from "@/lib/notifications";
 import { getClientIp } from "@/lib/request-ip";
+import { findUserById } from "@/lib/auth/store";
 
 async function requireAdmin() {
   const session = await auth();
@@ -32,9 +33,9 @@ async function requireAdmin() {
 
 export async function markInitialReviewComplete(applicationId: string) {
   const admin = await requireAdmin();
-  const app = getApplicationByIdAdmin(applicationId);
+  const app = await getApplicationByIdAdmin(applicationId);
   if (!app) return { ok: false as const, error: "Application not found." };
-  advanceApplicationStage(applicationId, "DOCUMENT_REVIEW");
+  await advanceApplicationStage(applicationId, "DOCUMENT_REVIEW", admin.id);
   await logAction({
     actorUserId: admin.id,
     actorRole: "ADMIN",
@@ -50,9 +51,9 @@ export async function markInitialReviewComplete(applicationId: string) {
 export async function requestApplicationInfo(applicationId: string, note: string) {
   const admin = await requireAdmin();
   if (!note.trim()) return { ok: false as const, error: "A note explaining what's needed is required." };
-  const app = getApplicationByIdAdmin(applicationId);
+  const app = await getApplicationByIdAdmin(applicationId);
   if (!app) return { ok: false as const, error: "Application not found." };
-  setInfoRequested(applicationId, note.trim());
+  await setInfoRequested(applicationId, note.trim());
   await logAction({
     actorUserId: admin.id,
     actorRole: "ADMIN",
@@ -82,9 +83,9 @@ export async function requestApplicationInfo(applicationId: string, note: string
 
 export async function clearApplicationInfoRequest(applicationId: string) {
   const admin = await requireAdmin();
-  const app = getApplicationByIdAdmin(applicationId);
+  const app = await getApplicationByIdAdmin(applicationId);
   if (!app) return { ok: false as const, error: "Application not found." };
-  clearInfoRequested(applicationId);
+  await clearInfoRequested(applicationId);
   await logAction({
     actorUserId: admin.id,
     actorRole: "ADMIN",
@@ -97,12 +98,13 @@ export async function clearApplicationInfoRequest(applicationId: string) {
   return { ok: true as const };
 }
 
-export async function assignAssessor(applicationId: string, assessorName: string) {
+export async function assignAssessor(applicationId: string, assessorUserId: string) {
   const admin = await requireAdmin();
-  if (!assessorName) return { ok: false as const, error: "Select an assessor." };
-  const app = getApplicationByIdAdmin(applicationId);
+  if (!assessorUserId) return { ok: false as const, error: "Select an assessor." };
+  const app = await getApplicationByIdAdmin(applicationId);
   if (!app) return { ok: false as const, error: "Application not found." };
-  assignAssessorToApplication(applicationId, assessorName);
+  const assessorUser = await findUserById(assessorUserId);
+  await assignAssessorToApplication(applicationId, assessorUserId, admin.id);
   await logAction({
     actorUserId: admin.id,
     actorRole: "ADMIN",
@@ -110,7 +112,7 @@ export async function assignAssessor(applicationId: string, assessorName: string
     action: "application.assessor_assigned",
     targetType: "Application",
     targetId: applicationId,
-    after: assessorName,
+    after: assessorUser?.name ?? assessorUserId,
   });
   revalidatePath(`/portal/admin/applications/${applicationId}`);
   return { ok: true as const };
@@ -128,9 +130,9 @@ export async function recordDecision(
 ) {
   const admin = await requireAdmin();
   if (!rationale.trim()) return { ok: false as const, error: "A rationale is required to record a decision." };
-  const app = getApplicationByIdAdmin(applicationId);
+  const app = await getApplicationByIdAdmin(applicationId);
   if (!app) return { ok: false as const, error: "Application not found." };
-  recordApplicationDecision(applicationId, outcome, rationale.trim(), admin.name ?? admin.email ?? "Admin");
+  await recordApplicationDecision(applicationId, outcome, rationale.trim(), admin.id);
   await logAction({
     actorUserId: admin.id,
     actorRole: "ADMIN",

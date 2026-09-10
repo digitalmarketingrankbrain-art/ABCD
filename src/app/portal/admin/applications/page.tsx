@@ -3,7 +3,7 @@ import { getAllApplications } from "@/lib/portal/applicant-data";
 import { getUserOrgName } from "@/lib/portal/admin-data";
 
 export default async function AdminApplicationsPage() {
-  const applications = getAllApplications();
+  const applications = await getAllApplications();
   const rows = await Promise.all(
     applications.map(async (a) => ({ ...a, organisationName: await getUserOrgName(a.applicantUserId) })),
   );

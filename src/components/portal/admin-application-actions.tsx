@@ -33,13 +33,13 @@ function AdminApplicationActions({
   applicationId: string;
   stage: ApplicationStage;
   infoRequested: boolean;
-  assessorOptions: string[];
+  assessorOptions: { id: string; name: string }[];
 }) {
   const router = useRouter();
   const { toast } = useToast();
   const [modal, setModal] = React.useState<ModalKind>("none");
   const [note, setNote] = React.useState("");
-  const [assessorName, setAssessorName] = React.useState(assessorOptions[0] ?? "");
+  const [assessorUserId, setAssessorUserId] = React.useState(assessorOptions[0]?.id ?? "");
   const [outcome, setOutcome] = React.useState<"ACCREDIT" | "DECLINE" | "REQUEST_MORE_INFO">("ACCREDIT");
   const [rationale, setRationale] = React.useState("");
   const [submitting, setSubmitting] = React.useState(false);
@@ -79,10 +79,11 @@ function AdminApplicationActions({
 
   async function handleAssign() {
     setSubmitting(true);
-    const result = await assignAssessor(applicationId, assessorName);
+    const result = await assignAssessor(applicationId, assessorUserId);
     setSubmitting(false);
     if (!result.ok) return toast({ tone: "error", title: "Failed", description: result.error });
-    toast({ tone: "success", title: `Assigned to ${assessorName}` });
+    const assignedName = assessorOptions.find((a) => a.id === assessorUserId)?.name ?? "the selected assessor";
+    toast({ tone: "success", title: `Assigned to ${assignedName}` });
     closeAndRefresh();
   }
 
@@ -135,12 +136,12 @@ function AdminApplicationActions({
       <Modal open={modal === "assign"} onClose={() => setModal("none")} title="Assign assessor"
         footer={<>
           <Button variant="secondary" onClick={() => setModal("none")}>Cancel</Button>
-          <Button variant="primary" onClick={handleAssign} disabled={submitting || !assessorName}>Assign</Button>
+          <Button variant="primary" onClick={handleAssign} disabled={submitting || !assessorUserId}>Assign</Button>
         </>}>
         <label className="font-sans text-sm font-medium text-text" htmlFor="assessor-select">Assessor</label>
-        <Select id="assessor-select" value={assessorName} onChange={(e) => setAssessorName(e.target.value)} className="mt-2">
-          {assessorOptions.map((name) => (
-            <option key={name} value={name}>{name}</option>
+        <Select id="assessor-select" value={assessorUserId} onChange={(e) => setAssessorUserId(e.target.value)} className="mt-2">
+          {assessorOptions.map((a) => (
+            <option key={a.id} value={a.id}>{a.name}</option>
           ))}
         </Select>
       </Modal>

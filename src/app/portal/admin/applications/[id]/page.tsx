@@ -26,12 +26,12 @@ export default async function AdminApplicationDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const application = getApplicationByIdAdmin(id);
+  const application = await getApplicationByIdAdmin(id);
   if (!application) notFound();
 
   const orgName = await getUserOrgName(application.applicantUserId);
   const assessorUsers = await getUsersByRoleSafe("ASSESSOR");
-  const assessorOptions = assessorUsers.map((u) => u.name);
+  const assessorOptions = assessorUsers.map((u) => ({ id: u.id, name: u.name }));
   const auditEntries = await getAuditLogForTarget("Application", application.id);
 
   return (

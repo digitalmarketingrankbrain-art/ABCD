@@ -5,7 +5,7 @@ import { getInvoicesForUser } from "@/lib/portal/applicant-data";
 
 export default async function InvoicesListPage() {
   const session = await auth();
-  const userInvoices = getInvoicesForUser(session!.user.id);
+  const userInvoices = await getInvoicesForUser(session!.user.id);
 
   return (
     <div className="px-6 py-8">

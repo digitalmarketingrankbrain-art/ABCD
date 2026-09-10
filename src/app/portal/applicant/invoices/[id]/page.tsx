@@ -13,7 +13,7 @@ export default async function InvoiceDetailPage({
 }) {
   const { id } = await params;
   const session = await auth();
-  const invoice = getInvoiceById(id, session!.user.id);
+  const invoice = await getInvoiceById(id, session!.user.id);
   if (!invoice) notFound();
   const style = INVOICE_STATUS_STYLE[invoice.status];
 

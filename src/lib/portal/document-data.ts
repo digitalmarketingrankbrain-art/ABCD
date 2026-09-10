@@ -3,12 +3,13 @@ import { saveDocumentFile, guessMimeType } from "@/lib/storage";
 import type { DocumentOwnerType, DocumentKind } from "@prisma/client";
 
 /**
- * Real Prisma-backed Document/DocumentVersion records (Milestone 13) —
- * `ownerId` is a plain string, not a foreign key, deliberately: it
- * currently holds the in-memory placeholder Application id (e.g. "app-1")
- * since Applications themselves haven't been migrated off the in-memory
- * store yet (remaining Milestone 12 work). Document storage didn't need to
- * wait on that migration to be real.
+ * Real Prisma-backed Document/DocumentVersion records (Milestone 13, tied
+ * into the real Application checklist in the Applications migration).
+ * `ownerId` stays a plain string (not just a foreign key) since a document
+ * can in principle belong to owner types other than APPLICATION (schema
+ * allows ASSESSMENT/COMPETENCE/ORGANISATION too); `applicationId` is set
+ * alongside it as the real FK whenever the owner is an application, which
+ * is what src/lib/portal/applicant-data.ts's checklist builder queries by.
  */
 
 export async function uploadDocumentForOwner(input: {
@@ -18,14 +19,31 @@ export async function uploadDocumentForOwner(input: {
   buffer: Buffer;
   filename: string;
   uploadedById: string;
+  /** Required-document-type checklist item this upload satisfies, if any. */
+  requiredDocumentTypeId?: string;
   /** If provided, adds a new version to this existing Document instead of creating one. */
   existingDocumentId?: string;
 }) {
   const { storageKey, sizeBytes } = await saveDocumentFile(input.buffer, input.filename);
   const mimeType = guessMimeType(input.filename);
 
-  if (input.existingDocumentId) {
-    const doc = await prisma.document.findUnique({ where: { id: input.existingDocumentId } });
+  // Re-uploading for a checklist item that already has a document should add
+  // a new version to it, not create a second, orphaned Document row for the
+  // same required-document-type — resolve that even when the caller didn't
+  // already know the existing document's id.
+  const existingDocumentId =
+    input.existingDocumentId ??
+    (input.requiredDocumentTypeId
+      ? (
+          await prisma.document.findFirst({
+            where: { ownerType: input.ownerType, ownerId: input.ownerId, requiredDocumentTypeId: input.requiredDocumentTypeId },
+            select: { id: true },
+          })
+        )?.id
+      : undefined);
+
+  if (existingDocumentId) {
+    const doc = await prisma.document.findUnique({ where: { id: existingDocumentId } });
     if (!doc) throw new Error("Document not found.");
     const versionCount = await prisma.documentVersion.count({ where: { documentId: doc.id } });
     const version = await prisma.documentVersion.create({
@@ -45,7 +63,13 @@ export async function uploadDocumentForOwner(input: {
   }
 
   const document = await prisma.document.create({
-    data: { ownerType: input.ownerType, ownerId: input.ownerId, documentKind: input.documentKind },
+    data: {
+      ownerType: input.ownerType,
+      ownerId: input.ownerId,
+      applicationId: input.ownerType === "APPLICATION" ? input.ownerId : undefined,
+      documentKind: input.documentKind,
+      requiredDocumentTypeId: input.requiredDocumentTypeId,
+    },
   });
   const version = await prisma.documentVersion.create({
     data: {

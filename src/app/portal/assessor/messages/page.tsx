@@ -2,15 +2,18 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getAssignmentsForUser } from "@/lib/portal/assessor-data";
-import { getMessagesForApplication } from "@/lib/portal/applicant-data";
+import { getMessagesForApplicationByReference } from "@/lib/portal/applicant-data";
 
 export default async function AssessorMessagesIndexPage() {
   const session = await auth();
   const myAssignments = getAssignmentsForUser(session!.user.id);
-  const threads = myAssignments
-    .filter((a) => a.linkedApplicationId)
-    .map((a) => ({ assignment: a, messages: getMessagesForApplication(a.linkedApplicationId!) }))
-    .filter((t) => t.messages.length > 0);
+  const threads = (
+    await Promise.all(
+      myAssignments
+        .filter((a) => a.linkedApplicationId)
+        .map(async (a) => ({ assignment: a, messages: await getMessagesForApplicationByReference(a.linkedApplicationId!) })),
+    )
+  ).filter((t) => t.messages.length > 0);
 
   return (
     <div className="px-6 py-8">

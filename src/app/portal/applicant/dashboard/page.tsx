@@ -20,8 +20,7 @@ import { findByReferenceAdmin } from "@/lib/verification-records";
 export default async function ApplicantDashboardPage() {
   const session = await auth();
   const userId = session!.user.id;
-  const apps = getApplicationsForUser(userId);
-  const userInvoices = getInvoicesForUser(userId);
+  const [apps, userInvoices] = await Promise.all([getApplicationsForUser(userId), getInvoicesForUser(userId)]);
   const accreditation = findByReferenceAdmin("MAB-2026-00417"); // demo tie-in to the applicant's own org
 
   const requiredActions = [

@@ -16,7 +16,8 @@ export default async function AdminOrganisationDetailPage({
   const org = await getOrganisationByUserId(id);
   if (!org) notFound();
 
-  const applications = getAllApplications().filter((a) => a.applicantUserId === id);
+  const allApplications = await getAllApplications();
+  const applications = allApplications.filter((a) => a.applicantUserId === id);
   const records = VERIFICATION_RECORDS.filter((r) => r.organisationName === org.organisationName);
 
   return (

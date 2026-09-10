@@ -56,7 +56,14 @@ export interface Assignment {
   reportSubmittedAt: string | null;
   /** Documents shared into this assignment's context — read-only for the assessor. */
   sharedDocuments: { name: string; filename: string }[];
-  /** Links to the corresponding applicant-side Application id, when one exists in the placeholder data — lets the assessor and applicant see the same case-scoped thread. */
+  /**
+   * The corresponding real Application's referenceNumber, when one exists —
+   * lets the assessor and applicant see the same case-scoped thread. A
+   * reference number (not an id) because Applications are now real Postgres
+   * rows (Milestone 12) while this Assignment is still placeholder data, so
+   * there's no stable id to hardcode here; the reference number is stable
+   * and resolved to a real id via getApplicationIdByReference() at read time.
+   */
   linkedApplicationId: string | null;
 }
 
@@ -113,7 +120,7 @@ export const assignments: Assignment[] = [
       { name: "Quality Manual", filename: "quality-manual-v1.pdf" },
       { name: "Scope of Accreditation Request", filename: "scope-request.pdf" },
     ],
-    linkedApplicationId: "app-1",
+    linkedApplicationId: "MAB-APP-2026-0091",
   },
   {
     id: "asg-2",

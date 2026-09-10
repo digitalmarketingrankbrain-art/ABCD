@@ -38,7 +38,7 @@ export interface OrganisationSummary {
 /** Organisations are real (Prisma) as of Milestone 12; applications/accreditation records are still the in-memory placeholder stores until they're migrated too. */
 export async function getOrganisations(): Promise<OrganisationSummary[]> {
   const applicantUsers = await getUsersByRoleSafe("APPLICANT");
-  const applications = getAllApplications();
+  const applications = await getAllApplications();
 
   const summaries: OrganisationSummary[] = [];
   for (const u of applicantUsers) {

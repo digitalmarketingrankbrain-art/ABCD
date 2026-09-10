@@ -1,15 +1,15 @@
 import Link from "next/link";
 import { FileClock, ClipboardCheck, ShieldAlert, Receipt } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { getAllApplications, STAGE_LABEL } from "@/lib/portal/applicant-data";
+import { getAllApplications, getAllInvoices, STAGE_LABEL } from "@/lib/portal/applicant-data";
 import { getAllAssignments } from "@/lib/portal/assessor-data";
-import { invoices } from "@/lib/portal/applicant-data";
 import { VERIFICATION_RECORDS } from "@/lib/verification-records";
 
 const today = new Date().toISOString().slice(0, 10);
 
 export default async function AdminDashboardPage() {
-  const applications = getAllApplications();
+  const applications = await getAllApplications();
+  const invoices = await getAllInvoices();
   const allAssignments = getAllAssignments();
 
   const awaitingAction = applications

@@ -102,6 +102,11 @@ export async function getUserOrganisationName(userId: string): Promise<string> {
   return membership?.organisation.displayName ?? "—";
 }
 
+export async function getUserOrganisationId(userId: string): Promise<string | null> {
+  const membership = await prisma.organisationMembership.findFirst({ where: { userId } });
+  return membership?.organisationId ?? null;
+}
+
 /** MFA required (not just available) for Admin and Assessor — Phase 1. */
 export function mfaRequiredForRole(role: Role): boolean {
   return role === "ADMIN" || role === "ASSESSOR";

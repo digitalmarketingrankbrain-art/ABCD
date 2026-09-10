@@ -11,7 +11,7 @@ import {
   removeBlackout,
   type FindingStatus,
 } from "./assessor-data";
-import { addMessage } from "./applicant-data";
+import { addMessage, getApplicationIdByReference } from "./applicant-data";
 
 async function requireAssessor() {
   const session = await auth();
@@ -75,7 +75,9 @@ export async function sendAssignmentMessage(assignmentId: string, body: string) 
   if (!assignment) return { ok: false as const, error: "Assignment not found." };
   if (!assignment.linkedApplicationId) return { ok: false as const, error: "No conversation available for this assignment yet." };
   if (!body.trim()) return { ok: false as const, error: "Message can't be empty." };
-  addMessage(assignment.linkedApplicationId, body.trim(), { name: user.name ?? "Assessor", role: "ASSESSOR" });
+  const applicationId = await getApplicationIdByReference(assignment.linkedApplicationId);
+  if (!applicationId) return { ok: false as const, error: "No conversation available for this assignment yet." };
+  await addMessage(applicationId, body.trim(), user.id);
   revalidatePath(`/portal/assessor/assignments/${assignmentId}`);
   revalidatePath("/portal/assessor/messages");
   return { ok: true as const };
