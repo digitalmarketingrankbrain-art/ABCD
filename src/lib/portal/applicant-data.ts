@@ -371,6 +371,34 @@ export async function getDraftScopeExtensionSummary(userId: string): Promise<Sco
   };
 }
 
+export interface ScopeExtensionApplicationRow {
+  id: string;
+  referenceNumber: string;
+  primaryProgramName: string;
+  additionalScopeCount: number;
+  stage: ApplicationStage;
+  submittedAt: string | null;
+  updatedAt: string;
+}
+
+/** Past (non-draft) Scope Extension applications — shown alongside the wizard so a CB isn't limited to seeing only its current draft. */
+export async function getScopeExtensionApplicationsForUser(userId: string): Promise<ScopeExtensionApplicationRow[]> {
+  const rows = await prisma.application.findMany({
+    where: { applicantUserId: userId, applicationType: "SCOPE_EXTENSION", stage: { not: "DRAFT" } },
+    include: { program: { select: { name: true } } },
+    orderBy: { updatedAt: "desc" },
+  });
+  return rows.map((r) => ({
+    id: r.id,
+    referenceNumber: r.referenceNumber,
+    primaryProgramName: r.program.name,
+    additionalScopeCount: r.additionalScopeSlugs.length,
+    stage: r.stage,
+    submittedAt: r.submittedAt ? fmtDate(r.submittedAt) : null,
+    updatedAt: fmtDate(r.updatedAt),
+  }));
+}
+
 export async function submitApplication(applicationId: string, actorUserId: string): Promise<boolean> {
   const app = await prisma.application.findUnique({ where: { id: applicationId } });
   if (!app || app.stage !== "DRAFT") return false;

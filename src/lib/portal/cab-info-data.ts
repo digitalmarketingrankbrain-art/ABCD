@@ -1,3 +1,5 @@
+import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { getUserOrganisationId } from "@/lib/auth/store";
 import { countryName } from "@/lib/countries";
@@ -195,6 +197,52 @@ export async function setAppliedCountries(userId: string, countryCodes: string[]
       })),
     }),
   ]);
+}
+
+function generateTempPassword(): string {
+  // 12 random alphanumeric chars — not shown to anyone but the inviting CB admin, once, immediately after creation.
+  return crypto.randomBytes(9).toString("base64url").slice(0, 12);
+}
+
+export interface AddTeamMemberInput {
+  name: string;
+  email: string;
+  title: string;
+  membershipRole: "PRIMARY_CONTACT" | "MEMBER";
+}
+
+/**
+ * No email provider is wired (Phase 11: vendor TBD) — same honest gap as
+ * password reset (`src/lib/auth/actions.ts`'s `requestPasswordReset`), so
+ * this returns the generated temporary password directly to the caller
+ * (shown once, client-side, marked [DEV ONLY]) rather than pretending an
+ * invite email was sent.
+ */
+export async function addTeamMember(
+  requestingUserId: string,
+  input: AddTeamMemberInput,
+): Promise<{ ok: true; tempPassword: string } | { ok: false; error: string }> {
+  const organisationId = await requireOrganisationId(requestingUserId);
+
+  const existing = await prisma.user.findFirst({ where: { email: { equals: input.email, mode: "insensitive" } } });
+  if (existing) {
+    return { ok: false, error: "A user with this email already exists." };
+  }
+
+  const tempPassword = generateTempPassword();
+  const user = await prisma.user.create({
+    data: {
+      email: input.email,
+      name: input.name,
+      primaryRole: "APPLICANT",
+      passwordHash: bcrypt.hashSync(tempPassword, 10),
+    },
+  });
+  await prisma.organisationMembership.create({
+    data: { organisationId, userId: user.id, membershipRole: input.membershipRole, title: input.title || null },
+  });
+
+  return { ok: true, tempPassword };
 }
 
 export async function getTeamMembers(userId: string): Promise<TeamMemberEntry[]> {

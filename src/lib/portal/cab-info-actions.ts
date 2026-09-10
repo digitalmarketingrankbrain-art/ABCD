@@ -2,7 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
-import { updateCabBasicDetails, addLocation, setAppliedCountries, type CabDetails, type LocationEntry } from "./cab-info-data";
+import {
+  updateCabBasicDetails,
+  addLocation,
+  setAppliedCountries,
+  addTeamMember,
+  type CabDetails,
+  type LocationEntry,
+  type AddTeamMemberInput,
+} from "./cab-info-data";
 import { uploadDocumentForOwner } from "./document-data";
 import { getUserOrganisationId } from "@/lib/auth/store";
 import { MAX_UPLOAD_BYTES } from "@/lib/storage";
@@ -35,6 +43,17 @@ export async function addLocationAction(data: Omit<LocationEntry, "id">) {
   await addLocation(user.id, data);
   revalidatePath("/portal/applicant/profile");
   return { ok: true as const };
+}
+
+export async function addTeamMemberAction(input: AddTeamMemberInput) {
+  const user = await requireApplicant();
+  if (!input.name.trim() || !input.email.trim()) {
+    return { ok: false as const, error: "Name and email are required." };
+  }
+  const result = await addTeamMember(user.id, input);
+  if (!result.ok) return { ok: false as const, error: result.error };
+  revalidatePath("/portal/applicant/profile");
+  return { ok: true as const, tempPassword: result.tempPassword };
 }
 
 export async function uploadOrganisationDocument(file: File) {

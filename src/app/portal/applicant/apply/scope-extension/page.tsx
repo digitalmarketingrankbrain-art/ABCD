@@ -1,17 +1,19 @@
 import { auth } from "@/auth";
 import { getCabDetails, getAwardedSchemes } from "@/lib/portal/cab-info-data";
-import { getDraftScopeExtensionSummary } from "@/lib/portal/applicant-data";
+import { getDraftScopeExtensionSummary, getScopeExtensionApplicationsForUser } from "@/lib/portal/applicant-data";
 import { PROGRAMS } from "@/lib/programs";
 import { ScopeExtensionWizard } from "@/components/portal/scope-extension-wizard";
+import { ScopeExtensionHistory } from "@/components/portal/scope-extension-history";
 
 export default async function ScopeExtensionPage() {
   const session = await auth();
   const userId = session!.user.id;
 
-  const [cabDetails, awardedSchemes, draft] = await Promise.all([
+  const [cabDetails, awardedSchemes, draft, history] = await Promise.all([
     getCabDetails(userId),
     getAwardedSchemes(userId),
     getDraftScopeExtensionSummary(userId),
+    getScopeExtensionApplicationsForUser(userId),
   ]);
 
   const awardedSlugs = new Set(awardedSchemes.map((s) => s.slug));
@@ -27,7 +29,11 @@ export default async function ScopeExtensionPage() {
       <h1 className="font-display text-2xl font-semibold text-text">Scope Extension</h1>
       <p className="mt-1 font-sans text-sm text-text-muted">Apply to extend your accreditation to additional schemes.</p>
 
-      <div className="mt-6 rounded-lg border border-border bg-surface p-6">
+      <div className="mt-6">
+        <ScopeExtensionHistory items={history} />
+      </div>
+
+      <div className="rounded-lg border border-border bg-surface p-6">
         <ScopeExtensionWizard
           cabDetails={cabDetails}
           awardedSchemes={awardedSchemes}
