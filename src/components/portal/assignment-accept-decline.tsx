@@ -25,7 +25,7 @@ function AssignmentAcceptDecline({ assignmentId }: { assignmentId: string }) {
     const result = await acceptAssignment(assignmentId);
     setSubmitting(false);
     if (!result.ok) {
-      toast({ tone: "error", title: "Couldn't accept", description: result.error });
+      toast({ tone: "error", persistent: true, title: "Couldn't accept", description: result.error });
       return;
     }
     toast({ tone: "success", title: "Assignment accepted" });
@@ -37,7 +37,7 @@ function AssignmentAcceptDecline({ assignmentId }: { assignmentId: string }) {
     const result = await declineAssignment(assignmentId, reason);
     setSubmitting(false);
     if (!result.ok) {
-      toast({ tone: "error", title: "Couldn't decline", description: result.error });
+      toast({ tone: "error", persistent: true, title: "Couldn't decline", description: result.error });
       return;
     }
     setDeclineOpen(false);
@@ -47,10 +47,10 @@ function AssignmentAcceptDecline({ assignmentId }: { assignmentId: string }) {
 
   return (
     <div className="flex gap-3">
-      <Button variant="primary" onClick={handleAccept} disabled={submitting}>
+      <Button variant="primary" onClick={handleAccept} loading={submitting}>
         Accept assignment
       </Button>
-      <Button variant="destructive-outline" onClick={() => setDeclineOpen(true)} disabled={submitting}>
+      <Button variant="destructive-outline" onClick={() => setDeclineOpen(true)} loading={submitting}>
         Decline
       </Button>
       <Modal
@@ -60,7 +60,7 @@ function AssignmentAcceptDecline({ assignmentId }: { assignmentId: string }) {
         footer={
           <>
             <Button variant="secondary" onClick={() => setDeclineOpen(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={handleDecline} disabled={submitting || !reason.trim()}>
+            <Button variant="destructive" onClick={handleDecline} disabled={!reason.trim()} loading={submitting}>
               Decline assignment
             </Button>
           </>

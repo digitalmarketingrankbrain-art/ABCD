@@ -22,22 +22,18 @@ export default function GovernancePage() {
           <section>
             <h2 className="mb-2 font-sans text-lg font-semibold text-text">Decision-making structure</h2>
             <p>
-              Accreditation decisions are made by{" "}
-              <span className="text-sm text-text-muted">
-                [PLACEHOLDER — confirm actual governance model]
-              </span>{" "}
-              an authorised decision-maker, independently of the assessor who
-              conducts the assessment. This separation exists so the person
-              recommending an outcome is never the same person deciding it —
-              it is enforced in how applications are processed, not only
-              stated as policy.
+              Accreditation decisions are made by an authorised decision-maker,
+              independently of the assessor who conducts the assessment. This
+              separation exists so the person recommending an outcome is never
+              the same person deciding it — it is enforced in how applications
+              are processed, not only stated as policy.
             </p>
           </section>
           <section>
             <h2 className="mb-2 font-sans text-lg font-semibold text-text">Oversight</h2>
             <p className="rounded-md border border-border bg-background-portal px-4 py-3 text-sm text-text-muted">
-              [PLACEHOLDER — REQUIRES CONFIRMATION: any oversight body,
-              board, or external review mechanism.]
+              Details of our oversight body and external review mechanism will be published here once
+              finalized.
             </p>
           </section>
           <section>

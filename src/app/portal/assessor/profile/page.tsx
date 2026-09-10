@@ -18,8 +18,8 @@ export default async function AssessorProfilePage() {
           <Input id="email" defaultValue={user?.email} disabled />
         </FormField>
         <p className="font-sans text-xs text-text-muted">
-          [PLACEHOLDER — biography/qualifications editing form not built yet;
-          the underlying Assessor.bio field is real (Milestone 11).]
+          Editing your biography and qualifications isn&apos;t available yet — contact an administrator
+          if you need to update this information.
         </p>
       </form>
     </div>

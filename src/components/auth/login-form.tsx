@@ -93,7 +93,7 @@ function LoginForm() {
             required
           />
         </FormField>
-        <Button type="submit" variant="primary" disabled={loading}>
+        <Button type="submit" variant="primary" loading={loading}>
           {loading ? "Verifying…" : "Verify and sign in"}
         </Button>
         <button
@@ -132,7 +132,7 @@ function LoginForm() {
         />
       </FormField>
       <div className="flex items-center justify-between">
-        <Button type="submit" variant="primary" disabled={loading}>
+        <Button type="submit" variant="primary" loading={loading}>
           {loading ? "Signing in…" : "Sign in"}
         </Button>
         <Link href="/forgot-password" className="font-sans text-sm text-secondary hover:underline">

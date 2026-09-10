@@ -83,9 +83,8 @@ function Footer() {
           })}
         </div>
 
-        <div className="mt-10 flex flex-col gap-2 border-t border-text-inverse/15 pt-6 font-sans text-xs text-text-inverse/60 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-10 border-t border-text-inverse/15 pt-6 font-sans text-xs text-text-inverse/60">
           <p>© {new Date().getFullYear()} Meridian Accreditation Board.</p>
-          <p>[PLACEHOLDER — legal entity / registration details pending confirmation]</p>
         </div>
       </div>
     </footer>

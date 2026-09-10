@@ -18,10 +18,7 @@ function Hero() {
             We accredit testing and calibration laboratories, inspection
             bodies, and certification bodies against defined, published
             criteria — through a process you can read in full, and a result
-            anyone can check in seconds.{" "}
-            <span className="text-xs">
-              [PLACEHOLDER — confirm real scope list]
-            </span>
+            anyone can check in seconds.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link href="/verify" className={buttonVariants({ variant: "primary", size: "lg" })}>

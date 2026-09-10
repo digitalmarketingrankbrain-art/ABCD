@@ -52,7 +52,7 @@ function ForgotPasswordForm() {
       <FormField label="Email" htmlFor="email" required>
         <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoFocus />
       </FormField>
-      <Button type="submit" variant="primary" disabled={loading}>
+      <Button type="submit" variant="primary" loading={loading}>
         {loading ? "Sending…" : "Send reset link"}
       </Button>
     </form>

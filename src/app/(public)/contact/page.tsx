@@ -16,14 +16,13 @@ export default function ContactPage() {
         <aside className="flex flex-col gap-6">
           <div>
             <h2 className="font-sans text-sm font-semibold text-text">Registered address</h2>
-            <p className="mt-1 font-sans text-sm text-text-muted">
-              [PLACEHOLDER — REQUIRES CONFIRMATION]
-            </p>
+            <p className="mt-1 font-sans text-sm text-text-muted">To be published here.</p>
           </div>
           <div>
             <h2 className="font-sans text-sm font-semibold text-text">Response time</h2>
             <p className="mt-1 font-sans text-sm text-text-muted">
-              [PLACEHOLDER — REQUIRES CONFIRMATION: real response-time commitment]
+              We aim to respond to all enquiries as quickly as possible. A specific response-time
+              commitment will be published here once finalized.
             </p>
           </div>
         </aside>

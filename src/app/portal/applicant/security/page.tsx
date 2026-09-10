@@ -40,11 +40,9 @@ export default async function SecurityPage() {
       <section className="mt-8 border-t border-border pt-6">
         <h2 className="font-sans text-sm font-semibold text-text">Active sessions</h2>
         <p className="mt-1 font-sans text-sm text-text-muted">
-          [PLACEHOLDER — this deployment uses stateless (JWT) sessions, which
-          don&apos;t support server-side session enumeration/revocation without
-          a database-backed session store. Revisit if per-session revoke
-          becomes a real requirement — Auth.js supports a database session
-          strategy for exactly this.]
+          Viewing and revoking individual sessions isn&apos;t available yet. If you believe your account
+          has been accessed without your permission, change your password above and contact us right
+          away.
         </p>
       </section>
     </div>

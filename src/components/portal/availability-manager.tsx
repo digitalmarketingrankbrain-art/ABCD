@@ -58,7 +58,7 @@ function AvailabilityManager({ blackouts }: { blackouts: AvailabilityBlackout[] 
         <FormField label="Note (optional)" htmlFor="note">
           <Input id="note" value={note} onChange={(e) => setNote(e.target.value)} placeholder="e.g. Annual leave" />
         </FormField>
-        <Button type="submit" variant="secondary" disabled={submitting}>
+        <Button type="submit" variant="secondary" loading={submitting}>
           Add blackout date
         </Button>
       </form>

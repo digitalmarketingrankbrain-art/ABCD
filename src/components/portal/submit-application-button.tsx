@@ -16,7 +16,7 @@ function SubmitApplicationButton({ applicationId }: { applicationId: string }) {
     const result = await submitApplicationForReview(applicationId);
     setSubmitting(false);
     if (!result.ok) {
-      toast({ tone: "error", title: "Couldn't submit", description: result.error });
+      toast({ tone: "error", persistent: true, title: "Couldn't submit", description: result.error });
       return;
     }
     toast({ tone: "success", title: "Application submitted" });
@@ -24,7 +24,7 @@ function SubmitApplicationButton({ applicationId }: { applicationId: string }) {
   }
 
   return (
-    <Button variant="primary" onClick={handleSubmit} disabled={submitting}>
+    <Button variant="primary" onClick={handleSubmit} loading={submitting}>
       {submitting ? "Submitting…" : "Submit application"}
     </Button>
   );

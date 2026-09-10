@@ -75,7 +75,7 @@ function MfaSetupFlow({ redirectTo }: { redirectTo: string }) {
             required
           />
         </FormField>
-        <Button type="submit" variant="primary" disabled={loading}>
+        <Button type="submit" variant="primary" loading={loading}>
           {loading ? "Confirming…" : "Enable MFA"}
         </Button>
       </form>

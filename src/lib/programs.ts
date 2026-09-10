@@ -15,34 +15,34 @@ export const PROGRAMS: Program[] = [
     name: "Testing & Calibration Laboratories",
     scopeDescription:
       "Covers physical, chemical, and dimensional testing and calibration activities.",
-    standardReference: "[PLACEHOLDER — REQUIRES CONFIRMATION: standard referenced]",
+    standardReference: "To be confirmed and published here.",
   },
   {
     slug: "inspection-bodies",
     name: "Inspection Bodies",
     scopeDescription:
       "Covers inspection of products, processes, installations, and services against defined criteria.",
-    standardReference: "[PLACEHOLDER — REQUIRES CONFIRMATION: standard referenced]",
+    standardReference: "To be confirmed and published here.",
   },
   {
     slug: "management-systems-certification-bodies",
     name: "Management Systems Certification Bodies",
     scopeDescription:
       "Covers certification of quality, environmental, and other management systems.",
-    standardReference: "[PLACEHOLDER — REQUIRES CONFIRMATION: standard referenced]",
+    standardReference: "To be confirmed and published here.",
   },
   {
     slug: "product-certification-bodies",
     name: "Product Certification Bodies",
     scopeDescription:
       "Covers certification that specific products meet defined technical requirements.",
-    standardReference: "[PLACEHOLDER — REQUIRES CONFIRMATION: standard referenced]",
+    standardReference: "To be confirmed and published here.",
   },
   {
     slug: "certification-bodies-for-persons",
     name: "Certification Bodies for Persons",
     scopeDescription:
       "Covers certification of individuals' competence against defined criteria.",
-    standardReference: "[PLACEHOLDER — REQUIRES CONFIRMATION: standard referenced]",
+    standardReference: "To be confirmed and published here.",
   },
 ];

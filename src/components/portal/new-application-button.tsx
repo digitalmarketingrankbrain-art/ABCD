@@ -20,7 +20,7 @@ function NewApplicationButton() {
     setCreating(false);
     setOpen(false);
     if (!result.ok) {
-      toast({ tone: "error", title: "Couldn't start application", description: result.error });
+      toast({ tone: "error", persistent: true, title: "Couldn't start application", description: result.error });
       return;
     }
     router.push(`/portal/applicant/applications/${result.applicationId}`);

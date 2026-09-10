@@ -55,7 +55,7 @@ function ChangePasswordForm() {
           required
         />
       </FormField>
-      <Button type="submit" variant="secondary" disabled={loading} className="self-start">
+      <Button type="submit" variant="secondary" loading={loading} className="self-start">
         {loading ? "Updating…" : "Update password"}
       </Button>
     </form>

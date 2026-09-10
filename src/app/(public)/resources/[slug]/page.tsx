@@ -47,7 +47,11 @@ export default async function ResourceDetailPage({
         Download PDF
       </Button>
       <p className="mt-2 font-sans text-xs text-text-muted">
-        [PLACEHOLDER — document storage/download wired up in Milestone 13 (Document System).]
+        The downloadable document isn&apos;t published yet — check back soon, or{" "}
+        <a href="/contact" className="text-secondary hover:underline">
+          contact us
+        </a>{" "}
+        for a copy in the meantime.
       </p>
     </PageHeader>
   );

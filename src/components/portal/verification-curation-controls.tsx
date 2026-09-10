@@ -31,7 +31,7 @@ function VerificationCurationControls({
     setBusy(true);
     const result = await toggleVerificationPublished(reference, !isPublished);
     setBusy(false);
-    if (!result.ok) return toast({ tone: "error", title: "Failed", description: result.error });
+    if (!result.ok) return toast({ tone: "error", persistent: true, title: "Failed", description: result.error });
     router.refresh();
   }
 
@@ -39,7 +39,7 @@ function VerificationCurationControls({
     setBusy(true);
     const result = await toggleCertificateVisible(reference, !certificateVisible);
     setBusy(false);
-    if (!result.ok) return toast({ tone: "error", title: "Failed", description: result.error });
+    if (!result.ok) return toast({ tone: "error", persistent: true, title: "Failed", description: result.error });
     router.refresh();
   }
 

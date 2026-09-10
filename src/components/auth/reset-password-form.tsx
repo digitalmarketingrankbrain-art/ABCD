@@ -61,7 +61,7 @@ function ResetPasswordForm({ token }: { token: string }) {
           autoFocus
         />
       </FormField>
-      <Button type="submit" variant="primary" disabled={loading}>
+      <Button type="submit" variant="primary" loading={loading}>
         {loading ? "Updating…" : "Update password"}
       </Button>
     </form>

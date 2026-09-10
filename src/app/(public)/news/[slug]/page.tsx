@@ -42,9 +42,6 @@ export default async function NewsDetailPage({
         )}
       </div>
       <p className="mt-6 max-w-2xl font-sans text-base text-text">{item.excerpt}</p>
-      <p className="mt-4 font-sans text-xs text-text-muted">
-        [PLACEHOLDER — full article body wired to the admin-published Resources/News CMS in Milestone 10.]
-      </p>
     </PageHeader>
   );
 }

@@ -84,7 +84,12 @@ export default async function ProgramDetailPage({
           <section id="eligibility" className="scroll-mt-24">
             <h2 className="font-sans text-lg font-semibold text-text">Eligibility</h2>
             <p className="mt-2 font-sans text-base text-text-muted">
-              [PLACEHOLDER — REQUIRES CONFIRMATION: eligibility criteria for this program.]
+              Detailed eligibility criteria for this program will be published here once finalized. In
+              the meantime, please{" "}
+              <Link href="/contact" className="text-secondary hover:underline">
+                contact us
+              </Link>{" "}
+              with any questions about whether your organisation qualifies.
             </p>
           </section>
           <section id="criteria" className="scroll-mt-24">
@@ -114,7 +119,8 @@ export default async function ProgramDetailPage({
           <section id="documents" className="scroll-mt-24">
             <h2 className="font-sans text-lg font-semibold text-text">Required Documents</h2>
             <p className="mt-2 font-sans text-base text-text-muted">
-              [PLACEHOLDER — REQUIRES CONFIRMATION: required-document list for this program.]
+              The full required-document checklist for this program is confirmed once you start an
+              application. A summary will be published here once finalized.
             </p>
           </section>
         </div>

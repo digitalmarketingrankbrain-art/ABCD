@@ -23,7 +23,7 @@ function SubmitReportButton({ assignmentId }: { assignmentId: string }) {
     setSubmitting(false);
     setConfirming(false);
     if (!result.ok) {
-      toast({ tone: "error", title: "Couldn't submit report", description: result.error });
+      toast({ tone: "error", persistent: true, title: "Couldn't submit report", description: result.error });
       return;
     }
     toast({ tone: "success", title: "Report submitted" });
@@ -34,7 +34,7 @@ function SubmitReportButton({ assignmentId }: { assignmentId: string }) {
     return (
       <div className="flex items-center gap-3">
         <span className="font-sans text-sm text-text-muted">Submit this report? This can&apos;t be undone.</span>
-        <Button variant="destructive" size="sm" onClick={handleSubmit} disabled={submitting}>
+        <Button variant="destructive" size="sm" onClick={handleSubmit} loading={submitting}>
           {submitting ? "Submitting…" : "Confirm submit"}
         </Button>
         <Button variant="secondary" size="sm" onClick={() => setConfirming(false)}>Cancel</Button>

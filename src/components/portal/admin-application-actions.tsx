@@ -55,7 +55,7 @@ function AdminApplicationActions({
     setSubmitting(true);
     const result = await markInitialReviewComplete(applicationId);
     setSubmitting(false);
-    if (!result.ok) return toast({ tone: "error", title: "Failed", description: result.error });
+    if (!result.ok) return toast({ tone: "error", persistent: true, title: "Failed", description: result.error });
     toast({ tone: "success", title: "Moved to Document Review" });
     router.refresh();
   }
@@ -64,7 +64,7 @@ function AdminApplicationActions({
     setSubmitting(true);
     const result = await requestApplicationInfo(applicationId, note);
     setSubmitting(false);
-    if (!result.ok) return toast({ tone: "error", title: "Failed", description: result.error });
+    if (!result.ok) return toast({ tone: "error", persistent: true, title: "Failed", description: result.error });
     toast({ tone: "success", title: "Information requested" });
     closeAndRefresh();
   }
@@ -81,7 +81,7 @@ function AdminApplicationActions({
     setSubmitting(true);
     const result = await assignAssessor(applicationId, assessorUserId);
     setSubmitting(false);
-    if (!result.ok) return toast({ tone: "error", title: "Failed", description: result.error });
+    if (!result.ok) return toast({ tone: "error", persistent: true, title: "Failed", description: result.error });
     const assignedName = assessorOptions.find((a) => a.id === assessorUserId)?.name ?? "the selected assessor";
     toast({ tone: "success", title: `Assigned to ${assignedName}` });
     closeAndRefresh();
@@ -91,7 +91,7 @@ function AdminApplicationActions({
     setSubmitting(true);
     const result = await recordDecision(applicationId, outcome, rationale);
     setSubmitting(false);
-    if (!result.ok) return toast({ tone: "error", title: "Failed", description: result.error });
+    if (!result.ok) return toast({ tone: "error", persistent: true, title: "Failed", description: result.error });
     toast({ tone: "success", title: "Decision recorded" });
     closeAndRefresh();
   }
@@ -99,12 +99,12 @@ function AdminApplicationActions({
   return (
     <div className="flex flex-wrap gap-3">
       {stage === "INITIAL_REVIEW" && (
-        <Button variant="secondary" size="sm" onClick={handleMarkReviewed} disabled={submitting}>
+        <Button variant="secondary" size="sm" onClick={handleMarkReviewed} loading={submitting}>
           Mark initial review complete
         </Button>
       )}
       {infoRequested ? (
-        <Button variant="secondary" size="sm" onClick={handleClearInfoRequest} disabled={submitting}>
+        <Button variant="secondary" size="sm" onClick={handleClearInfoRequest} loading={submitting}>
           Clear information request
         </Button>
       ) : (
@@ -126,7 +126,7 @@ function AdminApplicationActions({
       <Modal open={modal === "info"} onClose={() => setModal("none")} title="Request information"
         footer={<>
           <Button variant="secondary" onClick={() => setModal("none")}>Cancel</Button>
-          <Button variant="primary" onClick={handleRequestInfo} disabled={submitting || !note.trim()}>Send request</Button>
+          <Button variant="primary" onClick={handleRequestInfo} disabled={!note.trim()} loading={submitting}>Send request</Button>
         </>}>
         <label className="font-sans text-sm font-medium text-text" htmlFor="info-note">What&apos;s needed from the applicant?</label>
         <textarea id="info-note" value={note} onChange={(e) => setNote(e.target.value)} rows={4}
@@ -136,7 +136,7 @@ function AdminApplicationActions({
       <Modal open={modal === "assign"} onClose={() => setModal("none")} title="Assign assessor"
         footer={<>
           <Button variant="secondary" onClick={() => setModal("none")}>Cancel</Button>
-          <Button variant="primary" onClick={handleAssign} disabled={submitting || !assessorUserId}>Assign</Button>
+          <Button variant="primary" onClick={handleAssign} disabled={!assessorUserId} loading={submitting}>Assign</Button>
         </>}>
         <label className="font-sans text-sm font-medium text-text" htmlFor="assessor-select">Assessor</label>
         <Select id="assessor-select" value={assessorUserId} onChange={(e) => setAssessorUserId(e.target.value)} className="mt-2">
@@ -149,7 +149,7 @@ function AdminApplicationActions({
       <Modal open={modal === "decision"} onClose={() => setModal("none")} title="Record decision"
         footer={<>
           <Button variant="secondary" onClick={() => setModal("none")}>Cancel</Button>
-          <Button variant="primary" onClick={handleDecision} disabled={submitting || !rationale.trim()}>Record decision</Button>
+          <Button variant="primary" onClick={handleDecision} disabled={!rationale.trim()} loading={submitting}>Record decision</Button>
         </>}>
         <p className="mb-3 font-sans text-xs text-text-muted">
           This is a distinct action from the assessor&apos;s recommendation — the deciding identity is always the signed-in admin, never the assigned assessor.

@@ -56,7 +56,7 @@ function AssignmentMessagesThread({ assignmentId, messages }: { assignmentId: st
           placeholder="Write a message…"
           className="flex-1 rounded-[6px] border border-border bg-surface px-3 py-2 font-sans text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1"
         />
-        <Button type="submit" variant="primary" disabled={sending || !body.trim()}>
+        <Button type="submit" variant="primary" disabled={!body.trim()} loading={sending}>
           Send
         </Button>
       </form>

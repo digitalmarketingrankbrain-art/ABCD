@@ -19,10 +19,7 @@ export default function WhoWeArePage() {
           <p>
             Meridian Accreditation Board accredits testing and calibration
             laboratories, inspection bodies, and certification bodies against
-            defined, published criteria.{" "}
-            <span className="text-sm text-text-muted">
-              [PLACEHOLDER — confirm real scope list]
-            </span>
+            defined, published criteria.
           </p>
           <p>
             We are structured to make our own accreditation decisions
@@ -37,9 +34,7 @@ export default function WhoWeArePage() {
             pages for how that independence is maintained.
           </p>
           <p className="rounded-md border border-border bg-background-portal px-4 py-3 text-sm text-text-muted">
-            [PLACEHOLDER — REQUIRES CONFIRMATION: legal entity name/status,
-            jurisdiction of registration, year established — omitted rather
-            than asserted until confirmed.]
+            Formal registration and jurisdiction details will be published here once finalized.
           </p>
         </div>
       </div>

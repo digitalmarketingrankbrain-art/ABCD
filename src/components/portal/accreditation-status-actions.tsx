@@ -32,7 +32,7 @@ function AccreditationStatusActions({ reference, currentStatus }: { reference: s
     const result = await changeAccreditationStatus(reference, target, reason);
     setSubmitting(false);
     if (!result.ok) {
-      toast({ tone: "error", title: "Couldn't update status", description: result.error });
+      toast({ tone: "error", persistent: true, title: "Couldn't update status", description: result.error });
       return;
     }
     toast({ tone: "success", title: `Status changed to ${target}` });
@@ -55,7 +55,7 @@ function AccreditationStatusActions({ reference, currentStatus }: { reference: s
         footer={
           <>
             <Button variant="secondary" onClick={() => setTarget(null)}>Cancel</Button>
-            <Button variant="destructive" onClick={handleConfirm} disabled={submitting || !reason.trim()}>
+            <Button variant="destructive" onClick={handleConfirm} disabled={!reason.trim()} loading={submitting}>
               Confirm
             </Button>
           </>

@@ -18,7 +18,7 @@ export const TRAINING_COURSES: TrainingCourse[] = [
     audience: "Prospective and newly onboarded assessors",
     format: "In-person",
     nextDate: "2026-11-03",
-    cost: "[PLACEHOLDER — REQUIRES CONFIRMATION]",
+    cost: "Contact us for pricing.",
     description:
       "Covers assessment method, evidence-gathering, and impartiality obligations required before taking on assignments.",
     prerequisites: "Relevant technical background in at least one accreditation scope.",
@@ -31,7 +31,7 @@ export const TRAINING_COURSES: TrainingCourse[] = [
     audience: "Client organisation staff preparing for certification",
     format: "Online",
     nextDate: "2026-10-14",
-    cost: "[PLACEHOLDER — REQUIRES CONFIRMATION]",
+    cost: "Contact us for pricing.",
     description:
       "Introduces the requirements of management systems certification and common gaps found during assessment.",
     prerequisites: "None.",

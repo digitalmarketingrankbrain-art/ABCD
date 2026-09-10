@@ -63,7 +63,7 @@ function RegisterForm() {
           required
         />
       </FormField>
-      <Button type="submit" variant="primary" disabled={loading}>
+      <Button type="submit" variant="primary" loading={loading}>
         {loading ? "Creating account…" : "Create account"}
       </Button>
     </form>

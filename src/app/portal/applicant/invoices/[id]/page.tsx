@@ -51,7 +51,8 @@ export default async function InvoiceDetailPage({
       )}
       {invoice.status === "ISSUED" && (
         <p className="mt-2 font-sans text-xs text-text-muted">
-          [PLACEHOLDER — payment collection wired up in Milestone 15 (Payments), per Phase 11&apos;s Stripe decision]
+          Online payment isn&apos;t available yet — please contact us to arrange payment for this
+          invoice.
         </p>
       )}
     </div>

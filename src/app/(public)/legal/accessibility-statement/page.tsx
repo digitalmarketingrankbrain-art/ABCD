@@ -13,11 +13,7 @@ export const metadata: Metadata = {
  */
 export default function AccessibilityStatementPage() {
   return (
-    <PageHeader
-      breadcrumbs={[{ label: "Accessibility Statement" }]}
-      title="Accessibility Statement"
-      meta="Last updated: [PLACEHOLDER]"
-    >
+    <PageHeader breadcrumbs={[{ label: "Accessibility Statement" }]} title="Accessibility Statement">
       <div className="mt-8 flex flex-col gap-6">
         <div>
           <h2 className="font-sans text-base font-semibold text-text">Conformance target</h2>
@@ -28,15 +24,19 @@ export default function AccessibilityStatementPage() {
         <div>
           <h2 className="font-sans text-base font-semibold text-text">Known limitations</h2>
           <p className="mt-1 font-sans text-sm text-text-muted">
-            [PLACEHOLDER — REQUIRES CONFIRMATION: any known limitations, to be
-            listed honestly once a full accessibility audit is complete —
-            see Phase 14 Testing.]
+            A full assistive-technology audit (screen reader and automated accessibility scanning)
+            has not yet been completed. Known limitations will be listed here honestly once that
+            audit is done.
           </p>
         </div>
         <div>
           <h2 className="font-sans text-base font-semibold text-text">Contact us about accessibility</h2>
           <p className="mt-1 font-sans text-sm text-text-muted">
-            [PLACEHOLDER — REQUIRES CONFIRMATION: contact channel for accessibility issues.]
+            If you encounter an accessibility barrier anywhere on this site, please{" "}
+            <a href="/contact" className="text-secondary hover:underline">
+              contact us
+            </a>{" "}
+            and we&apos;ll do our best to help.
           </p>
         </div>
       </div>

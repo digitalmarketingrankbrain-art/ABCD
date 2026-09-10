@@ -1,9 +1,10 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
+import { Spinner } from "./spinner";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-[6px] font-sans text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center gap-2 rounded-[6px] font-sans text-sm font-medium transition-colors active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
@@ -14,9 +15,9 @@ const buttonVariants = cva(
         destructive: "bg-error-text text-text-inverse hover:opacity-90",
         "destructive-outline":
           "border border-error-text bg-surface text-error-text hover:bg-error-surface",
-        inverse: "bg-surface text-primary hover:bg-background",
+        inverse: "bg-surface text-primary hover:bg-background focus-visible:ring-text-inverse",
         ghost:
-          "border border-text-inverse/40 text-text-inverse hover:bg-text-inverse/10",
+          "border border-text-inverse/40 text-text-inverse hover:bg-text-inverse/10 focus-visible:ring-text-inverse",
       },
       size: {
         sm: "h-8 px-3 text-xs",
@@ -33,16 +34,24 @@ const buttonVariants = cva(
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {}
+    VariantProps<typeof buttonVariants> {
+  /** Shows an inline spinner and disables the button — per Phase 4, button actions get a spinner, never a full-page blocking one. */
+  loading?: boolean;
+}
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, ...props }, ref) => {
+  ({ className, variant, size, loading, disabled, children, ...props }, ref) => {
     return (
       <button
         ref={ref}
+        disabled={disabled || loading}
+        aria-busy={loading || undefined}
         className={cn(buttonVariants({ variant, size }), className)}
         {...props}
-      />
+      >
+        {loading && <Spinner className="size-4" />}
+        {children}
+      </button>
     );
   },
 );

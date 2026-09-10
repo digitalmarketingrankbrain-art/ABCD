@@ -9,10 +9,10 @@ export const metadata: Metadata = {
 
 const STEPS = [
   { title: "Submit", body: "Tell us what you're appealing or complaining about, with any supporting evidence." },
-  { title: "Acknowledgement", body: "We confirm receipt of your submission within [PLACEHOLDER — REQUIRES CONFIRMATION]." },
+  { title: "Acknowledgement", body: "We confirm receipt of your submission. Our specific acknowledgement-time commitment will be published here once finalized." },
   { title: "Review", body: "Your submission is reviewed by staff not involved in the original decision or conduct in question." },
-  { title: "Outcome", body: "You receive a written outcome within [PLACEHOLDER — REQUIRES CONFIRMATION]." },
-  { title: "Escalation", body: "If you're not satisfied with the outcome, [PLACEHOLDER — REQUIRES CONFIRMATION: escalation path]." },
+  { title: "Outcome", body: "You receive a written outcome once our review is complete." },
+  { title: "Escalation", body: "If you're not satisfied with the outcome, an escalation path is available — details will be published here once finalized." },
 ];
 
 export default function ComplaintsAndAppealsPage() {

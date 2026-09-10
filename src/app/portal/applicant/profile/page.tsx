@@ -23,7 +23,8 @@ export default async function ProfilePage() {
           <Input id="email" defaultValue={user?.email} disabled />
         </FormField>
         <p className="font-sans text-xs text-text-muted">
-          [PLACEHOLDER — profile editing wired up once remaining portal data (Milestone 12b) moves off in-memory stores.]
+          Editing your profile isn&apos;t available yet — contact an administrator if you need to update
+          this information.
         </p>
         <Button variant="secondary" disabled className="self-start">
           Save changes
