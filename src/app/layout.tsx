@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Source_Serif_4, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import { ToastProvider } from "@/components/ui/toast";
 import { AuthSessionProvider } from "@/components/auth/session-provider";
+import { SITE_URL } from "@/lib/site-url";
 import "./globals.css";
 
 const sourceSerif = Source_Serif_4({
@@ -23,9 +24,11 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "Meridian Accreditation Board",
   description:
     "Meridian Accreditation Board — accreditation you can verify, not just trust.",
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({
