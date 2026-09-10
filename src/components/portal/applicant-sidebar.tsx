@@ -8,12 +8,14 @@ import {
   MessageSquare,
   User,
   Lock,
+  ClipboardPlus,
 } from "lucide-react";
 import { PortalSidebar } from "./portal-sidebar";
 
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/portal/applicant/dashboard", icon: LayoutDashboard },
   { label: "Applications", href: "/portal/applicant/applications", icon: FileText },
+  { label: "Scope Extension", href: "/portal/applicant/apply/scope-extension", icon: ClipboardPlus },
   { label: "Invoices", href: "/portal/applicant/invoices", icon: Receipt },
   { label: "Accreditation", href: "/portal/applicant/accreditation", icon: ShieldCheck },
   { label: "Messages", href: "/portal/applicant/messages", icon: MessageSquare },

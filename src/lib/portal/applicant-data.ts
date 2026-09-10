@@ -298,6 +298,79 @@ export async function createDraftApplication(userId: string, programSlug: string
   return { id: app.id };
 }
 
+export interface ScopeExtensionDraftInput {
+  primaryProgramSlug: string;
+  additionalScopeSlugs: string[];
+  draftData: Record<string, unknown>;
+}
+
+/** The CB Dashboard's "Apply → Scope Extension" wizard — one Application row (applicationType SCOPE_EXTENSION) can cover several schemes at once via `additionalScopeSlugs`. */
+export async function saveScopeExtensionDraft(
+  userId: string,
+  input: ScopeExtensionDraftInput,
+  existingApplicationId?: string,
+): Promise<{ id: string; referenceNumber: string }> {
+  const program = await prisma.program.findUnique({ where: { slug: input.primaryProgramSlug } });
+  if (!program) throw new Error(`Unknown program: ${input.primaryProgramSlug}`);
+  const organisationId = await getUserOrganisationId(userId);
+  if (!organisationId) throw new Error("No organisation found for this applicant.");
+
+  if (existingApplicationId) {
+    const updated = await prisma.application.update({
+      where: { id: existingApplicationId, applicantUserId: userId, stage: "DRAFT" },
+      data: {
+        programId: program.id,
+        additionalScopeSlugs: input.additionalScopeSlugs,
+        draftData: input.draftData as Prisma.InputJsonValue,
+      },
+    });
+    return { id: updated.id, referenceNumber: updated.referenceNumber };
+  }
+
+  const referenceNumber = `MAB-SE-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+  const created = await prisma.application.create({
+    data: {
+      referenceNumber,
+      organisationId,
+      applicantUserId: userId,
+      programId: program.id,
+      applicationType: "SCOPE_EXTENSION",
+      additionalScopeSlugs: input.additionalScopeSlugs,
+      draftData: input.draftData as Prisma.InputJsonValue,
+      stage: "DRAFT",
+    },
+  });
+  await prisma.applicationStageHistory.create({
+    data: { applicationId: created.id, toStage: "DRAFT", changedById: userId },
+  });
+  return { id: created.id, referenceNumber: created.referenceNumber };
+}
+
+export interface ScopeExtensionDraftSummary {
+  id: string;
+  referenceNumber: string;
+  primaryProgramSlug: string;
+  additionalScopeSlugs: string[];
+  draftData: Record<string, unknown>;
+}
+
+/** Lean resume-lookup for the Scope Extension wizard — doesn't build the full document checklist mapApplication() does, since the wizard only needs the raw selections. */
+export async function getDraftScopeExtensionSummary(userId: string): Promise<ScopeExtensionDraftSummary | undefined> {
+  const row = await prisma.application.findFirst({
+    where: { applicantUserId: userId, applicationType: "SCOPE_EXTENSION", stage: "DRAFT" },
+    include: { program: { select: { slug: true } } },
+    orderBy: { updatedAt: "desc" },
+  });
+  if (!row) return undefined;
+  return {
+    id: row.id,
+    referenceNumber: row.referenceNumber,
+    primaryProgramSlug: row.program.slug,
+    additionalScopeSlugs: row.additionalScopeSlugs,
+    draftData: (row.draftData as Record<string, unknown> | null) ?? {},
+  };
+}
+
 export async function submitApplication(applicationId: string, actorUserId: string): Promise<boolean> {
   const app = await prisma.application.findUnique({ where: { id: applicationId } });
   if (!app || app.stage !== "DRAFT") return false;
