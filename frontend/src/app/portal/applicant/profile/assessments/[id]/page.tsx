@@ -5,7 +5,7 @@ import { auth } from "@/auth";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getAssessmentByIdForUser } from "@/lib/portal/cb-assessments-data";
-import { STATUS_TONE, STATUS_LABEL, TYPE_LABEL } from "@/components/portal/cb-assessments-table";
+import { STATUS_TONE, STATUS_LABEL, TYPE_LABEL } from "@/lib/portal/cb-assessments-status";
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
