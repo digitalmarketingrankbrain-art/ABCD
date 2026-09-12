@@ -9,12 +9,20 @@ import {
   User,
   Lock,
   ClipboardPlus,
+  FolderOpen,
+  Building2,
+  ClipboardCheck,
+  AlertTriangle,
 } from "lucide-react";
 import { PortalSidebar } from "./portal-sidebar";
 
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/portal/applicant/dashboard", icon: LayoutDashboard },
   { label: "Profile", href: "/portal/applicant/profile", icon: User },
+  { label: "Documents", href: "/portal/applicant/profile?tab=documents", icon: FolderOpen },
+  { label: "CAB Info", href: "/portal/applicant/profile?tab=cab-info", icon: Building2 },
+  { label: "Assessments", href: "/portal/applicant/profile?tab=assessments", icon: ClipboardCheck },
+  { label: "NC", href: "/portal/applicant/profile?tab=nc", icon: AlertTriangle },
   { label: "Applications", href: "/portal/applicant/applications", icon: FileText },
   { label: "Scope Extension", href: "/portal/applicant/apply/scope-extension", icon: ClipboardPlus },
   { label: "Invoices", href: "/portal/applicant/invoices", icon: Receipt },

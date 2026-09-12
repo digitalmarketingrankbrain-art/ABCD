@@ -28,16 +28,18 @@ export interface TabsProps {
 function QuerySync({
   queryParam,
   values,
+  defaultValue,
   onResolve,
 }: {
   queryParam: string;
   values: string[];
+  defaultValue: string;
   onResolve: (value: string) => void;
 }) {
   const searchParams = useSearchParams();
   const fromQuery = searchParams.get(queryParam);
   React.useEffect(() => {
-    if (fromQuery && values.includes(fromQuery)) onResolve(fromQuery);
+    onResolve(fromQuery && values.includes(fromQuery) ? fromQuery : defaultValue);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fromQuery]);
   return null;
@@ -45,13 +47,19 @@ function QuerySync({
 
 /** Plain underline-style tabs, not pill/button tabs — Phase 4. */
 function Tabs({ items, defaultValue, className, queryParam }: TabsProps) {
-  const [active, setActive] = React.useState(defaultValue ?? items[0]?.value);
+  const resolvedDefault = defaultValue ?? items[0]?.value ?? "";
+  const [active, setActive] = React.useState(resolvedDefault);
 
   return (
     <div className={className}>
       {queryParam && (
         <React.Suspense fallback={null}>
-          <QuerySync queryParam={queryParam} values={items.map((i) => i.value)} onResolve={setActive} />
+          <QuerySync
+            queryParam={queryParam}
+            values={items.map((i) => i.value)}
+            defaultValue={resolvedDefault}
+            onResolve={setActive}
+          />
         </React.Suspense>
       )}
       <div role="tablist" className="flex gap-6 border-b border-border">
