@@ -1,4 +1,4 @@
-// Meridian Accreditation Board — Prisma schema
+// SAAF — Prisma schema
 // Direct translation of the Phase 12 data model (docs/phases/phase-12-data-model.md).
 // Milestone 11: schema + migrations only. Milestone 12 wires the application
 // code (currently reading in-memory placeholder stores) to this database.
@@ -32,14 +32,25 @@ enum AdminPermission {
   FINANCE
 }
 
+// Real DB storage (not in-memory) is required here: Next.js dev-mode
+// compiles Server Actions and Route Handlers as separate module instances,
+// so a login OTP created by requestLoginOtp (a Server Action) and consumed
+// by auth.ts's authorize() (invoked from the NextAuth Route Handler) would
+// never see the same in-memory Map. Short-lived and single-use by design —
+// a fresh request overwrites any pending code for that email.
+model LoginOtp {
+  email     String   @id
+  code      String
+  expiresAt DateTime @map("expires_at")
+
+  @@map("login_otps")
+}
+
 model User {
   id           String     @id @default(cuid())
   email        String     @unique
   name         String
   primaryRole  Role       @map("primary_role")
-  passwordHash String     @map("password_hash")
-  mfaEnabled   Boolean    @default(false) @map("mfa_enabled")
-  mfaSecret    String?    @map("mfa_secret")
   status       UserStatus @default(ACTIVE)
   createdAt    DateTime   @default(now()) @map("created_at")
   updatedAt    DateTime   @updatedAt @map("updated_at")
@@ -553,7 +564,7 @@ model DocumentVersion {
 }
 
 /**
- * AB-issued reference material (checklists/forms/guidance) visible to every CB — the "UAF"/AB tab under CB Documents. Not organisation-scoped.
+ * AB-issued reference material (checklists/forms/guidance) visible to every CB — the "SAAF"/AB tab under CB Documents. Not organisation-scoped.
  */
 model ReferenceDocument {
   id          String   @id @default(cuid())

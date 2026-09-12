@@ -20,7 +20,7 @@ function PortalSidebar({ items }: { items: SidebarItem[] }) {
   const pathname = usePathname();
 
   return (
-    <nav className="w-56 shrink-0 border-r border-border-portal bg-surface">
+    <nav className="sticky top-16 w-56 shrink-0 border-r border-border-portal bg-surface">
       <ul className="flex flex-col gap-0.5 p-3">
         {items.map((item) => {
           const active = pathname === item.href || pathname?.startsWith(item.href + "/");

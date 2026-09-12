@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
-  title: "Complaints & Appeals | Meridian Accreditation Board",
+  title: "Complaints & Appeals | SAAF",
   description: "How to appeal an accreditation decision or raise a complaint about conduct or impartiality.",
 };
 

@@ -161,11 +161,11 @@ function ScopeExtensionWizard({
               <p className="mb-3">By submitting this Scope Extension application, you confirm and agree that:</p>
               <ol className="list-decimal space-y-2 pl-5">
                 <li>All information provided in this application is true, complete, and accurate to the best of your knowledge.</li>
-                <li>You will cooperate with Meridian Accreditation Board (MAB) to enable review of documentation and, where applicable, an on-site or witness assessment.</li>
-                <li>You will comply with MAB&apos;s accreditation requirements and relevant scheme-specific guidance documents for each scope requested.</li>
+                <li>You will cooperate with SAAF to enable review of documentation and, where applicable, an on-site or witness assessment.</li>
+                <li>You will comply with SAAF&apos;s accreditation requirements and relevant scheme-specific guidance documents for each scope requested.</li>
                 <li>You confirm your organisation has certified at least one client under each management system scheme requested, where applicable.</li>
-                <li>You understand that fees associated with this application are described in MAB&apos;s published Fee Structure and are non-refundable once assessment work has begun.</li>
-                <li>You will notify MAB promptly of any material change to your organisation&apos;s structure, ownership, or certified client base that could affect this application.</li>
+                <li>You understand that fees associated with this application are described in SAAF&apos;s published Fee Structure and are non-refundable once assessment work has begun.</li>
+                <li>You will notify SAAF promptly of any material change to your organisation&apos;s structure, ownership, or certified client base that could affect this application.</li>
                 <li>Accreditation, once granted, applies only to the specific scopes for which it was awarded and must not be represented otherwise.</li>
               </ol>
             </div>

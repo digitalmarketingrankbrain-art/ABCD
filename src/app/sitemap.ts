@@ -33,8 +33,7 @@ const STATIC_ROUTES = [
 ];
 
 /**
- * Excludes auth pages (login/register/forgot-password/reset-password — not
- * content, and reset-password carries a one-time token) and /verify/[reference]
+ * Excludes auth pages (login/register — not content) and /verify/[reference]
  * (dynamic per-record lookups, not a static content set to enumerate here).
  */
 export default function sitemap(): MetadataRoute.Sitemap {

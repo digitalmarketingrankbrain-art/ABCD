@@ -1,21 +1,22 @@
 @import "tailwindcss";
 
 :root {
-  --color-primary: #13233e;
-  --color-primary-hover: #0c1729;
-  --color-secondary: #1f4e5f;
-  --color-accent: #b8722a;
+  --color-primary: #0d2b20;
+  --color-primary-hover: #071c14;
+  --color-secondary: #1f5c3f;
+  --color-accent: #c9a24a;
+  --color-accent-hover: #b48d38;
 
-  --color-background: #f7f5f1;
+  --color-background: #f4f1e6;
   --color-background-portal: #f4f5f6;
   --color-surface: #ffffff;
 
-  --color-border: #dcd7cd;
+  --color-border: #ded7c4;
   --color-border-portal: #d7dae0;
 
-  --color-text: #1b2430;
-  --color-text-muted: #5b6472;
-  --color-text-inverse: #f7f5f1;
+  --color-text: #1a221c;
+  --color-text-muted: #5c645d;
+  --color-text-inverse: #ffffff;
 
   --color-success-text: #1b6b41;
   --color-success-surface: #e5f3ea;
@@ -25,6 +26,8 @@
   --color-error-surface: #fbeae9;
   --color-info-text: #4b5563;
   --color-info-surface: #eef0f2;
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 @theme inline {
@@ -32,6 +35,7 @@
   --color-primary-hover: var(--color-primary-hover);
   --color-secondary: var(--color-secondary);
   --color-accent: var(--color-accent);
+  --color-accent-hover: var(--color-accent-hover);
 
   --color-background: var(--color-background);
   --color-background-portal: var(--color-background-portal);
@@ -53,7 +57,7 @@
   --color-info-text: var(--color-info-text);
   --color-info-surface: var(--color-info-surface);
 
-  --font-display: var(--font-source-serif), ui-serif, Georgia, serif;
+  --font-display: var(--font-ibm-plex-sans), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-ibm-plex-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-ibm-plex-mono), ui-monospace, monospace;
 }
@@ -61,4 +65,42 @@
 body {
   background: var(--color-background);
   color: var(--color-text);
+}
+
+/* Scroll-triggered entrance, used by <Reveal> (src/components/ui/reveal.tsx). */
+.reveal {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 500ms var(--ease-out), transform 500ms var(--ease-out);
+}
+.reveal[data-visible="true"] {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-up {
+  animation: fade-up 500ms var(--ease-out) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .animate-fade-up {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
 }

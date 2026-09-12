@@ -28,9 +28,9 @@ interface DemoRow {
 }
 
 const demoRows: DemoRow[] = [
-  { id: "1", reference: "MAB-2026-00417", organisation: "Northfield Testing Laboratories", status: "ACTIVE", effectiveDate: "2026-01-14" },
-  { id: "2", reference: "MAB-2025-00298", organisation: "Prairie Inspection Services", status: "SUSPENDED", effectiveDate: "2025-06-02" },
-  { id: "3", reference: "MAB-2023-00091", organisation: "Coastal Certification Group", status: "WITHDRAWN", effectiveDate: "2023-11-20" },
+  { id: "1", reference: "SAAF-2026-00417", organisation: "Northfield Testing Laboratories", status: "ACTIVE", effectiveDate: "2026-01-14" },
+  { id: "2", reference: "SAAF-2025-00298", organisation: "Prairie Inspection Services", status: "SUSPENDED", effectiveDate: "2025-06-02" },
+  { id: "3", reference: "SAAF-2023-00091", organisation: "Coastal Certification Group", status: "WITHDRAWN", effectiveDate: "2023-11-20" },
 ];
 
 const columns: DataTableColumn<DemoRow>[] = [
@@ -139,7 +139,7 @@ export default function DesignSystemPreview() {
             <Input id="org-name" placeholder="Northfield Testing Laboratories" />
           </FormField>
           <FormField label="Accreditation number" htmlFor="acc-num" error="This field is required.">
-            <Input id="acc-num" invalid placeholder="MAB-2026-00417" />
+            <Input id="acc-num" invalid placeholder="SAAF-2026-00417" />
           </FormField>
           <FormField label="Program" htmlFor="program">
             <Select id="program" defaultValue="">
@@ -154,7 +154,7 @@ export default function DesignSystemPreview() {
       <section className="flex flex-col gap-4">
         <h2 className="font-sans text-sm font-semibold uppercase tracking-[0.02em] text-text-muted">Alerts</h2>
         <div className="flex flex-col gap-3">
-          <Alert tone="success" title="Application submitted">Your application MAB-2026-00417 was submitted for review.</Alert>
+          <Alert tone="success" title="Application submitted">Your application SAAF-2026-00417 was submitted for review.</Alert>
           <Alert tone="warning" title="Action needed">A reviewer has requested an updated Quality Manual.</Alert>
           <Alert tone="error" title="We couldn't save your changes">Your existing information has not been removed. Please try again.</Alert>
           <Alert tone="info" title="Last reviewed">This governance page was last reviewed on 14 Jan 2026.</Alert>
@@ -244,7 +244,7 @@ export default function DesignSystemPreview() {
           <p className="font-display text-4xl font-semibold text-text">Display / H1 — Source Serif 4</p>
           <p className="font-sans text-2xl font-semibold text-text">H2 — IBM Plex Sans</p>
           <p className="font-sans text-base text-text">Body — IBM Plex Sans</p>
-          <p className="font-mono text-sm text-text">MAB-2026-00417 — IBM Plex Mono (reference data)</p>
+          <p className="font-mono text-sm text-text">SAAF-2026-00417 — IBM Plex Mono (reference data)</p>
         </div>
         <div className="flex items-center gap-2 text-text-muted">
           <FileText className="size-4" strokeWidth={1.5} />

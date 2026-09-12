@@ -19,7 +19,7 @@ export async function generateMetadata({
   const program = PROGRAMS.find((p) => p.slug === slug);
   if (!program) return {};
   return {
-    title: `${program.name} | Meridian Accreditation Board`,
+    title: `${program.name} | SAAF`,
     description: program.scopeDescription,
   };
 }

@@ -5,7 +5,7 @@ import { PROGRAMS } from "@/lib/programs";
 import { getProgramFees } from "@/lib/program-fees";
 
 export const metadata: Metadata = {
-  title: "Fees | Meridian Accreditation Board",
+  title: "Fees | SAAF",
   description: "Fee structure and guidance by accreditation program.",
 };
 

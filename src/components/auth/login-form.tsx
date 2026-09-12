@@ -8,138 +8,199 @@ import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
-import { checkCredentials } from "@/lib/auth/actions";
+import { cn } from "@/lib/utils";
+import { requestLoginOtp } from "@/lib/auth/actions";
+import type { Role } from "@/lib/auth/store";
 
-type Step = "credentials" | "mfa";
+type Step = "email" | "otp";
+type Portal = "cb" | "ab";
+
+const PORTAL_CONFIG: Record<Portal, { label: string; allowedRoles: Role[]; wrongPortalMessage: string }> = {
+  cb: {
+    label: "Certification Body",
+    allowedRoles: ["APPLICANT"],
+    wrongPortalMessage: "This isn't a Certification Body account. Switch to “Assessor” above.",
+  },
+  ab: {
+    label: "Assessor",
+    allowedRoles: ["ADMIN", "ASSESSOR"],
+    wrongPortalMessage: "This isn't an Accreditation Body staff or assessor account. Switch to “Certification Body” above.",
+  },
+};
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/portal";
 
-  const [step, setStep] = React.useState<Step>("credentials");
+  const [portal, setPortal] = React.useState<Portal>("cb");
+  const [step, setStep] = React.useState<Step>("email");
   const [email, setEmail] = React.useState("");
-  const [password, setPassword] = React.useState("");
-  const [mfaCode, setMfaCode] = React.useState("");
+  const [otp, setOtp] = React.useState("");
+  const [devCode, setDevCode] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(false);
 
-  async function handleCredentialsSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  const config = PORTAL_CONFIG[portal];
+
+  function selectPortal(next: Portal) {
+    setPortal(next);
+    setStep("email");
+    setOtp("");
+    setDevCode(null);
+    setError(null);
+  }
+
+  async function requestCode() {
     setError(null);
     setLoading(true);
-    const result = await checkCredentials(email, password);
+    const result = await requestLoginOtp(email, config.allowedRoles);
     setLoading(false);
 
     if (!result.ok) {
-      setError(
-        "rateLimited" in result && result.rateLimited
-          ? "Too many sign-in attempts. Wait 15 minutes and try again."
-          : "Incorrect email or password.",
-      );
+      if ("wrongPortal" in result && result.wrongPortal) {
+        setError(config.wrongPortalMessage);
+        return;
+      }
+      setError(result.error);
       return;
     }
-    if (result.mfaRequired) {
-      setStep("mfa");
-      return;
-    }
-    await completeSignIn();
+    setDevCode(result.devCode);
+    setStep("otp");
   }
 
-  async function handleMfaSubmit(e: React.FormEvent) {
+  async function handleEmailSubmit(e: React.FormEvent) {
     e.preventDefault();
-    await completeSignIn();
+    await requestCode();
   }
 
-  async function completeSignIn() {
+  async function handleOtpSubmit(e: React.FormEvent) {
+    e.preventDefault();
     setError(null);
     setLoading(true);
-    const result = await signIn("credentials", {
-      email,
-      password,
-      mfaCode,
-      redirect: false,
-    });
+    const result = await signIn("credentials", { email, otp, redirect: false });
     setLoading(false);
 
     if (result?.error) {
-      setError(
-        step === "mfa"
-          ? "That code didn't match. Check your authenticator app and try again."
-          : "Incorrect email or password.",
-      );
+      setError("That code didn't match or has expired. Try again or request a new one.");
       return;
     }
     router.push(callbackUrl);
-    router.refresh();
   }
 
-  if (step === "mfa") {
+  const portalToggle = (
+    <div className="mb-6" role="radiogroup" aria-label="Login as">
+      <div className="grid grid-cols-2 gap-2 rounded-lg border border-border bg-background p-1">
+        {(Object.keys(PORTAL_CONFIG) as Portal[]).map((key) => (
+          <button
+            key={key}
+            type="button"
+            role="radio"
+            aria-checked={portal === key}
+            onClick={() => selectPortal(key)}
+            className={cn(
+              "rounded-md px-3 py-2 font-sans text-sm font-medium transition",
+              portal === key
+                ? "bg-surface text-text shadow-sm"
+                : "text-text-muted hover:text-text",
+            )}
+          >
+            Login as {PORTAL_CONFIG[key].label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  if (step === "otp") {
     return (
-      <form onSubmit={handleMfaSubmit} className="flex flex-col gap-5">
-        <p className="font-sans text-sm text-text-muted">
-          Enter the 6-digit code from your authenticator app.
-        </p>
-        {error && <Alert tone="error" title="Sign in failed">{error}</Alert>}
-        <FormField label="Authentication code" htmlFor="mfaCode" required>
-          <Input
-            id="mfaCode"
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            maxLength={6}
-            value={mfaCode}
-            onChange={(e) => setMfaCode(e.target.value)}
-            autoFocus
-            required
-          />
-        </FormField>
-        <Button type="submit" variant="primary" loading={loading}>
-          {loading ? "Verifying…" : "Verify and sign in"}
-        </Button>
-        <button
-          type="button"
-          onClick={() => setStep("credentials")}
-          className="font-sans text-sm text-text-muted hover:underline"
-        >
-          ← Back
-        </button>
-      </form>
+      <div>
+        {portalToggle}
+        <form onSubmit={handleOtpSubmit} className="flex flex-col gap-5">
+          <p className="font-sans text-sm text-text-muted">
+            Enter the 6-digit code sent for <span className="font-medium text-text">{email}</span>.
+          </p>
+          {error && <Alert tone="error" title="Sign in failed">{error}</Alert>}
+          {devCode && (
+            <Alert tone="info" title="[DEV ONLY] No email/SMS provider is connected yet">
+              <p>This code would normally be sent to your email. For now, here it is:</p>
+              <p className="mt-1 font-mono text-lg text-text">{devCode}</p>
+            </Alert>
+          )}
+          <FormField label="One-time code" htmlFor="otp" required>
+            <Input
+              id="otp"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={6}
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              autoFocus
+              required
+              suppressHydrationWarning
+            />
+          </FormField>
+          <Button type="submit" variant="primary" loading={loading}>
+            {loading ? "Verifying…" : "Sign in"}
+          </Button>
+          <div className="flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => {
+                setStep("email");
+                setOtp("");
+                setDevCode(null);
+                setError(null);
+              }}
+              className="font-sans text-sm text-text-muted hover:underline"
+            >
+              ← Use a different email
+            </button>
+            <button
+              type="button"
+              onClick={requestCode}
+              disabled={loading}
+              className="font-sans text-sm text-secondary hover:underline"
+            >
+              Resend code
+            </button>
+          </div>
+        </form>
+      </div>
     );
   }
 
   return (
-    <form onSubmit={handleCredentialsSubmit} className="flex flex-col gap-5">
-      {error && <Alert tone="error" title="Sign in failed">{error}</Alert>}
-      <FormField label="Email" htmlFor="email" required>
-        <Input
-          id="email"
-          type="email"
-          autoComplete="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          autoFocus
-          required
-        />
-      </FormField>
-      <FormField label="Password" htmlFor="password" required>
-        <Input
-          id="password"
-          type="password"
-          autoComplete="current-password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-      </FormField>
-      <div className="flex items-center justify-between">
+    <div>
+      {portalToggle}
+      <form onSubmit={handleEmailSubmit} className="flex flex-col gap-5">
+        {error && <Alert tone="error" title="Couldn't send code">{error}</Alert>}
+        <FormField label="Email" htmlFor="email" required>
+          <Input
+            id="email"
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoFocus
+            required
+            suppressHydrationWarning
+          />
+        </FormField>
         <Button type="submit" variant="primary" loading={loading}>
-          {loading ? "Signing in…" : "Sign in"}
+          {loading ? "Sending code…" : "Send code"}
         </Button>
-        <Link href="/forgot-password" className="font-sans text-sm text-secondary hover:underline">
-          Forgot password?
-        </Link>
-      </div>
-    </form>
+      </form>
+
+      {portal === "cb" && (
+        <p className="mt-4 font-sans text-sm text-text-muted">
+          New applicant organisation?{" "}
+          <Link href="/register" className="text-secondary hover:underline">
+            Create an account
+          </Link>
+        </p>
+      )}
+    </div>
   );
 }
 

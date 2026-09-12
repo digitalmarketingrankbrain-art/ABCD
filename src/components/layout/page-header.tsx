@@ -17,7 +17,7 @@ function PageHeader({ breadcrumbs, title, description, meta, children }: PageHea
         {meta && (
           <p className="mt-4 font-sans text-xs text-text-muted">{meta}</p>
         )}
-        <h1 className="mt-2 font-display text-3xl font-semibold text-text sm:text-4xl">
+        <h1 className="mt-2 font-display text-3xl font-bold tracking-tight text-text sm:text-4xl">
           {title}
         </h1>
         {description && (

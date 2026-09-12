@@ -2,12 +2,11 @@ import { AdminUsersTable } from "@/components/portal/admin-users-table";
 import { getAllUsersSafe } from "@/lib/auth/store";
 
 /**
- * getAllUsersSafe() excludes passwordHash/mfaSecret at the Prisma query
- * level (see src/lib/auth/store.ts) — sensitive fields never load into this
- * Server Component's memory in the first place, not just never reach the
- * client. Milestone 10 caught the "never pass full user records to a
- * Client Component" version of this rule; this hardens it one layer
- * earlier.
+ * getAllUsersSafe() selects only display-safe fields at the Prisma query
+ * level (see src/lib/auth/store.ts) rather than loading a full user record
+ * into this Server Component just to pass a subset to the Client Component
+ * below. Milestone 10 caught the "never pass full user records to a Client
+ * Component" version of this rule; this applies it one layer earlier.
  */
 export default async function AdminUsersPage() {
   const rows = await getAllUsersSafe();

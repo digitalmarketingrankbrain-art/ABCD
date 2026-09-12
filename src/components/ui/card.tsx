@@ -10,9 +10,9 @@ function Card({ className, interactive, ...props }: CardProps) {
   return (
     <div
       className={cn(
-        "rounded-lg border border-border bg-surface p-6 transition-shadow",
+        "rounded-lg border border-border bg-surface p-6 transition duration-150",
         interactive &&
-          "hover:border-secondary hover:shadow-[0_2px_12px_rgba(19,35,62,0.08)]",
+          "hover:-translate-y-0.5 hover:border-secondary hover:shadow-[0_2px_12px_rgba(13,43,32,0.08)]",
         className,
       )}
       {...props}

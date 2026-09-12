@@ -30,7 +30,7 @@ export default async function ApplicantDashboardPage() {
     getNonConformitiesForUser(userId),
     getAssessmentsForUser(userId),
   ]);
-  const accreditation = findByReferenceAdmin("MAB-2026-00417"); // demo tie-in to the applicant's own org
+  const accreditation = findByReferenceAdmin("SAAF-2026-00417"); // demo tie-in to the applicant's own org
   const openNcs = nonConformities.filter((n) => n.status === "OPEN");
   const upcomingAssessments = assessments.filter((a) => a.status === "SCHEDULED" || a.status === "IN_PROGRESS");
 

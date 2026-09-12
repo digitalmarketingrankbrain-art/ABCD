@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import { PageHeader } from "@/components/layout/page-header";
 
 export const metadata: Metadata = {
-  title: "Who We Are | Meridian Accreditation Board",
-  description: "What Meridian Accreditation Board does and how it operates independently.",
+  title: "Who We Are | SAAF",
+  description: "What SAAF does and how it operates independently.",
 };
 
 export default function WhoWeArePage() {
@@ -17,9 +17,9 @@ export default function WhoWeArePage() {
       <div className="mx-auto max-w-3xl px-6 py-12">
         <div className="flex flex-col gap-6 font-sans text-base leading-relaxed text-text">
           <p>
-            Meridian Accreditation Board accredits testing and calibration
-            laboratories, inspection bodies, and certification bodies against
-            defined, published criteria.
+            The South Asia Accreditation Foundation (SAAF) accredits testing and
+            calibration laboratories, inspection bodies, and certification bodies
+            against defined, published criteria.
           </p>
           <p>
             We are structured to make our own accreditation decisions

@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { LegalPage } from "@/components/layout/legal-page";
 
 export const metadata: Metadata = {
-  title: "Terms of Use | Meridian Accreditation Board",
-  description: "Terms governing use of this website and the Meridian Accreditation Board portal.",
+  title: "Terms of Use | SAAF",
+  description: "Terms governing use of this website and the SAAF portal.",
 };
 
 export default function TermsOfUsePage() {

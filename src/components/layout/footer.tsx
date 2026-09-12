@@ -15,20 +15,24 @@ function Footer() {
   const [openGroup, setOpenGroup] = React.useState<string | null>(null);
 
   return (
-    <footer className="bg-primary text-text-inverse">
+    <footer className="border-t-2 border-accent bg-primary text-text-inverse">
       <div className="mx-auto max-w-6xl px-6 py-12">
-        <div className="mb-10 flex items-center gap-2">
-          <ShieldCheck className="size-6" strokeWidth={1.75} />
-          <span className="font-sans text-sm font-semibold">
-            Meridian Accreditation Board
-          </span>
+        <div className="mb-10">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="size-6 text-accent" strokeWidth={1.75} />
+            <span className="font-display text-sm font-bold">SAAF</span>
+          </div>
+          <p className="mt-3 max-w-xs font-sans text-sm text-text-inverse/70">
+            Independent, technically rigorous accreditation designed to strengthen trust in
+            conformity assessment across South Asia.
+          </p>
         </div>
 
-        {/* Desktop: five columns */}
-        <div className="hidden grid-cols-5 gap-8 sm:grid">
+        {/* Desktop: four link columns */}
+        <div className="hidden grid-cols-4 gap-8 sm:grid">
           {FOOTER_GROUPS.map((group) => (
             <div key={group.label}>
-              <p className="mb-3 font-sans text-xs font-semibold uppercase tracking-[0.02em] text-text-inverse/60">
+              <p className="mb-3 font-sans text-xs font-semibold uppercase tracking-[0.08em] text-accent">
                 {group.label}
               </p>
               <ul className="flex flex-col gap-2">
@@ -84,7 +88,7 @@ function Footer() {
         </div>
 
         <div className="mt-10 border-t border-text-inverse/15 pt-6 font-sans text-xs text-text-inverse/60">
-          <p>© {new Date().getFullYear()} Meridian Accreditation Board.</p>
+          <p>© {new Date().getFullYear()} SAAF.</p>
         </div>
       </div>
     </footer>

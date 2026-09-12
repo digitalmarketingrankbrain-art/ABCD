@@ -9,7 +9,7 @@ import { STATUS_EXPLANATION, findByReferenceAdmin } from "@/lib/verification-rec
  * public sees, not a different private truth (Phase 8).
  */
 export default async function AccreditationPage() {
-  const accreditation = findByReferenceAdmin("MAB-2026-00417");
+  const accreditation = findByReferenceAdmin("SAAF-2026-00417");
 
   return (
     <div className="px-6 py-8">

@@ -1,51 +1,61 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
+import { Reveal } from "@/components/ui/reveal";
 
 const STEPS = [
-  { title: "Apply", description: "Submit your application and supporting documents." },
-  { title: "Review", description: "We confirm your application is complete and eligible." },
-  { title: "Assessment", description: "An assigned assessor evaluates your organisation against the relevant scope." },
-  { title: "Decision", description: "An authorised decision-maker reviews the assessment and makes a determination, independent of the assessor's recommendation." },
-  { title: "Accreditation", description: "Once granted, your accreditation is published and publicly verifiable." },
-  { title: "Ongoing", description: "Accreditation is maintained through surveillance and renewal, not granted once and forgotten." },
+  { title: "Enquiry & application", description: "We clarify your intended scope and establish the assessment pathway." },
+  { title: "Document review", description: "Your systems, methods, and evidence are reviewed against applicable criteria." },
+  { title: "Competence assessment", description: "Qualified assessors evaluate implementation, technical capability, and impartiality." },
+  { title: "Decision & surveillance", description: "An independent decision is followed by planned ongoing oversight." },
 ];
 
 function HowItWorks() {
   return (
-    <section className="mx-auto max-w-6xl px-6 py-16">
-      <h2 className="font-sans text-2xl font-semibold text-text sm:text-3xl">
-        A process you can follow, start to finish
-      </h2>
+    <section className="bg-primary py-16 sm:py-20">
+      <div className="mx-auto max-w-6xl px-6">
+        <Reveal className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+          <div className="max-w-xl">
+            <p className="flex items-center gap-2 font-sans text-xs font-semibold uppercase tracking-[0.12em] text-accent">
+              <span className="h-px w-8 bg-accent" aria-hidden="true" />
+              The Accreditation Journey
+            </p>
+            <h2 className="mt-3 font-display text-3xl font-bold leading-tight text-text-inverse sm:text-4xl">
+              A clear, rigorous path to recognition.
+            </h2>
+          </div>
+          <p className="max-w-sm font-sans text-sm text-text-inverse/70">
+            Every decision is grounded in documented evidence, competent assessment, and
+            independent review.
+          </p>
+        </Reveal>
 
-      <ol className="mt-10 flex flex-col gap-8 lg:flex-row lg:gap-4">
-        {STEPS.map((step, i) => (
-          <li key={step.title} className="relative flex flex-1 gap-4 lg:flex-col lg:gap-3">
-            <div className="flex flex-col items-center lg:w-full">
-              <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary font-mono text-xs font-medium text-text-inverse">
-                {i + 1}
-              </div>
-              {i < STEPS.length - 1 && (
-                <span
-                  aria-hidden="true"
-                  className="mt-1 w-px flex-1 bg-border lg:mt-0 lg:h-px lg:w-full lg:flex-none lg:translate-y-4"
-                />
-              )}
-            </div>
-            <div className="pb-2 lg:text-center">
-              <p className="font-sans text-sm font-semibold text-text">{step.title}</p>
-              <p className="mt-1 font-sans text-xs text-text-muted">{step.description}</p>
-            </div>
-          </li>
-        ))}
-      </ol>
+        <ol className="relative mt-14 grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
+          <span
+            aria-hidden="true"
+            className="absolute left-0 right-0 top-4 hidden h-px bg-text-inverse/20 lg:block"
+          />
+          {STEPS.map((step, i) => (
+            <Reveal as="li" key={step.title} delayMs={i * 40} className="relative">
+              <span className="relative z-10 flex size-8 items-center justify-center rounded-full bg-primary">
+                <span className="size-2.5 rounded-full bg-accent" aria-hidden="true" />
+              </span>
+              <p className="mt-4 font-sans text-xs font-semibold text-accent">
+                {String(i + 1).padStart(2, "0")}
+              </p>
+              <p className="mt-1 font-sans text-base font-semibold text-text-inverse">{step.title}</p>
+              <p className="mt-1 font-sans text-sm text-text-inverse/70">{step.description}</p>
+            </Reveal>
+          ))}
+        </ol>
 
-      <Link
-        href="/accreditation/how-it-works"
-        className={cn(buttonVariants({ variant: "secondary" }), "mt-10 inline-flex")}
-      >
-        Read the full process
-      </Link>
+        <Link
+          href="/accreditation/how-it-works"
+          className={cn(buttonVariants({ variant: "inverse" }), "mt-12 inline-flex")}
+        >
+          View the complete process
+        </Link>
+      </div>
     </section>
   );
 }

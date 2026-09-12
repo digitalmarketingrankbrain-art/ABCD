@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { ContactForm } from "@/components/contact/contact-form";
 
 export const metadata: Metadata = {
-  title: "Contact | Meridian Accreditation Board",
+  title: "Contact | SAAF",
   description: "Contact us — general enquiries, applicant questions, media, complaints, and fraud reports are routed to the right team.",
 };
 

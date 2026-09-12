@@ -1,48 +1,49 @@
 "use server";
 
-import { TOTP, Secret } from "otpauth";
-import QRCode from "qrcode";
-import { auth, verifyTotpCode } from "@/auth";
-import {
-  findUserByEmail,
-  findUserById,
-  verifyPassword,
-  createApplicantUser,
-  createResetToken,
-  consumeResetToken,
-  setUserPassword,
-  setUserMfaSecret,
-  enableUserMfa,
-} from "./store";
-import { createNotification } from "@/lib/notifications";
+import { findUserByEmail, createApplicantUser, createLoginOtp, type Role } from "./store";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getClientIp } from "@/lib/request-ip";
 
 /**
- * Pre-check email/password only, without creating a session — lets the
- * login form know whether to show the MFA code step, without ever trusting
- * that client-reported result for the actual sign-in (auth.ts re-verifies
- * password + MFA code together on the real signIn call, and enforces its
- * own rate limit independently since this pre-check can be bypassed by
- * calling the NextAuth endpoint directly).
+ * Generates and "sends" a one-time login code for the given email — the
+ * only step before the real sign-in (`signIn("credentials", { email, otp })`,
+ * which consumes the code server-side in auth.ts's `authorize()`; that's the
+ * real trust boundary, rate-limited independently of this action since the
+ * NextAuth endpoint can be called directly).
+ *
+ * `allowedRoles`, when given, restricts this to the login page the user
+ * landed on (Certification Body vs. Accreditation Body) — an account whose
+ * role isn't in the list gets `wrongPortal` instead of a code, so a CB user
+ * can't request a code through the AB page or vice versa. This is a UX
+ * guardrail, not the real security boundary: the `/portal` subtree RBAC in
+ * middleware.ts is what actually enforces access regardless of which login
+ * page a session was created through.
+ *
+ * No real email/SMS provider is wired up yet (Phase 11: vendor TBD) — the
+ * code is returned directly for local development/demo purposes only,
+ * same pattern as the dev-only password-reset link this replaced.
  */
-export async function checkCredentials(email: string, password: string) {
+export async function requestLoginOtp(email: string, allowedRoles?: Role[]) {
   const ip = await getClientIp();
-  const limit = checkRateLimit(`login:${ip}:${email.toLowerCase()}`, 10, 15 * 60 * 1000);
+  const limit = checkRateLimit(`login-otp:${ip}:${email.toLowerCase()}`, 5, 15 * 60 * 1000);
   if (!limit.allowed) {
-    return { ok: false as const, mfaRequired: false, rateLimited: true as const };
+    return { ok: false as const, error: "Too many attempts. Wait 15 minutes and try again." };
   }
 
   const user = await findUserByEmail(email);
-  if (!user || user.status !== "ACTIVE" || !verifyPassword(user, password)) {
-    return { ok: false as const, mfaRequired: false };
+  if (!user || user.status !== "ACTIVE") {
+    return { ok: false as const, error: "No account found for that email." };
   }
-  return { ok: true as const, mfaRequired: user.mfaEnabled };
+  if (allowedRoles && !allowedRoles.includes(user.primaryRole)) {
+    return { ok: false as const, wrongPortal: true as const };
+  }
+
+  const code = await createLoginOtp(email);
+  return { ok: true as const, devCode: code };
 }
 
 export async function registerApplicant(input: {
   email: string;
-  password: string;
   name: string;
   organisationName: string;
 }) {
@@ -54,96 +55,6 @@ export async function registerApplicant(input: {
   if (await findUserByEmail(input.email)) {
     return { ok: false as const, error: "An account with this email already exists." };
   }
-  if (input.password.length < 10) {
-    return { ok: false as const, error: "Password must be at least 10 characters." };
-  }
   await createApplicantUser(input);
-  return { ok: true as const };
-}
-
-export async function requestPasswordReset(email: string) {
-  const ip = await getClientIp();
-  const limit = checkRateLimit(`reset:${ip}:${email.toLowerCase()}`, 5, 60 * 60 * 1000);
-  // Same "always respond the same way" response even when rate-limited, so
-  // this can't be used to distinguish a real account from a rate-limited one.
-  if (!limit.allowed) return { ok: true as const, devToken: null };
-  const user = await findUserByEmail(email);
-  // Always respond the same way whether or not the account exists, so this
-  // endpoint can't be used to enumerate registered emails.
-  if (!user) return { ok: true as const, devToken: null };
-  const token = createResetToken(email);
-  // No real email provider is wired up yet (Phase 11: Resend, vendor TBD) —
-  // the token is returned directly for local development/demo purposes only.
-  return { ok: true as const, devToken: token };
-}
-
-export async function resetPassword(token: string, newPassword: string) {
-  const email = consumeResetToken(token);
-  if (!email) return { ok: false as const, error: "This reset link is invalid or has expired." };
-  const user = await findUserByEmail(email);
-  if (!user) return { ok: false as const, error: "This reset link is invalid or has expired." };
-  if (newPassword.length < 10) {
-    return { ok: false as const, error: "Password must be at least 10 characters." };
-  }
-  await setUserPassword(user.id, newPassword);
-  // Security notification on password change — Phase 1 requirement.
-  await createNotification({ userId: user.id, type: "password.changed", channel: "IN_APP" });
-  await createNotification({ userId: user.id, type: "password.changed", channel: "EMAIL" });
-  return { ok: true as const };
-}
-
-export async function startMfaEnrollment() {
-  const session = await auth();
-  if (!session?.user) return { ok: false as const, error: "Not signed in." };
-
-  const secret = new Secret({ size: 20 });
-  const totp = new TOTP({
-    issuer: "Meridian Accreditation Board",
-    label: session.user.email ?? session.user.id,
-    secret,
-  });
-  await setUserMfaSecret(session.user.id, secret.base32);
-  const qrDataUrl = await QRCode.toDataURL(totp.toString());
-  return { ok: true as const, secret: secret.base32, qrDataUrl };
-}
-
-export async function confirmMfaEnrollment(code: string) {
-  const session = await auth();
-  if (!session?.user) return { ok: false as const, error: "Not signed in." };
-  const limit = checkRateLimit(`mfa-confirm:${session.user.id}`, 8, 10 * 60 * 1000);
-  if (!limit.allowed) {
-    return { ok: false as const, error: "Too many attempts. Wait a few minutes and try again." };
-  }
-  const user = await findUserById(session.user.id);
-  if (!user?.mfaSecret) return { ok: false as const, error: "Start MFA setup again." };
-  if (!verifyTotpCode(user.mfaSecret, code)) {
-    return { ok: false as const, error: "That code didn't match. Check your authenticator app and try again." };
-  }
-  await enableUserMfa(session.user.id);
-  // Security notification on a privileged action — Phase 1 requirement.
-  await createNotification({ userId: session.user.id, type: "mfa.enabled", channel: "IN_APP" });
-  await createNotification({ userId: session.user.id, type: "mfa.enabled", channel: "EMAIL" });
-  return { ok: true as const };
-}
-
-export async function changeOwnPassword(currentPassword: string, newPassword: string) {
-  const session = await auth();
-  if (!session?.user) return { ok: false as const, error: "Not signed in." };
-  const limit = checkRateLimit(`change-password:${session.user.id}`, 8, 15 * 60 * 1000);
-  if (!limit.allowed) {
-    return { ok: false as const, error: "Too many attempts. Wait a few minutes and try again." };
-  }
-  const user = await findUserById(session.user.id);
-  if (!user) return { ok: false as const, error: "Not signed in." };
-  if (!verifyPassword(user, currentPassword)) {
-    return { ok: false as const, error: "Current password is incorrect." };
-  }
-  if (newPassword.length < 10) {
-    return { ok: false as const, error: "New password must be at least 10 characters." };
-  }
-  await setUserPassword(user.id, newPassword);
-  // Security notification on password change — Phase 1 requirement.
-  await createNotification({ userId: user.id, type: "password.changed", channel: "IN_APP" });
-  await createNotification({ userId: user.id, type: "password.changed", channel: "EMAIL" });
   return { ok: true as const };
 }

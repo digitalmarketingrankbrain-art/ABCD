@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 
 export const metadata: Metadata = {
-  title: "How Accreditation Works | Meridian Accreditation Board",
+  title: "How Accreditation Works | SAAF",
   description: "The full accreditation process, stage by stage, including what happens on a negative decision.",
 };
 

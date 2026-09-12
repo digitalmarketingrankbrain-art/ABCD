@@ -5,7 +5,7 @@ import { Accordion } from "@/components/ui/accordion";
 import { FAQ_AUDIENCES } from "@/lib/faqs";
 
 export const metadata: Metadata = {
-  title: "FAQs | Meridian Accreditation Board",
+  title: "FAQs | SAAF",
   description: "Frequently asked questions, organised by audience.",
 };
 

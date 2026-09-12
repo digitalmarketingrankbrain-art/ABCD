@@ -23,14 +23,6 @@ const NOTIFICATION_COPY: Record<string, { title: string; body: string }> = {
     title: "More information requested",
     body: "A decision-maker has requested more information before deciding on your application.",
   },
-  "mfa.enabled": {
-    title: "Multi-factor authentication enabled",
-    body: "MFA was just enabled on your account.",
-  },
-  "password.changed": {
-    title: "Password changed",
-    body: "Your password was just changed.",
-  },
 };
 
 export function getNotificationCopy(type: string) {

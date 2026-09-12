@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { PageHeader } from "@/components/layout/page-header";
 
 export const metadata: Metadata = {
-  title: "Accessibility Statement | Meridian Accreditation Board",
+  title: "Accessibility Statement | SAAF",
   description: "Our accessibility conformance target and known limitations.",
 };
 

@@ -12,8 +12,6 @@ import path from "path";
 
 const prisma = new PrismaClient();
 
-const DEMO_PASSWORD_HASH = "$2b$10$gfixhPAnYYhLd.ZJNJ2N4u1dNQNBCEDStlrQwjiye8dG8.G/eGx/W"; // "Password123!"
-
 // Mirrors src/lib/storage.ts's layout (storage/documents/<key>) without
 // importing app code with a "@/" alias into this script — seed.ts is
 // intentionally excluded from the app's tsconfig (see Milestone 11).
@@ -33,6 +31,7 @@ async function main() {
       slug: "testing-calibration-laboratories",
       name: "Testing & Calibration Laboratories",
       scopeDescription: "Covers physical, chemical, and dimensional testing and calibration activities.",
+      standardReference: "ISO/IEC 17025",
       feeAmount: 2500,
       currency: "USD",
     },
@@ -40,6 +39,7 @@ async function main() {
       slug: "inspection-bodies",
       name: "Inspection Bodies",
       scopeDescription: "Covers inspection of products, processes, installations, and services against defined criteria.",
+      standardReference: "ISO/IEC 17020",
       feeAmount: 2200,
       currency: "USD",
     },
@@ -47,6 +47,7 @@ async function main() {
       slug: "management-systems-certification-bodies",
       name: "Management Systems Certification Bodies",
       scopeDescription: "Covers certification of quality, environmental, and other management systems.",
+      standardReference: "ISO/IEC 17021-1",
       feeAmount: 3000,
       currency: "USD",
     },
@@ -54,6 +55,7 @@ async function main() {
       slug: "product-certification-bodies",
       name: "Product Certification Bodies",
       scopeDescription: "Covers certification that specific products meet defined technical requirements.",
+      standardReference: "ISO/IEC 17065",
       feeAmount: 2800,
       currency: "USD",
     },
@@ -61,6 +63,7 @@ async function main() {
       slug: "certification-bodies-for-persons",
       name: "Certification Bodies for Persons",
       scopeDescription: "Covers certification of individuals' competence against defined criteria.",
+      standardReference: "ISO/IEC 17024",
       feeAmount: 1800,
       currency: "USD",
     },
@@ -70,7 +73,7 @@ async function main() {
   for (const p of programsData) {
     const program = await prisma.program.upsert({
       where: { slug: p.slug },
-      update: {},
+      update: { standardReference: p.standardReference },
       create: p,
     });
     programs[p.slug] = program;
@@ -129,7 +132,6 @@ async function main() {
       email: "admin@example.com",
       name: "Jordan Admin",
       primaryRole: "ADMIN",
-      passwordHash: DEMO_PASSWORD_HASH,
     },
   });
 
@@ -141,7 +143,6 @@ async function main() {
       email: "assessor@example.com",
       name: "Sam Assessor",
       primaryRole: "ASSESSOR",
-      passwordHash: DEMO_PASSWORD_HASH,
     },
   });
   const assessor = await prisma.assessor.upsert({
@@ -158,7 +159,6 @@ async function main() {
       email: "applicant@example.com",
       name: "Alex Applicant",
       primaryRole: "APPLICANT",
-      passwordHash: DEMO_PASSWORD_HASH,
     },
   });
 

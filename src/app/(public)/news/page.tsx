@@ -5,7 +5,7 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { NEWS_ITEMS } from "@/lib/news";
 
 export const metadata: Metadata = {
-  title: "News & Notices | Meridian Accreditation Board",
+  title: "News & Notices | SAAF",
   description: "Announcements, policy updates, and accreditation status changes.",
 };
 

@@ -15,34 +15,34 @@ export const PROGRAMS: Program[] = [
     name: "Testing & Calibration Laboratories",
     scopeDescription:
       "Covers physical, chemical, and dimensional testing and calibration activities.",
-    standardReference: "To be confirmed and published here.",
+    standardReference: "ISO/IEC 17025",
   },
   {
     slug: "inspection-bodies",
     name: "Inspection Bodies",
     scopeDescription:
       "Covers inspection of products, processes, installations, and services against defined criteria.",
-    standardReference: "To be confirmed and published here.",
+    standardReference: "ISO/IEC 17020",
   },
   {
     slug: "management-systems-certification-bodies",
     name: "Management Systems Certification Bodies",
     scopeDescription:
       "Covers certification of quality, environmental, and other management systems.",
-    standardReference: "To be confirmed and published here.",
+    standardReference: "ISO/IEC 17021-1",
   },
   {
     slug: "product-certification-bodies",
     name: "Product Certification Bodies",
     scopeDescription:
       "Covers certification that specific products meet defined technical requirements.",
-    standardReference: "To be confirmed and published here.",
+    standardReference: "ISO/IEC 17065",
   },
   {
     slug: "certification-bodies-for-persons",
     name: "Certification Bodies for Persons",
     scopeDescription:
       "Covers certification of individuals' competence against defined criteria.",
-    standardReference: "To be confirmed and published here.",
+    standardReference: "ISO/IEC 17024",
   },
 ];

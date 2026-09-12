@@ -7,7 +7,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { findByReference, searchRecords } from "@/lib/verification-records";
 
 export const metadata: Metadata = {
-  title: "Verify an Accreditation | Meridian Accreditation Board",
+  title: "Verify an Accreditation | SAAF",
   description: "Search by accreditation number or organisation name to check a current, unambiguous status. No account required.",
 };
 

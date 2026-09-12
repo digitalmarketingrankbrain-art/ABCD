@@ -23,7 +23,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const resource = RESOURCES.find((r) => r.slug === slug);
   if (!resource) return {};
-  return { title: `${resource.title} | Meridian Accreditation Board`, description: resource.description };
+  return { title: `${resource.title} | SAAF`, description: resource.description };
 }
 
 export default async function ResourceDetailPage({

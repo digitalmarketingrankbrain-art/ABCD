@@ -1,47 +1,74 @@
-import { FileQuestion, SearchCheck, BadgeCheck, ArrowRight } from "lucide-react";
+import Link from "next/link";
+import { Check } from "lucide-react";
+import { Reveal } from "@/components/ui/reveal";
+import { HeroMotif } from "./hero-motif";
 
-const NODES = [
-  { icon: FileQuestion, label: "Claim" },
-  { icon: SearchCheck, label: "Independent Assessment" },
-  { icon: BadgeCheck, label: "Verifiable Record" },
+const POINTS = [
+  {
+    title: "A documented claim",
+    description: "Every accreditation starts with a specific, published scope — not a general seal of approval.",
+  },
+  {
+    title: "Independent assessment",
+    description: "Qualified assessors with no stake in the outcome evaluate competence against named criteria.",
+  },
+  {
+    title: "A verifiable record",
+    description: "The result is published and checkable by anyone, for as long as it remains valid.",
+  },
 ];
 
 function WhyItMatters() {
   return (
-    <section className="bg-surface">
-      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-10 px-6 py-16 lg:grid-cols-2 lg:items-center">
+    <section className="bg-background">
+      <Reveal className="mx-auto grid max-w-6xl grid-cols-1 gap-10 px-6 py-16 sm:py-20 lg:grid-cols-2 lg:items-center">
+        <div className="relative flex min-h-[280px] items-end overflow-hidden rounded-lg bg-primary p-8">
+          <div className="pointer-events-none absolute -right-16 -top-16">
+            <HeroMotif className="h-72 w-72" tone="dark" />
+          </div>
+          <div className="relative">
+            <p className="font-sans text-xs font-semibold uppercase tracking-[0.1em] text-accent">
+              One Framework · Regional Relevance
+            </p>
+            <p className="mt-3 font-display text-2xl font-bold leading-snug text-text-inverse">
+              Reliable conformity assessment helps quality move confidently across South Asia.
+            </p>
+          </div>
+        </div>
+
         <div>
-          <h2 className="font-sans text-2xl font-semibold text-text sm:text-3xl">
-            Why accreditation matters
+          <p className="flex items-center gap-2 font-sans text-xs font-semibold uppercase tracking-[0.12em] text-accent">
+            <span className="h-px w-8 bg-accent" aria-hidden="true" />
+            Why Accreditation Matters
+          </p>
+          <h2 className="mt-3 font-display text-3xl font-bold leading-tight text-text sm:text-4xl">
+            Independent evidence of competence.
           </h2>
           <p className="mt-4 font-sans text-base text-text-muted">
-            Accreditation is an independent check that an organisation meets a
-            defined standard of competence — assessed by a third party with no
-            stake in the outcome. It exists so that a client, regulator, or
-            member of the public doesn&apos;t have to take a competence claim
-            on faith; they can rely on a documented, verifiable assessment
-            instead.
+            Accreditation gives organisations, regulators, and the public confidence that a
+            competence claim is technically sound and impartially assessed — not simply asserted.
           </p>
-        </div>
-        <div className="flex flex-col items-center gap-4 rounded-lg border border-border bg-background px-6 py-10 sm:flex-row sm:justify-between">
-          {NODES.map((node, i) => (
-            <div key={node.label} className="flex items-center gap-4 sm:contents">
-              <div className="flex flex-col items-center gap-2 text-center">
-                <div className="flex size-14 items-center justify-center rounded-full border border-primary/30 bg-surface">
-                  <node.icon className="size-6 text-primary" strokeWidth={1.5} />
+          <ul className="mt-6 flex flex-col gap-5">
+            {POINTS.map((point) => (
+              <li key={point.title} className="flex items-start gap-3">
+                <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-accent/20">
+                  <Check className="size-3.5 text-accent-hover" strokeWidth={2.5} />
+                </span>
+                <div>
+                  <p className="font-sans text-sm font-semibold text-text">{point.title}</p>
+                  <p className="mt-0.5 font-sans text-sm text-text-muted">{point.description}</p>
                 </div>
-                <p className="font-sans text-xs font-medium text-text">{node.label}</p>
-              </div>
-              {i < NODES.length - 1 && (
-                <ArrowRight
-                  className="size-4 shrink-0 rotate-90 text-text-muted sm:rotate-0"
-                  strokeWidth={1.5}
-                />
-              )}
-            </div>
-          ))}
+              </li>
+            ))}
+          </ul>
+          <Link
+            href="/about/who-we-are"
+            className="mt-6 inline-block font-sans text-sm font-semibold text-secondary hover:underline"
+          >
+            Discover the SAAF approach →
+          </Link>
         </div>
-      </div>
+      </Reveal>
     </section>
   );
 }

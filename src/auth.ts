@@ -1,19 +1,7 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { TOTP, Secret } from "otpauth";
-import {
-  findUserByEmail,
-  findUserById,
-  verifyPassword,
-  type Role,
-} from "@/lib/auth/store";
+import { findUserByEmail, consumeLoginOtp, type Role } from "@/lib/auth/store";
 import { checkRateLimit } from "@/lib/rate-limit";
-
-export function verifyTotpCode(secret: string, code: string): boolean {
-  const totp = new TOTP({ secret: Secret.fromBase32(secret), digits: 6, period: 30 });
-  // Allow the immediately-adjacent time step either side, for clock drift.
-  return totp.validate({ token: code, window: 1 }) !== null;
-}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "jwt" },
@@ -22,18 +10,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     Credentials({
       credentials: {
         email: {},
-        password: {},
-        mfaCode: {},
+        otp: {},
       },
       async authorize(credentials, request) {
         const email = credentials?.email as string | undefined;
-        const password = credentials?.password as string | undefined;
-        const mfaCode = credentials?.mfaCode as string | undefined;
-        if (!email || !password) return null;
+        const otp = credentials?.otp as string | undefined;
+        if (!email || !otp) return null;
 
         // The real trust boundary for login — rate-limited independently of
-        // the client-side pre-check (src/lib/auth/actions.ts:checkCredentials),
-        // since this endpoint can be called directly, bypassing that pre-check.
+        // the client-side pre-check (src/lib/auth/actions.ts:checkOtpAndSignIn
+        // equivalent), since this endpoint can be called directly, bypassing
+        // that pre-check.
         const forwardedFor = request.headers.get("x-forwarded-for");
         const ip = forwardedFor ? forwardedFor.split(",")[0]!.trim() : "unknown";
         const limit = checkRateLimit(`login-authorize:${ip}:${email.toLowerCase()}`, 10, 15 * 60 * 1000);
@@ -41,13 +28,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const user = await findUserByEmail(email);
         if (!user || user.status !== "ACTIVE") return null;
-        if (!verifyPassword(user, password)) return null;
-
-        if (user.mfaEnabled) {
-          if (!user.mfaSecret || !mfaCode || !verifyTotpCode(user.mfaSecret, mfaCode)) {
-            return null;
-          }
-        }
+        if (!(await consumeLoginOtp(email, otp))) return null;
 
         return {
           id: user.id,
@@ -59,18 +40,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user, trigger }) {
+    async jwt({ token, user }) {
       if (user) {
         token.role = (user as { role: Role }).role;
         token.id = user.id;
-        const dbUser = user.id ? await findUserById(user.id) : null;
-        token.mfaEnabled = dbUser?.mfaEnabled ?? false;
-      }
-      // Client calls useSession().update() after enrolling in MFA so the
-      // token reflects the change without requiring a full re-login.
-      if (trigger === "update") {
-        const dbUser = await findUserById(token.id as string);
-        token.mfaEnabled = dbUser?.mfaEnabled ?? false;
       }
       return token;
     },
@@ -78,7 +51,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as Role;
-        session.user.mfaEnabled = token.mfaEnabled as boolean;
       }
       return session;
     },

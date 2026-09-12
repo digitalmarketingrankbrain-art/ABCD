@@ -77,7 +77,7 @@ function ToastProvider({ children }: { children: React.ReactNode }) {
                   key={t.id}
                   role="status"
                   className={cn(
-                    "flex w-full items-start gap-3 rounded-md border px-4 py-3 shadow-[0_4px_16px_rgba(19,35,62,0.12)] sm:w-96",
+                    "flex w-full items-start gap-3 rounded-md border px-4 py-3 shadow-[0_4px_16px_rgba(13,43,32,0.12)] sm:w-96",
                     toneStyles[t.tone ?? "info"],
                   )}
                 >

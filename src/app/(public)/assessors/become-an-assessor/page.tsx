@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
-  title: "Become an Assessor | Meridian Accreditation Board",
+  title: "Become an Assessor | SAAF",
   description: "Express interest in becoming an assessor.",
 };
 

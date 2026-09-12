@@ -16,7 +16,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const item = NEWS_ITEMS.find((n) => n.slug === slug);
   if (!item) return {};
-  return { title: `${item.title} | Meridian Accreditation Board`, description: item.excerpt };
+  return { title: `${item.title} | SAAF`, description: item.excerpt };
 }
 
 export default async function NewsDetailPage({

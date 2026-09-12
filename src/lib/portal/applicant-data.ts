@@ -288,7 +288,7 @@ export async function createDraftApplication(userId: string, programSlug: string
   const organisationId = await getUserOrganisationId(userId);
   if (!organisationId) throw new Error("No organisation found for this applicant.");
 
-  const referenceNumber = `MAB-APP-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+  const referenceNumber = `SAAF-APP-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
   const app = await prisma.application.create({
     data: { referenceNumber, organisationId, applicantUserId: userId, programId: program.id, stage: "DRAFT" },
   });
@@ -327,7 +327,7 @@ export async function saveScopeExtensionDraft(
     return { id: updated.id, referenceNumber: updated.referenceNumber };
   }
 
-  const referenceNumber = `MAB-SE-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+  const referenceNumber = `SAAF-SE-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
   const created = await prisma.application.create({
     data: {
       referenceNumber,

@@ -66,7 +66,7 @@ function SearchForm({
           ref={inputRef}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder={mode === "number" ? "e.g. MAB-2026-00417" : "e.g. Northfield Testing Laboratories"}
+          placeholder={mode === "number" ? "e.g. SAAF-2026-00417" : "e.g. Northfield Testing Laboratories"}
           aria-label={mode === "number" ? "Accreditation number" : "Organisation name"}
           className="h-14 pl-11 text-base"
         />

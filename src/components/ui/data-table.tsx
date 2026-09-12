@@ -76,9 +76,21 @@ function DataTable<T>({
             <tr
               key={getRowKey(row)}
               onClick={() => onRowClick?.(row)}
+              tabIndex={onRowClick ? 0 : undefined}
+              onKeyDown={
+                onRowClick
+                  ? (e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        onRowClick(row);
+                      }
+                    }
+                  : undefined
+              }
               className={cn(
                 "border-b border-border last:border-b-0",
-                onRowClick && "cursor-pointer hover:bg-background-portal",
+                onRowClick &&
+                  "cursor-pointer hover:bg-background-portal focus-visible:outline-none focus-visible:bg-background-portal focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary",
               )}
             >
               {columns.map((col) => (

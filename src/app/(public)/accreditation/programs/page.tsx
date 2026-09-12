@@ -6,7 +6,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from "@/comp
 import { PROGRAMS } from "@/lib/programs";
 
 export const metadata: Metadata = {
-  title: "Accreditation Programs | Meridian Accreditation Board",
+  title: "Accreditation Programs | SAAF",
   description: "Scopes we accredit and their eligibility criteria.",
 };
 

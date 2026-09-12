@@ -66,8 +66,8 @@ function CabOverview({
 }) {
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="rounded-lg border border-border lg:col-span-1">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="rounded-lg border border-border">
           <div className="border-b border-border bg-background-portal px-4 py-3">
             <h3 className="font-sans text-sm font-semibold text-text">CAB Details</h3>
           </div>
@@ -94,10 +94,8 @@ function CabOverview({
           </div>
         </div>
 
-        <div className="lg:col-span-1">
+        <div className="flex flex-col gap-6">
           <SchemesPanel title="Applied Schemes and Technical Categories" schemes={appliedSchemes} emptyLabel="No applied schemes." />
-        </div>
-        <div className="lg:col-span-1">
           <SchemesPanel title="Awarded Schemes and Technical Categories" schemes={awardedSchemes} emptyLabel="No Awarded Schemes" />
         </div>
       </div>

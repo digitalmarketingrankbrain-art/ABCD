@@ -50,7 +50,7 @@ export const STATUS_EXPLANATION: Record<VerificationStatus, string> = {
  */
 export const VERIFICATION_RECORDS: VerificationRecord[] = [
   {
-    reference: "MAB-2026-00417",
+    reference: "SAAF-2026-00417",
     organisationName: "Northfield Testing Laboratories",
     programSlug: "testing-calibration-laboratories",
     programName: "Testing & Calibration Laboratories",
@@ -64,7 +64,7 @@ export const VERIFICATION_RECORDS: VerificationRecord[] = [
     statusHistory: [],
   },
   {
-    reference: "MAB-2025-00298",
+    reference: "SAAF-2025-00298",
     organisationName: "Prairie Inspection Services",
     programSlug: "inspection-bodies",
     programName: "Inspection Bodies",
@@ -80,13 +80,13 @@ export const VERIFICATION_RECORDS: VerificationRecord[] = [
         from: "ACTIVE",
         to: "SUSPENDED",
         reason: "Non-conformance identified during surveillance assessment; corrective action pending.",
-        changedBy: "Meridian Admin",
+        changedBy: "SAAF Admin",
         changedAt: "2026-07-18",
       },
     ],
   },
   {
-    reference: "MAB-2022-00156",
+    reference: "SAAF-2022-00156",
     organisationName: "Prairie Inspection Services",
     programSlug: "product-certification-bodies",
     programName: "Product Certification Bodies",
@@ -102,13 +102,13 @@ export const VERIFICATION_RECORDS: VerificationRecord[] = [
         from: "SUSPENDED",
         to: "WITHDRAWN",
         reason: "Non-conformance from surveillance assessment was not resolved within the corrective action period.",
-        changedBy: "Meridian Admin",
+        changedBy: "SAAF Admin",
         changedAt: "2026-07-30",
       },
     ],
   },
   {
-    reference: "MAB-2020-00043",
+    reference: "SAAF-2020-00043",
     organisationName: "Coastal Certification Group",
     programSlug: "management-systems-certification-bodies",
     programName: "Management Systems Certification Bodies",
@@ -122,7 +122,7 @@ export const VERIFICATION_RECORDS: VerificationRecord[] = [
     statusHistory: [],
   },
   {
-    reference: "MAB-2024-00512",
+    reference: "SAAF-2024-00512",
     organisationName: "Coastal Certification Laboratories",
     programSlug: "certification-bodies-for-persons",
     programName: "Certification Bodies for Persons",

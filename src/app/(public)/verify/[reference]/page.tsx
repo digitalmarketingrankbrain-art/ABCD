@@ -12,8 +12,8 @@ export async function generateMetadata({
   const record = findByReference(reference);
   return {
     title: record
-      ? `${record.organisationName} — ${reference} | Meridian Accreditation Board`
-      : `Verify ${reference} | Meridian Accreditation Board`,
+      ? `${record.organisationName} — ${reference} | SAAF`
+      : `Verify ${reference} | SAAF`,
     description: record
       ? `Verification status for ${record.organisationName}, accreditation ${reference}.`
       : `No matching public accreditation record was found for ${reference}.`,

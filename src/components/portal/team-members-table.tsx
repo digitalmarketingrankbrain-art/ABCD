@@ -21,7 +21,7 @@ function TeamMembersTable({ members }: { members: TeamMemberEntry[] }) {
   const [open, setOpen] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
   const [form, setForm] = React.useState(EMPTY_FORM);
-  const [tempPassword, setTempPassword] = React.useState<{ email: string; password: string } | null>(null);
+  const [added, setAdded] = React.useState<{ email: string } | null>(null);
 
   function set<K extends keyof typeof form>(key: K, value: string) {
     setForm((f) => ({ ...f, [key]: value }) as typeof form);
@@ -29,7 +29,7 @@ function TeamMembersTable({ members }: { members: TeamMemberEntry[] }) {
 
   function closeModal() {
     setOpen(false);
-    setTempPassword(null);
+    setAdded(null);
     setForm(EMPTY_FORM);
   }
 
@@ -39,7 +39,7 @@ function TeamMembersTable({ members }: { members: TeamMemberEntry[] }) {
     setSaving(false);
     if (result.ok) {
       toast({ tone: "success", title: "Team member added." });
-      setTempPassword({ email: form.email, password: result.tempPassword });
+      setAdded({ email: form.email });
     } else {
       toast({ tone: "error", title: result.error ?? "Couldn't add team member.", persistent: true });
     }
@@ -89,7 +89,7 @@ function TeamMembersTable({ members }: { members: TeamMemberEntry[] }) {
         onClose={closeModal}
         title="Add Team Member"
         footer={
-          tempPassword ? (
+          added ? (
             <Button onClick={closeModal}>Done</Button>
           ) : (
             <>
@@ -103,17 +103,10 @@ function TeamMembersTable({ members }: { members: TeamMemberEntry[] }) {
           )
         }
       >
-        {tempPassword ? (
+        {added ? (
           <div className="flex flex-col gap-4">
             <Alert tone="success" title="Team member added">
-              {tempPassword.email} can now sign in to this account.
-            </Alert>
-            <Alert tone="warning" title="[DEV ONLY] No email provider is connected yet">
-              <p>
-                This temporary password would normally be emailed to the new member (Phase 11: email vendor still
-                to be confirmed). For now, share it with them directly:
-              </p>
-              <p className="mt-1 font-mono text-sm text-text">{tempPassword.password}</p>
+              {added.email} can now sign in — login sends a one-time code to their email, no password needed.
             </Alert>
           </div>
         ) : (

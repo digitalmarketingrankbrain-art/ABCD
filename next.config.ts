@@ -1,29 +1,12 @@
 import type { NextConfig } from "next";
 
-const isDev = process.env.NODE_ENV !== "production";
-
 /**
- * Dev needs 'unsafe-eval' for Next's HMR/source-map machinery; the
- * production build never eval()s, so prod keeps the tighter script policy.
- * style-src keeps 'unsafe-inline' because Next/React can inject inline
- * styles internally even though this app's own components never use the
- * style prop; no inline <script> exists anywhere so script-src stays clean.
+ * Content-Security-Policy is set per-request in middleware.ts instead of
+ * here: Next.js's App Router streams RSC payloads through inline <script>
+ * tags on every route, so script-src can only be locked down with a nonce
+ * issued fresh per request, not a static header.
  */
-const csp = [
-  "default-src 'self'",
-  `script-src 'self'${isDev ? " 'unsafe-eval'" : ""}`,
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob:",
-  "font-src 'self' data:",
-  "connect-src 'self'",
-  "frame-ancestors 'none'",
-  "form-action 'self'",
-  "base-uri 'self'",
-  "object-src 'none'",
-].join("; ");
-
 const securityHeaders = [
-  { key: "Content-Security-Policy", value: csp },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },

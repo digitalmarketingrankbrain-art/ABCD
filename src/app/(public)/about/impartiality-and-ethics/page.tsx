@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 
 export const metadata: Metadata = {
-  title: "Impartiality & Ethics | Meridian Accreditation Board",
+  title: "Impartiality & Ethics | SAAF",
   description: "Impartiality policy, conflict-of-interest handling, and how to raise a concern.",
 };
 

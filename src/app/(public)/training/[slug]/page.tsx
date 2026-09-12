@@ -16,7 +16,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const course = TRAINING_COURSES.find((c) => c.slug === slug);
   if (!course) return {};
-  return { title: `${course.title} | Meridian Accreditation Board`, description: course.description };
+  return { title: `${course.title} | SAAF`, description: course.description };
 }
 
 export default async function TrainingDetailPage({

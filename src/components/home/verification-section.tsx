@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Reveal } from "@/components/ui/reveal";
 
 /**
  * Visually distinct from surrounding marketing sections — this is a tool,
@@ -22,14 +23,14 @@ function VerificationSection() {
 
   return (
     <section className="border-y border-border-portal bg-background-portal">
-      <div className="mx-auto max-w-2xl px-6 py-16 text-center">
+      <Reveal className="mx-auto max-w-2xl px-6 py-16 text-center">
         <h2 className="font-sans text-2xl font-semibold text-text sm:text-3xl">
           Check any accreditation, instantly
         </h2>
         <p className="mt-3 font-sans text-base text-text-muted">
           Seen an accreditation claim on a certificate, website, or report?
-          Verify it directly — search by accreditation number or organisation
-          name and get a current, unambiguous status.
+          Search by accreditation number or organisation name and get a
+          current, unambiguous status.
         </p>
         <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-3 sm:flex-row">
           <div className="relative flex-1">
@@ -50,7 +51,7 @@ function VerificationSection() {
           </Button>
         </form>
         <p className="mt-2 font-sans text-xs text-text-muted">No account required.</p>
-      </div>
+      </Reveal>
     </section>
   );
 }

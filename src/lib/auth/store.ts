@@ -1,4 +1,3 @@
-import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import type { User as PrismaUser, Role } from "@prisma/client";
 
@@ -29,19 +28,18 @@ export interface SafeUser {
   name: string;
   email: string;
   role: Role;
-  mfaEnabled: boolean;
   status: string;
 }
 
-const SAFE_SELECT = { id: true, name: true, email: true, primaryRole: true, mfaEnabled: true, status: true } as const;
+const SAFE_SELECT = { id: true, name: true, email: true, primaryRole: true, status: true } as const;
 
 /**
- * Excludes passwordHash/mfaSecret at the Prisma query level — not just at
- * display time. `getAllUsers()` above still exists for auth-flow code that
- * genuinely needs the full record (verifying a password); anything that
- * only needs to *display* users (admin screens, name lookups for a select
- * box) should prefer this instead, so the sensitive fields never load into
- * server memory in the first place, not just never reach the client.
+ * Selects only display-safe fields at the Prisma query level. Login no
+ * longer involves a password or MFA secret at all (see createLoginOtp/
+ * consumeLoginOtp below), but this selective-select pattern is kept since
+ * it's still the right way for anything that only needs to *display* users
+ * (admin screens, name lookups for a select box) to avoid loading more than
+ * it needs into server memory.
  */
 export async function getAllUsersSafe(): Promise<SafeUser[]> {
   const rows = await prisma.user.findMany({ orderBy: { createdAt: "asc" }, select: SAFE_SELECT });
@@ -55,14 +53,12 @@ export async function getUsersByRoleSafe(role: Role): Promise<SafeUser[]> {
 
 export async function createApplicantUser(input: {
   email: string;
-  password: string;
   name: string;
   organisationName: string;
 }): Promise<AuthUser> {
   const user = await prisma.user.create({
     data: {
       email: input.email,
-      passwordHash: bcrypt.hashSync(input.password, 10),
       name: input.name,
       primaryRole: "APPLICANT",
     },
@@ -78,22 +74,6 @@ export async function createApplicantUser(input: {
   return user;
 }
 
-export function verifyPassword(user: AuthUser, password: string): boolean {
-  return bcrypt.compareSync(password, user.passwordHash);
-}
-
-export async function setUserPassword(userId: string, password: string) {
-  await prisma.user.update({ where: { id: userId }, data: { passwordHash: bcrypt.hashSync(password, 10) } });
-}
-
-export async function setUserMfaSecret(userId: string, secret: string) {
-  await prisma.user.update({ where: { id: userId }, data: { mfaSecret: secret } });
-}
-
-export async function enableUserMfa(userId: string) {
-  await prisma.user.update({ where: { id: userId }, data: { mfaEnabled: true } });
-}
-
 export async function getUserOrganisationName(userId: string): Promise<string> {
   const membership = await prisma.organisationMembership.findFirst({
     where: { userId },
@@ -107,30 +87,40 @@ export async function getUserOrganisationId(userId: string): Promise<string | nu
   return membership?.organisationId ?? null;
 }
 
-/** MFA required (not just available) for Admin and Assessor — Phase 1. */
-export function mfaRequiredForRole(role: Role): boolean {
-  return role === "ADMIN" || role === "ASSESSOR";
+// --- Login OTPs ---
+//
+// Backed by a real `login_otps` table rather than an in-memory Map: Next.js
+// dev mode compiles Server Actions and Route Handlers as separate module
+// instances, so a code created by requestLoginOtp (a Server Action) and
+// consumed by auth.ts's authorize() (invoked from the NextAuth Route
+// Handler) would never see the same in-memory state — a real DB row is the
+// only thing both layers reliably share, in dev or in a multi-instance
+// production deployment.
+
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
 }
 
-// --- Password reset tokens (in-memory, short-lived — not worth persisting) ---
-
-interface ResetToken {
-  email: string;
-  expiresAt: number;
+export async function createLoginOtp(email: string): Promise<string> {
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  const key = normalizeEmail(email);
+  await prisma.loginOtp.upsert({
+    where: { email: key },
+    create: { email: key, code, expiresAt: new Date(Date.now() + 10 * 60 * 1000) },
+    update: { code, expiresAt: new Date(Date.now() + 10 * 60 * 1000) },
+  });
+  return code;
 }
 
-const resetTokens = new Map<string, ResetToken>();
-
-export function createResetToken(email: string): string {
-  const token = crypto.randomUUID();
-  resetTokens.set(token, { email, expiresAt: Date.now() + 30 * 60 * 1000 });
-  return token;
-}
-
-export function consumeResetToken(token: string): string | null {
-  const entry = resetTokens.get(token);
-  if (!entry) return null;
-  resetTokens.delete(token);
-  if (entry.expiresAt < Date.now()) return null;
-  return entry.email;
+export async function consumeLoginOtp(email: string, code: string): Promise<boolean> {
+  const key = normalizeEmail(email);
+  const entry = await prisma.loginOtp.findUnique({ where: { email: key } });
+  if (!entry) return false;
+  if (entry.expiresAt < new Date()) {
+    await prisma.loginOtp.delete({ where: { email: key } }).catch(() => {});
+    return false;
+  }
+  if (entry.code !== code) return false;
+  await prisma.loginOtp.delete({ where: { email: key } });
+  return true;
 }

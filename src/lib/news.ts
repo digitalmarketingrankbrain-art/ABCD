@@ -22,7 +22,7 @@ export const NEWS_ITEMS: NewsItem[] = [
   },
   {
     slug: "accreditation-withdrawn-prairie-inspection",
-    title: "Accreditation withdrawn: Prairie Inspection Services (MAB-2022-00156)",
+    title: "Accreditation withdrawn: Prairie Inspection Services (SAAF-2022-00156)",
     excerpt: "Accreditation withdrawn following a non-conformance identified during surveillance assessment.",
     category: "STATUS_CHANGE",
     publishedAt: "2026-07-30",

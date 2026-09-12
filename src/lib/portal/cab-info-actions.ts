@@ -53,7 +53,7 @@ export async function addTeamMemberAction(input: AddTeamMemberInput) {
   const result = await addTeamMember(user.id, input);
   if (!result.ok) return { ok: false as const, error: result.error };
   revalidatePath("/portal/applicant/profile");
-  return { ok: true as const, tempPassword: result.tempPassword };
+  return { ok: true as const };
 }
 
 export async function uploadOrganisationDocument(file: File) {

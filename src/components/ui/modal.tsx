@@ -74,7 +74,7 @@ function Modal({ open, onClose, title, children, footer, className }: ModalProps
         aria-modal="true"
         aria-labelledby="modal-title"
         className={cn(
-          "relative z-10 w-full max-w-lg rounded-lg border border-border bg-surface p-6 shadow-[0_8px_32px_rgba(19,35,62,0.2)]",
+          "relative z-10 w-full max-w-lg rounded-lg border border-border bg-surface p-6 shadow-[0_8px_32px_rgba(13,43,32,0.2)]",
           className,
         )}
       >

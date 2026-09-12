@@ -29,7 +29,7 @@ function CbDocumentsTabs({
   orgDocuments: OrgDocumentEntry[];
   referenceDocuments: ReferenceDocumentEntry[];
 }) {
-  const [tab, setTab] = React.useState<"documents" | "uaf">("documents");
+  const [tab, setTab] = React.useState<"documents" | "saaf">("documents");
 
   async function handleUpload(file: File) {
     const result = await uploadOrganisationDocument(file);
@@ -39,7 +39,7 @@ function CbDocumentsTabs({
   return (
     <div>
       <div role="tablist" className="mb-5 flex gap-6 border-b border-border">
-        {(["documents", "uaf"] as const).map((key) => (
+        {(["documents", "saaf"] as const).map((key) => (
           <button
             key={key}
             role="tab"
@@ -50,7 +50,7 @@ function CbDocumentsTabs({
               tab === key ? "border-accent text-text" : "border-transparent text-text-muted hover:text-text",
             )}
           >
-            {key === "documents" ? "Documents" : "UAF"}
+            {key === "documents" ? "Documents" : "SAAF"}
           </button>
         ))}
       </div>
@@ -87,7 +87,7 @@ function CbDocumentsTabs({
       ) : (
         <div>
           {referenceDocuments.length === 0 ? (
-            <EmptyState title="No reference documents published yet." description="Checklists and forms issued by UAF will appear here." />
+            <EmptyState title="No reference documents published yet." description="Checklists and forms issued by SAAF will appear here." />
           ) : (
             <div className="overflow-x-auto rounded-lg border border-border">
               <table className="w-full border-collapse text-sm">

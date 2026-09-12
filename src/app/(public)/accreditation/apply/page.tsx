@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 
 export const metadata: Metadata = {
-  title: "Apply | Meridian Accreditation Board",
+  title: "Apply | SAAF",
   description: "Start an accreditation application.",
 };
 
@@ -19,7 +19,7 @@ export default function ApplyPage() {
     <PageHeader
       breadcrumbs={[{ label: "Accreditation", href: "/accreditation" }, { label: "Apply" }]}
       title="Start an application"
-      description="Applications are submitted and tracked through your Meridian account. If you don't have one yet, you'll create one as part of starting your application."
+      description="Applications are submitted and tracked through your SAAF account. If you don't have one yet, you'll create one as part of starting your application."
     >
       <ol className="mt-6 flex flex-col gap-2 font-sans text-sm text-text-muted">
         <li>1. Sign in or create an account.</li>

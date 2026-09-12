@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 
 export const metadata: Metadata = {
-  title: "Governance | Meridian Accreditation Board",
+  title: "Governance | SAAF",
   description: "Decision-making structure and oversight.",
 };
 

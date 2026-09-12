@@ -14,12 +14,12 @@ import { PortalSidebar } from "./portal-sidebar";
 
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/portal/applicant/dashboard", icon: LayoutDashboard },
+  { label: "Profile", href: "/portal/applicant/profile", icon: User },
   { label: "Applications", href: "/portal/applicant/applications", icon: FileText },
   { label: "Scope Extension", href: "/portal/applicant/apply/scope-extension", icon: ClipboardPlus },
   { label: "Invoices", href: "/portal/applicant/invoices", icon: Receipt },
   { label: "Accreditation", href: "/portal/applicant/accreditation", icon: ShieldCheck },
   { label: "Messages", href: "/portal/applicant/messages", icon: MessageSquare },
-  { label: "Profile", href: "/portal/applicant/profile", icon: User },
   { label: "Security", href: "/portal/applicant/security", icon: Lock },
 ];
 

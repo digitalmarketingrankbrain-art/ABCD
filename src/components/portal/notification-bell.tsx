@@ -59,7 +59,7 @@ function NotificationBell({
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-80 rounded-lg border border-border bg-surface shadow-[0_8px_24px_rgba(19,35,62,0.12)]">
+        <div className="absolute right-0 top-full z-50 mt-2 w-80 rounded-lg border border-border bg-surface shadow-[0_8px_24px_rgba(13,43,32,0.12)]">
           <div className="flex items-center justify-between border-b border-border px-4 py-3">
             <p className="font-sans text-sm font-semibold text-text">Notifications</p>
             {initialUnreadCount > 0 && (

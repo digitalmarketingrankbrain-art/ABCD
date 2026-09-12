@@ -4,7 +4,7 @@ import { ResourceTable } from "@/components/resources/resource-table";
 import { RESOURCES } from "@/lib/resources";
 
 export const metadata: Metadata = {
-  title: "Procedures | Meridian Accreditation Board",
+  title: "Procedures | SAAF",
   description: "Operational procedures for applicants and assessors.",
 };
 

@@ -20,12 +20,12 @@ export default async function PortalLayout({ children }: { children: React.React
 
   return (
     <div className="flex min-h-screen flex-col bg-background-portal">
-      <header className="border-b border-border-portal bg-surface">
+      <header className="sticky top-0 z-20 border-b border-border-portal bg-surface">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
           <Link href="/" className="flex items-center gap-2">
             <ShieldCheck className="size-6 text-primary" strokeWidth={1.75} />
             <span className="font-sans text-sm font-semibold text-text">
-              Meridian Accreditation Board
+              SAAF
             </span>
           </Link>
           {session?.user && (

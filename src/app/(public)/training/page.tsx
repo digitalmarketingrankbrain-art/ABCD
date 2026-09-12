@@ -7,7 +7,7 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { TRAINING_COURSES } from "@/lib/training";
 
 export const metadata: Metadata = {
-  title: "Training | Meridian Accreditation Board",
+  title: "Training | SAAF",
   description: "Courses for assessors and client organisations.",
 };
 
