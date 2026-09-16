@@ -11,17 +11,16 @@ export interface RevealProps extends React.HTMLAttributes<HTMLElement> {
 }
 
 /**
- * Fades and lifts its content in once, the first time it scrolls into view.
- * CSS-driven (see .reveal in globals.css) so it costs nothing beyond a single
- * IntersectionObserver per instance — no animation library needed for this.
+ * Ensures smooth entrance animations while guaranteeing 100% visibility fallback on all screens.
  */
 function Reveal({ className, delayMs = 0, style, as = "div", ...props }: RevealProps) {
   const ref = React.useRef<HTMLElement>(null);
-  const [visible, setVisible] = React.useState(false);
+  const [visible, setVisible] = React.useState(true);
 
   React.useEffect(() => {
     const el = ref.current;
-    if (!el) return;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry?.isIntersecting) {
@@ -29,10 +28,17 @@ function Reveal({ className, delayMs = 0, style, as = "div", ...props }: RevealP
           observer.disconnect();
         }
       },
-      { threshold: 0.15, rootMargin: "0px 0px -10% 0px" },
+      { threshold: 0.01, rootMargin: "100px 0px" },
     );
     observer.observe(el);
-    return () => observer.disconnect();
+
+    // Guarantee visibility fallback after 200ms
+    const timer = setTimeout(() => setVisible(true), 200);
+
+    return () => {
+      observer.disconnect();
+      clearTimeout(timer);
+    };
   }, []);
 
   const Tag = as;

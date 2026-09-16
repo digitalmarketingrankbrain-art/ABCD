@@ -58,7 +58,7 @@ function ToastProvider({ children }: { children: React.ReactNode }) {
       const id = ++idCounter;
       setToasts((current) => [...current, { id, ...options }]);
       if (!options.persistent) {
-        setTimeout(() => dismiss(id), options.durationMs ?? 5000);
+        setTimeout(() => dismiss(id), options.durationMs ?? 2000);
       }
     },
     [dismiss],

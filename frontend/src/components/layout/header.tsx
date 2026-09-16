@@ -2,17 +2,14 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Menu, X, ShieldCheck } from "lucide-react";
+import { Menu, X, Search, Lock, ChevronDown, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { HEADER_NAV, HEADER_SIMPLE_LINKS } from "@/lib/nav";
+import { SaafLogo } from "@/components/ui/saaf-logo";
 
 /**
- * Sticky header with a click-triggered mega menu (not hover-only, for touch/
- * accessibility parity) and a full-screen mobile nav. Per Phase 5: "Verify"
- * is a single distinct link, never folded into a dropdown, and the header's
- * primary CTA is Verify (not Apply) — it's the lowest-friction, highest-
- * frequency action and belongs in the persistent header on every page.
+ * Ultra-sleek Header featuring SAAF logo emblem with slim navbar height.
  */
 function Header() {
   const [openMenu, setOpenMenu] = React.useState<string | null>(null);
@@ -47,26 +44,44 @@ function Header() {
   }, [mobileOpen]);
 
   return (
-    <header ref={headerRef} className="sticky top-0 z-40">
-      <div className="hidden bg-primary lg:block">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-2 font-sans text-xs font-semibold tracking-[0.08em] text-text-inverse/90 uppercase">
-          <span>Independent Accreditation · Trusted Across South Asia</span>
-          <Link href="/verify" className="hover:text-accent">
-            Verify an Accreditation
-          </Link>
+    <header ref={headerRef} className="sticky top-0 z-40 bg-surface shadow-sm">
+      {/* Top Utility & Trust Bar - Slimmed */}
+      <div className="bg-[#062863] text-white">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-1 text-[11px] font-semibold sm:px-6">
+          <div className="flex items-center gap-2 tracking-wide text-blue-100">
+            <CheckCircle2 className="size-3.5 text-amber-400" />
+            <span>South Asia Accreditation Foundation — Official Institutional Portal</span>
+          </div>
+          <div className="hidden items-center gap-6 sm:flex">
+            <Link
+              href="/verify"
+              className="flex items-center gap-1.5 text-amber-300 transition-colors hover:text-white"
+            >
+              <Search className="size-3" />
+              <span>Public Verification Register</span>
+            </Link>
+            <span className="text-blue-400/50">|</span>
+            <Link
+              href="/login"
+              className="flex items-center gap-1 text-blue-100 transition-colors hover:text-white"
+            >
+              <Lock className="size-3" />
+              <span>Portal Sign In</span>
+            </Link>
+          </div>
         </div>
       </div>
 
-      <div className="border-b border-border bg-surface shadow-[0_1px_0_rgba(13,43,32,0.04)]">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-6 px-6">
-          <Link href="/" className="flex items-center gap-2 shrink-0">
-            <ShieldCheck className="size-6 text-primary" strokeWidth={1.75} />
-            <span className="font-display text-sm font-bold tracking-tight text-text">
-              SAAF
-            </span>
+      {/* Main Slim Navbar (h-13 sm:h-14) */}
+      <div className="border-b border-slate-200/80 bg-white/95 backdrop-blur-md">
+        <div className="mx-auto flex h-13 sm:h-14 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
+          {/* SAAF Official Brand Logo - Reduced by 10px more */}
+          <Link href="/" className="flex items-center gap-3 shrink-0">
+            <SaafLogo variant="horizontal" size="md" className="h-[39px] sm:h-[49px] transition-transform hover:scale-105" />
           </Link>
 
-          <nav className="hidden lg:flex lg:items-center lg:gap-1">
+          {/* Desktop Nav */}
+          <nav className="hidden items-center gap-1 lg:flex">
             {HEADER_NAV.map((group) => (
               <div key={group.label} className="relative">
                 <button
@@ -75,26 +90,34 @@ function Header() {
                     setOpenMenu(openMenu === group.label ? null : group.label)
                   }
                   className={cn(
-                    "flex items-center gap-1 rounded-[6px] px-3 py-2 font-sans text-sm font-semibold text-text hover:bg-background",
-                    openMenu === group.label && "bg-background",
+                    "flex items-center gap-1 rounded-md px-3 py-1 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-100 hover:text-blue-900",
+                    openMenu === group.label && "bg-blue-50 text-blue-900"
                   )}
                 >
-                  {group.label}
+                  <span>{group.label}</span>
+                  <ChevronDown
+                    className={cn(
+                      "size-4 text-slate-400 transition-transform duration-200",
+                      openMenu === group.label && "rotate-180 text-blue-700"
+                    )}
+                  />
                 </button>
                 {openMenu === group.label && (
-                  <div className="absolute left-0 top-full mt-2 w-80 rounded-lg border border-border bg-surface p-2 shadow-[0_12px_28px_rgba(13,43,32,0.14)]">
+                  <div className="absolute left-0 top-full mt-2 w-80 rounded-xl border border-slate-200 bg-white p-2.5 shadow-2xl ring-1 ring-black/5 animate-fade-up">
                     {group.links.map((link) => (
                       <Link
                         key={link.href}
                         href={link.href}
                         onClick={() => setOpenMenu(null)}
-                        className="block rounded-[6px] px-3 py-2 hover:bg-background"
+                        className="block rounded-lg px-3.5 py-2.5 transition-colors hover:bg-blue-50/80"
                       >
-                        <p className="font-sans text-sm font-semibold text-text">
+                        <p className="text-sm font-semibold text-slate-900">
                           {link.label}
                         </p>
                         {link.description && (
-                          <p className="text-xs text-text-muted">{link.description}</p>
+                          <p className="mt-0.5 text-xs text-slate-500">
+                            {link.description}
+                          </p>
                         )}
                       </Link>
                     ))}
@@ -105,117 +128,129 @@ function Header() {
 
             <Link
               href="/verify"
-              className="rounded-[6px] px-3 py-2 font-sans text-sm font-semibold text-secondary hover:bg-background"
+              className="rounded-md px-3 py-1 text-sm font-bold text-blue-700 transition-colors hover:bg-blue-50"
             >
-              Verify
+              Verify Certificate
             </Link>
 
             {HEADER_SIMPLE_LINKS.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="rounded-[6px] px-3 py-2 font-sans text-sm font-semibold text-text hover:bg-background"
+                className="rounded-md px-3 py-1 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-100"
               >
                 {link.label}
               </Link>
             ))}
           </nav>
 
-          <div className="hidden items-center gap-3 lg:flex">
+          {/* Action CTAs */}
+          <div className="hidden items-center gap-2.5 lg:flex">
             <Link
               href="/login"
-              className="font-sans text-sm font-semibold text-text hover:text-secondary"
+              className="rounded-md px-3 py-1 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900"
             >
               Log In
             </Link>
             <Link
               href="/accreditation/apply"
-              className={cn(buttonVariants({ variant: "primary", size: "sm" }), "h-9")}
+              className={cn(
+                buttonVariants({ variant: "primary", size: "sm" }),
+                "h-8 px-3.5 bg-[#0B4DA2] font-semibold text-white shadow-md shadow-blue-900/10 hover:bg-[#083B7E] hover:shadow-blue-900/20"
+              )}
             >
               Apply for Accreditation
             </Link>
           </div>
 
+          {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileOpen(true)}
             aria-label="Open menu"
-            className="rounded-[6px] p-2 text-text lg:hidden"
+            className="rounded-lg p-1.5 text-slate-700 hover:bg-slate-100 lg:hidden"
           >
-            <Menu className="size-6" strokeWidth={1.75} />
+            <Menu className="size-6" strokeWidth={2} />
           </button>
         </div>
       </div>
 
+      {/* Mobile Drawer */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-surface lg:hidden">
-          <div className="flex h-16 items-center justify-between border-b border-border px-6">
-            <span className="font-display text-sm font-bold text-text">
-              SAAF
-            </span>
+        <div className="fixed inset-0 z-50 flex flex-col bg-white lg:hidden">
+          <div className="flex h-14 items-center justify-between border-b border-slate-200 px-6">
+            <SaafLogo variant="horizontal" size="md" className="h-10" />
             <button
               onClick={() => setMobileOpen(false)}
               aria-label="Close menu"
-              className="rounded-[6px] p-2 text-text"
+              className="rounded-lg p-2 text-slate-700 hover:bg-slate-100"
             >
-              <X className="size-6" strokeWidth={1.75} />
+              <X className="size-6" strokeWidth={2} />
             </button>
           </div>
           <div className="flex-1 overflow-y-auto px-6 py-6">
             <Link
               href="/verify"
               onClick={() => setMobileOpen(false)}
-              className="mb-4 block rounded-md bg-background-portal px-4 py-3 font-sans text-sm font-semibold text-secondary"
+              className="mb-6 flex items-center justify-between rounded-xl bg-blue-50 px-4 py-3 text-sm font-bold text-blue-900 border border-blue-200/60"
             >
-              Verify an Accreditation
+              <span className="flex items-center gap-2">
+                <Search className="size-4 text-blue-700" />
+                Verify an Accreditation
+              </span>
+              <span className="rounded bg-blue-700 px-2 py-0.5 text-[10px] text-white">LIVE</span>
             </Link>
+
             {HEADER_NAV.map((group) => (
               <div key={group.label} className="mb-6">
-                <p className="mb-2 font-sans text-xs font-semibold uppercase tracking-[0.02em] text-text-muted">
+                <p className="mb-2 font-sans text-xs font-bold uppercase tracking-wider text-slate-400">
                   {group.label}
                 </p>
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-2.5">
                   {group.links.map((link) => (
                     <Link
                       key={link.href}
                       href={link.href}
                       onClick={() => setMobileOpen(false)}
+                      className="block rounded-lg px-2 py-1.5 hover:bg-slate-50"
                     >
-                      <p className="font-sans text-sm font-medium text-text">
+                      <p className="text-sm font-semibold text-slate-900">
                         {link.label}
                       </p>
                       {link.description && (
-                        <p className="text-xs text-text-muted">{link.description}</p>
+                        <p className="text-xs text-slate-500">{link.description}</p>
                       )}
                     </Link>
                   ))}
                 </div>
               </div>
             ))}
-            <div className="flex flex-col gap-3 border-t border-border pt-4">
+
+            <div className="flex flex-col gap-3 border-t border-slate-200 pt-4">
               {HEADER_SIMPLE_LINKS.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
                   onClick={() => setMobileOpen(false)}
-                  className="font-sans text-sm font-medium text-text"
+                  className="text-sm font-semibold text-slate-800 hover:text-blue-700"
                 >
                   {link.label}
                 </Link>
               ))}
             </div>
           </div>
-          <div className="flex flex-col gap-3 border-t border-border px-6 py-4">
+
+          <div className="flex flex-col gap-3 border-t border-slate-200 px-6 py-4 bg-slate-50">
             <Link
               href="/login"
               onClick={() => setMobileOpen(false)}
-              className={cn(buttonVariants({ variant: "secondary" }), "w-full")}
+              className={cn(buttonVariants({ variant: "secondary" }), "w-full justify-center text-slate-800")}
             >
-              Log In
+              Portal Log In
             </Link>
             <Link
               href="/accreditation/apply"
               onClick={() => setMobileOpen(false)}
-              className={cn(buttonVariants({ variant: "primary" }), "w-full")}
+              className={cn(buttonVariants({ variant: "primary" }), "w-full justify-center bg-[#0B4DA2] text-white")}
             >
               Apply for Accreditation
             </Link>

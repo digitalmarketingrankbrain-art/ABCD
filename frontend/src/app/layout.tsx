@@ -19,9 +19,19 @@ const ibmPlexMono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: "SAAF",
+  title: "South Asia Accreditation Foundation (SAAF) | Independent Accreditation Body",
   description:
-    "SAAF — accreditation you can verify, not just trust.",
+    "Official website of South Asia Accreditation Foundation (SAAF) — Independent international accreditation body delivering trust, scheme competence, and verification across South Asia.",
+  keywords: [
+    "SAAF",
+    "South Asia Accreditation Foundation",
+    "Accreditation Body",
+    "ISO 17025",
+    "ISO 17020",
+    "ISO 17021",
+    "Verification Portal",
+    "Conformity Assessment",
+  ],
   robots: { index: true, follow: true },
 };
 
@@ -31,9 +41,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="scroll-smooth">
       <body
-        className={`${ibmPlexSans.variable} ${ibmPlexMono.variable} font-sans antialiased`}
+        className={`${ibmPlexSans.variable} ${ibmPlexMono.variable} font-sans antialiased selection:bg-blue-600 selection:text-white`}
       >
         <AuthSessionProvider>
           <ToastProvider>{children}</ToastProvider>

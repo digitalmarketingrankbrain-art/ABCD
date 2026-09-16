@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FlaskConical, ClipboardCheck, ShieldCheck, PackageCheck, UserCheck, type LucideIcon } from "lucide-react";
+import { FlaskConical, ClipboardCheck, ShieldCheck, PackageCheck, UserCheck, ArrowRight, type LucideIcon } from "lucide-react";
 import { Reveal } from "@/components/ui/reveal";
 import { PROGRAMS } from "@/lib/programs";
 
@@ -13,51 +13,56 @@ const PROGRAM_ICONS: Record<string, LucideIcon> = {
 
 function ProgramsSection() {
   return (
-    <section className="bg-surface py-16 sm:py-20">
-      <div className="mx-auto max-w-6xl px-6">
-        <Reveal className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-          <div className="max-w-xl">
-            <p className="flex items-center gap-2 font-sans text-xs font-semibold uppercase tracking-[0.12em] text-accent">
-              <span className="h-px w-8 bg-accent" aria-hidden="true" />
-              Our Accreditation Services
-            </p>
-            <h2 className="mt-3 font-display text-3xl font-bold leading-tight text-text sm:text-4xl">
-              Technical confidence across critical domains.
+    <section className="bg-white py-20 sm:py-28">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        <Reveal className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
+          <div className="max-w-2xl">
+            <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-800">
+              <span className="size-1.5 rounded-full bg-blue-600" />
+              SAAF Accreditation Programs
+            </div>
+            <h2 className="mt-4 font-display text-3xl font-extrabold text-slate-900 sm:text-4xl lg:text-5xl">
+              Technical Evaluation Scopes & ISO Standards
             </h2>
           </div>
-          <p className="max-w-sm font-sans text-sm text-text-muted">
-            We assess the organisations that assess others — strengthening the integrity of
-            certificates, inspections, and claims across South Asia.
+          <p className="max-w-md text-sm leading-relaxed text-slate-600">
+            SAAF accredits conformity assessment bodies (CABs) across South Asia against internationally recognised ISO/IEC requirements, establishing verifiable confidence in laboratory testing, inspection, and certification.
           </p>
         </Reveal>
 
-        <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {PROGRAMS.map((program, i) => {
             const Icon = PROGRAM_ICONS[program.slug] ?? FlaskConical;
             return (
-              <Reveal key={program.slug} delayMs={i * 40} className="h-full">
-                <div className="flex h-full flex-col rounded-lg border border-border bg-background p-6 transition duration-150 hover:-translate-y-0.5 hover:border-secondary hover:shadow-[0_2px_12px_rgba(13,43,32,0.08)]">
-                  <div className="flex items-start justify-between">
-                    <span className="font-sans text-xs font-semibold uppercase tracking-[0.04em] text-text-muted">
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
-                    <span className="flex size-9 items-center justify-center rounded-md bg-primary/5">
-                      <Icon className="size-4 text-primary" strokeWidth={1.75} />
-                    </span>
+              <Reveal key={program.slug} delayMs={i * 50} className="h-full">
+                <div className="group flex h-full flex-col justify-between rounded-2xl border border-slate-200 bg-slate-50/50 p-7 transition-all duration-300 hover:-translate-y-1.5 hover:border-blue-500/60 hover:bg-white hover:shadow-2xl hover:shadow-blue-900/10">
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <span className="inline-flex items-center rounded-lg bg-blue-900/5 px-2.5 py-1 text-xs font-bold font-mono text-blue-900">
+                        {program.standardReference}
+                      </span>
+                      <div className="rounded-xl bg-blue-600/10 p-3 text-blue-700 transition-colors group-hover:bg-blue-600 group-hover:text-white">
+                        <Icon className="size-5" />
+                      </div>
+                    </div>
+
+                    <h3 className="mt-5 font-display text-xl font-bold text-slate-900 group-hover:text-blue-800">
+                      {program.name}
+                    </h3>
+                    <p className="mt-2 text-xs leading-relaxed text-slate-600">
+                      {program.scopeDescription}
+                    </p>
                   </div>
-                  <p className="mt-4 font-sans text-xs font-semibold uppercase tracking-[0.04em] text-secondary">
-                    {program.standardReference}
-                  </p>
-                  <h3 className="mt-1 font-sans text-lg font-semibold text-text">{program.name}</h3>
-                  <p className="mt-2 flex-1 font-sans text-sm text-text-muted">
-                    {program.scopeDescription}
-                  </p>
-                  <Link
-                    href={`/accreditation/programs/${program.slug}`}
-                    className="mt-4 font-sans text-sm font-semibold text-secondary hover:underline"
-                  >
-                    Explore this service →
-                  </Link>
+
+                  <div className="mt-6 border-t border-slate-200/80 pt-4">
+                    <Link
+                      href={`/accreditation/programs/${program.slug}`}
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 transition-all group-hover:translate-x-1"
+                    >
+                      <span>Explore Accreditation Scheme</span>
+                      <ArrowRight className="size-3.5" />
+                    </Link>
+                  </div>
                 </div>
               </Reveal>
             );

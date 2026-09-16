@@ -1,5 +1,6 @@
+import Link from "next/link";
 import { auth } from "@/auth";
-import { BadgeCheck } from "lucide-react";
+import { BadgeCheck, Plus } from "lucide-react";
 import { Tabs } from "@/components/ui/tabs";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { findUserById, getUserOrganisationId } from "@/lib/auth/store";
@@ -58,18 +59,29 @@ export default async function ProfilePage() {
 
   return (
     <div className="px-6 py-8">
-      <div className="rounded-lg border border-border bg-surface p-6">
-        <div className="flex flex-wrap items-center gap-3">
-          <h1 className="font-display text-2xl font-semibold text-text">{details.displayName}</h1>
-          {isApproved && <BadgeCheck className="size-5 text-accent" strokeWidth={1.75} />}
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-lg border border-border bg-surface p-6">
+        <div>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="font-display text-2xl font-semibold text-text">{details.displayName}</h1>
+            {isApproved && <BadgeCheck className="size-5 text-accent" strokeWidth={1.75} />}
+          </div>
+          <p className="mt-1 font-sans text-sm text-text-muted">{user?.email}</p>
+          <div className="mt-3">
+            <StatusBadge
+              tone={isApproved ? "success" : "info"}
+              label={isApproved ? "Approved" : "Pending Approval"}
+              size="sm"
+            />
+          </div>
         </div>
-        <p className="mt-1 font-sans text-sm text-text-muted">{user?.email}</p>
-        <div className="mt-3">
-          <StatusBadge
-            tone={isApproved ? "success" : "info"}
-            label={isApproved ? "Approved" : "Pending Approval"}
-            size="sm"
-          />
+
+        <div>
+          <Link
+            href="/portal/applicant/profile/add-certificate"
+            className="inline-flex items-center gap-2 rounded-md bg-[#041f19] px-4 py-2.5 text-sm font-bold text-amber-400 hover:bg-[#08352a] transition-all shadow-xs border border-[#c9a24a]/40"
+          >
+            <Plus className="size-4" /> Add Certification
+          </Link>
         </div>
       </div>
 

@@ -13,17 +13,32 @@ export default function Icon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#0d2b20",
-          borderRadius: 6,
-          color: "#c9a24a",
-          fontSize: 20,
-          fontWeight: 700,
-          fontFamily: "sans-serif",
+          background: "#0B4DA2",
+          borderRadius: "50%",
+          border: "2px solid #FFFFFF",
+          boxShadow: "0 0 0 1px #062863",
         }}
       >
-        S
+        <div
+          style={{
+            width: "80%",
+            height: "60%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "#FFFFFF",
+            borderRadius: "50%",
+            color: "#0B4DA2",
+            fontSize: 10,
+            fontWeight: 900,
+            fontFamily: "sans-serif",
+            letterSpacing: -0.5,
+          }}
+        >
+          SAAF
+        </div>
       </div>
     ),
-    { ...size },
+    { ...size }
   );
 }

@@ -1,31 +1,47 @@
 /**
- * Abstract geometric line motif — deliberately not a photo or illustration,
- * per Phase 4/5 (no real photography exists yet; avoids both stock-photo
- * cliché and SaaS-blob-illustration cliché). Reads as a reticle / reference
- * grid, echoing the "precise, checkable" brand idea.
+ * SAAF Institutional Globe & Grid Motif
  */
-function HeroMotif({ className, tone = "light" }: { className?: string; tone?: "light" | "dark" }) {
-  const line = tone === "dark" ? "#ffffff33" : "#ded7c4";
-  const ring = tone === "dark" ? "#ffffff66" : "#0d2b20";
+function HeroMotif({ className, tone = "dark" }: { className?: string; tone?: "light" | "dark" }) {
+  const line = tone === "dark" ? "rgba(255, 255, 255, 0.15)" : "rgba(11, 77, 162, 0.15)";
+  const ring = tone === "dark" ? "rgba(147, 197, 253, 0.35)" : "rgba(11, 77, 162, 0.4)";
+  const gold = "#F59E0B";
+
   return (
     <svg
-      viewBox="0 0 400 400"
+      viewBox="0 0 500 500"
       fill="none"
       aria-hidden="true"
       className={className}
     >
-      <rect x="0.5" y="0.5" width="399" height="399" rx="8" stroke={line} />
-      {[80, 160, 240, 320].map((pos) => (
-        <line key={`v-${pos}`} x1={pos} y1="0" x2={pos} y2="400" stroke={line} strokeWidth="1" />
-      ))}
-      {[80, 160, 240, 320].map((pos) => (
-        <line key={`h-${pos}`} x1="0" y1={pos} x2="400" y2={pos} stroke={line} strokeWidth="1" />
-      ))}
-      <circle cx="200" cy="200" r="120" stroke={ring} strokeWidth="1.5" />
-      <circle cx="200" cy="200" r="72" stroke={ring} strokeWidth="1.5" />
-      <circle cx="200" cy="200" r="4" fill="#c9a24a" />
-      <line x1="200" y1="40" x2="200" y2="360" stroke={ring} strokeWidth="1" strokeDasharray="2 6" />
-      <line x1="40" y1="200" x2="360" y2="200" stroke={ring} strokeWidth="1" strokeDasharray="2 6" />
+      <defs>
+        <linearGradient id="motifBlueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.4" />
+          <stop offset="100%" stopColor="#1D4ED8" stopOpacity="0.1" />
+        </linearGradient>
+      </defs>
+
+      {/* Concentric Globe Ellipses */}
+      <ellipse cx="250" cy="250" rx="220" ry="140" stroke={ring} strokeWidth="1.5" fill="url(#motifBlueGrad)" />
+      <ellipse cx="250" cy="250" rx="180" ry="140" stroke={ring} strokeWidth="1.2" />
+      <ellipse cx="250" cy="250" rx="120" ry="140" stroke={ring} strokeWidth="1.2" />
+      <ellipse cx="250" cy="250" rx="50" ry="140" stroke={ring} strokeWidth="1.2" />
+
+      {/* Horizontal Latitude Lines */}
+      <line x1="30" y1="250" x2="470" y2="250" stroke={ring} strokeWidth="2" />
+      <path d="M 60 190 Q 250 150 440 190" stroke={line} strokeWidth="1.5" fill="none" />
+      <path d="M 100 130 Q 250 100 400 130" stroke={line} strokeWidth="1.5" fill="none" />
+      <path d="M 60 310 Q 250 350 440 310" stroke={line} strokeWidth="1.5" fill="none" />
+      <path d="M 100 370 Q 250 400 400 370" stroke={line} strokeWidth="1.5" fill="none" />
+
+      {/* Vertical Axis */}
+      <line x1="250" y1="110" x2="250" y2="390" stroke={ring} strokeWidth="2" />
+
+      {/* Golden Trust Markers */}
+      <circle cx="250" cy="250" r="6" fill={gold} />
+      <circle cx="250" cy="110" r="4" fill={gold} />
+      <circle cx="250" cy="390" r="4" fill={gold} />
+      <circle cx="70" cy="250" r="4" fill={gold} />
+      <circle cx="430" cy="250" r="4" fill={gold} />
     </svg>
   );
 }

@@ -1,33 +1,34 @@
 @import "tailwindcss";
 
 :root {
-  --color-primary: #0d2b20;
-  --color-primary-hover: #071c14;
-  --color-secondary: #1f5c3f;
-  --color-accent: #c9a24a;
-  --color-accent-hover: #b48d38;
+  /* SAAF Official Brand Palette derived from SAAF Oval Logo */
+  --color-primary: #0B4DA2;
+  --color-primary-hover: #083B7E;
+  --color-secondary: #1E6091;
+  --color-accent: #D97706;
+  --color-accent-hover: #B45309;
 
-  --color-background: #f4f1e6;
-  --color-background-portal: #f4f5f6;
-  --color-surface: #ffffff;
+  --color-background: #F8FAFC;
+  --color-background-portal: #F1F5F9;
+  --color-surface: #FFFFFF;
 
-  --color-border: #ded7c4;
-  --color-border-portal: #d7dae0;
+  --color-border: #E2E8F0;
+  --color-border-portal: #CBD5E1;
 
-  --color-text: #1a221c;
-  --color-text-muted: #5c645d;
-  --color-text-inverse: #ffffff;
+  --color-text: #0F172A;
+  --color-text-muted: #475569;
+  --color-text-inverse: #FFFFFF;
 
-  --color-success-text: #1b6b41;
-  --color-success-surface: #e5f3ea;
-  --color-warning-text: #8a5a0b;
-  --color-warning-surface: #fbefda;
-  --color-error-text: #a62f27;
-  --color-error-surface: #fbeae9;
-  --color-info-text: #4b5563;
-  --color-info-surface: #eef0f2;
+  --color-success-text: #15803D;
+  --color-success-surface: #DCFCE7;
+  --color-warning-text: #B45309;
+  --color-warning-surface: #FEF3C7;
+  --color-error-text: #B91C1C;
+  --color-error-surface: #FEE2E2;
+  --color-info-text: #1E40AF;
+  --color-info-surface: #DBEAFE;
 
-  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @theme inline {
@@ -57,21 +58,62 @@
   --color-info-text: var(--color-info-text);
   --color-info-surface: var(--color-info-surface);
 
-  --font-display: var(--font-ibm-plex-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-sans: var(--font-ibm-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-ibm-plex-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-sans: var(--font-ibm-plex-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-ibm-plex-mono), ui-monospace, monospace;
 }
 
 body {
   background: var(--color-background);
   color: var(--color-text);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 
-/* Scroll-triggered entrance, used by <Reveal> (src/components/ui/reveal.tsx). */
+/* Glassmorphism & Trust Card Effects */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.glass-panel-dark {
+  background: rgba(11, 37, 69, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(147, 197, 253, 0.2);
+}
+
+.saaf-gradient-hero {
+  background: radial-gradient(125% 125% at 50% 10%, #062863 0%, #0B4DA2 45%, #0F52BA 80%, #03112B 100%);
+}
+
+.saaf-glow-border {
+  position: relative;
+}
+.saaf-glow-border::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.5), rgba(217, 119, 6, 0.5), rgba(11, 77, 162, 0.1));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Scroll-triggered entrance with fail-safe visibility */
 .reveal {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 500ms var(--ease-out), transform 500ms var(--ease-out);
+}
+.reveal[data-visible="false"] {
   opacity: 0;
   transform: translateY(12px);
-  transition: opacity 500ms var(--ease-out), transform 500ms var(--ease-out);
 }
 .reveal[data-visible="true"] {
   opacity: 1;
@@ -81,15 +123,25 @@ body {
 @keyframes fade-up {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(14px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
+
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.92; transform: scale(1.015); }
+}
+
 .animate-fade-up {
-  animation: fade-up 500ms var(--ease-out) both;
+  animation: fade-up 600ms var(--ease-out) both;
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 4s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
