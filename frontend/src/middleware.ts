@@ -21,7 +21,7 @@ export default auth((req) => {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const csp = [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}'${isDev ? " 'unsafe-eval'" : ""}`,
+    `script-src 'self' 'unsafe-inline' 'unsafe-eval' 'nonce-${nonce}'`,
     // Nonces only cover <style> elements, not inline style="" attributes or
     // JS `el.style.x =` assignments — and Next/React's own internals (dev
     // overlay, route announcer) rely on those. A nonce here would silently
