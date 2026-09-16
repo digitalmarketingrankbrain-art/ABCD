@@ -4,6 +4,8 @@ import { FeesTable, type FeesTableRow } from "@/components/accreditation/fees-ta
 import { PROGRAMS } from "@/lib/programs";
 import { getProgramFees } from "@/lib/program-fees";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Fees | SAAF",
   description: "Fee structure and guidance by accreditation program.",
