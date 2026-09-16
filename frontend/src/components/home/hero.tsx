@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Search, ShieldCheck, CheckCircle2, Globe2, Award, Building2 } from "lucide-react";
 import { HeroMotif } from "./hero-motif";

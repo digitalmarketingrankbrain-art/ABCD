@@ -7,11 +7,25 @@ import { prisma } from "@/lib/prisma";
  * still in-memory (remaining Milestone 12 work), so ownerId below is shown
  * as a raw reference rather than a resolved organisation name for now.
  */
+type DocumentWithVersion = {
+  id: string;
+  ownerType: string;
+  ownerId: string;
+  documentKind: string;
+  currentVersion?: {
+    id: string;
+    filename: string;
+    sizeBytes: number;
+    uploadedAt: Date | string;
+    reviewStatus: string;
+  } | null;
+};
+
 export default async function AdminDocumentsPage() {
-  const documents = await prisma.document.findMany({
+  const documents = (await prisma.document.findMany({
     include: { currentVersion: true },
     orderBy: { createdAt: "desc" },
-  });
+  })) as unknown as DocumentWithVersion[];
 
   return (
     <div className="px-6 py-8">
@@ -40,7 +54,7 @@ export default async function AdminDocumentsPage() {
                 </td>
               </tr>
             )}
-            {documents.map((d) => (
+            {documents.map((d: DocumentWithVersion) => (
               <tr key={d.id} className="border-b border-border last:border-b-0">
                 <td className="px-4 py-3 font-mono text-xs text-text">{d.ownerType} · {d.ownerId}</td>
                 <td className="px-4 py-3 text-text-muted">{d.documentKind}</td>
