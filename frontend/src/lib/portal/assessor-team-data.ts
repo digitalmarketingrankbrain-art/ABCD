@@ -94,3 +94,7 @@ export function rejectProposal(proposalId: string, adminUserId: string, note: st
 export function getAllAssessorsForPicker(): Promise<{ id: string; name: string; email: string }[]> {
   return rpc(MODULE, "getAllAssessorsForPicker", []);
 }
+
+export function linkMemberToAssessor(memberId: string, linkedAssessorId: string | null): Promise<boolean> {
+  return rpc(MODULE, "linkMemberToAssessor", [memberId, linkedAssessorId]);
+}

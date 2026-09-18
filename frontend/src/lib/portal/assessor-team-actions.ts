@@ -10,6 +10,8 @@ import {
   approveProposal,
   requestProposalChanges,
   rejectProposal,
+  linkMemberToAssessor,
+  getAllAssessorsForPicker,
   type AssessorTeamMemberInput,
 } from "./assessor-team-data";
 import { getApplicationById, getApplicationByIdAdmin } from "./applicant-data";
@@ -60,6 +62,19 @@ export async function submitTeamProposal(proposalId: string, applicationId: stri
 }
 
 // --- AB side ---
+
+export async function loadAssessorsForPicker() {
+  await requireAdmin();
+  return getAllAssessorsForPicker();
+}
+
+export async function linkTeamMemberToAssessor(memberId: string, linkedAssessorId: string | null, proposalId: string) {
+  await requireAdmin();
+  const ok = await linkMemberToAssessor(memberId, linkedAssessorId);
+  if (!ok) return { ok: false as const, error: "Couldn't link this member." };
+  revalidatePath(`/portal/admin/assessor-teams/${proposalId}`);
+  return { ok: true as const };
+}
 
 export async function approveTeamProposal(proposalId: string, dueDate: string, note: string) {
   const admin = await requireAdmin();

@@ -9,6 +9,7 @@ import { ApplicationDocumentsList } from "@/components/portal/application-docume
 import { ApplicationMessagesThread } from "@/components/portal/application-messages-thread";
 import { ApplicationInvoicesTab } from "@/components/portal/application-invoices-tab";
 import { SubmitApplicationButton } from "@/components/portal/submit-application-button";
+import { AssessorTeamPanel } from "@/components/portal/assessor-team-panel";
 import {
   getApplicationById,
   getMessagesForApplication,
@@ -16,6 +17,7 @@ import {
   STAGE_LABEL,
   type Application,
 } from "@/lib/portal/applicant-data";
+import { loadOrCreateTeamProposal } from "@/lib/portal/assessor-team-actions";
 
 const STAGE_TONE: Record<string, "success" | "warning" | "info" | "neutral"> = {
   DRAFT: "neutral",
@@ -106,9 +108,12 @@ export default async function ApplicationDetailPage({
   const application = await getApplicationById(id, session!.user.id);
   if (!application) notFound();
 
-  const [messages, userInvoices] = await Promise.all([
+  const showAssessorTeamTab = !["DRAFT", "SUBMITTED", "INITIAL_REVIEW"].includes(application.stage);
+
+  const [messages, userInvoices, teamProposalResult] = await Promise.all([
     getMessagesForApplication(application.id),
     getInvoicesForUser(session!.user.id),
+    showAssessorTeamTab ? loadOrCreateTeamProposal(application.id) : Promise.resolve(null),
   ]);
 
   return (
@@ -145,6 +150,13 @@ export default async function ApplicationDetailPage({
               content: <ApplicationDocumentsList application={application} />,
             },
             { value: "assessment", label: "Assessment", content: <AssessmentTab application={application} /> },
+            ...(showAssessorTeamTab && teamProposalResult?.ok
+              ? [{
+                  value: "assessor-team",
+                  label: "Assessor Team",
+                  content: <AssessorTeamPanel applicationId={application.id} proposal={teamProposalResult.proposal} />,
+                }]
+              : []),
             {
               value: "messages",
               label: "Messages",

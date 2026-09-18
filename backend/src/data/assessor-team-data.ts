@@ -280,6 +280,12 @@ export async function rejectProposal(proposalId: string, adminUserId: string, no
   return true;
 }
 
+/** Admin links a proposed member to a real Assessor account before approving — required for approval to create an Assignment for that member. */
+export async function linkMemberToAssessor(memberId: string, linkedAssessorId: string | null): Promise<boolean> {
+  const res = await prisma.assessorTeamMember.updateMany({ where: { id: memberId }, data: { linkedAssessorId } });
+  return res.count > 0;
+}
+
 /** For the admin's "link to existing assessor" picker. */
 export async function getAllAssessorsForPicker(): Promise<{ id: string; name: string; email: string }[]> {
   const rows = await prisma.assessor.findMany({ include: { user: true } });
