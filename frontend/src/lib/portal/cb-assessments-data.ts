@@ -20,6 +20,9 @@ export interface CbAssessmentDetail extends CbAssessmentSummary {
   respondedAt: string | null;
   startedAt: string | null;
   reportSubmittedAt: string | null;
+  reportFinalized: boolean;
+  reportSummary: string | null;
+  reportRecommendation: string | null;
   findings: { criterion: string; status: string; severity: string | null; notes: string | null }[];
 }
 

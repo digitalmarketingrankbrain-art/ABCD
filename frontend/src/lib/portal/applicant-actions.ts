@@ -6,6 +6,7 @@ import { getApplicationById, addMessage, createDraftApplication, submitApplicati
 import { uploadDocumentForOwner } from "./document-data";
 import { MAX_UPLOAD_BYTES } from "@/lib/storage";
 import { PROGRAMS } from "@/lib/programs";
+import { notifyAllAdmins } from "@/lib/notify-admins";
 
 async function requireApplicant() {
   const session = await auth();
@@ -49,6 +50,7 @@ export async function uploadApplicationDocument(applicationId: string, requiredD
     filename: file.name,
     uploadedById: user.id,
   });
+  await notifyAllAdmins({ type: "document.submitted", relatedType: "Application", relatedId: applicationId });
 
   revalidatePath(`/cab/applicant/applications/${applicationId}`);
   return { ok: true as const };
@@ -71,6 +73,7 @@ export async function submitApplicationForReview(applicationId: string) {
     return { ok: false as const, error: "All mandatory documents must be uploaded before submitting." };
   }
   await submitApplication(applicationId, user.id);
+  await notifyAllAdmins({ type: "application.submitted", relatedType: "Application", relatedId: applicationId });
   revalidatePath(`/cab/applicant/applications/${applicationId}`);
   revalidatePath("/cab/applicant/applications");
   return { ok: true as const };

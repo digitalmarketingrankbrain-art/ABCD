@@ -41,7 +41,17 @@ export interface Finding {
   notes: string;
   severity: "MINOR" | "MAJOR" | null;
   evidenceNote: string | null;
+  evidenceDocumentId: string | null;
 }
+
+export type AssessmentReportStatus = "DRAFT" | "SUBMITTED" | "UNDER_REVIEW" | "FINALIZED";
+
+export const REPORT_STATUS_LABEL: Record<AssessmentReportStatus, string> = {
+  DRAFT: "Draft",
+  SUBMITTED: "Submitted",
+  UNDER_REVIEW: "Under AB review",
+  FINALIZED: "Finalized",
+};
 
 export interface Assignment {
   id: string;
@@ -58,6 +68,9 @@ export interface Assignment {
   criteria: AssessmentCriterion[];
   findings: Record<string, Finding>;
   reportSubmittedAt: string | null;
+  reportSummary: string;
+  reportRecommendation: string;
+  reportStatus: AssessmentReportStatus;
   sharedDocuments: { name: string; filename: string }[];
   linkedApplicationId: string | null;
 }
@@ -135,4 +148,37 @@ export function updateFinding(
 
 export function submitAssignmentReport(assignmentId: string, userId: string): Promise<boolean> {
   return rpc(MODULE, "submitAssignmentReport", [assignmentId, userId]);
+}
+
+export function getOrCreateAssessmentId(assignmentId: string, userId: string): Promise<string | undefined> {
+  return rpc(MODULE, "getOrCreateAssessmentId", [assignmentId, userId]);
+}
+
+export function attachEvidenceToFinding(
+  assignmentId: string,
+  userId: string,
+  criterionId: string,
+  documentId: string,
+): Promise<boolean> {
+  return rpc(MODULE, "attachEvidenceToFinding", [assignmentId, userId, criterionId, documentId]);
+}
+
+export function updateReportContent(
+  assignmentId: string,
+  userId: string,
+  content: { summary?: string; recommendation?: string },
+): Promise<boolean> {
+  return rpc(MODULE, "updateReportContent", [assignmentId, userId, content]);
+}
+
+export function markReportUnderReview(assignmentId: string): Promise<boolean> {
+  return rpc(MODULE, "markReportUnderReview", [assignmentId]);
+}
+
+export function finalizeAssessmentReport(assignmentId: string, adminUserId: string): Promise<boolean> {
+  return rpc(MODULE, "finalizeAssessmentReport", [assignmentId, adminUserId]);
+}
+
+export function countUnfinalizedReportsForApplication(applicationId: string): Promise<number> {
+  return rpc(MODULE, "countUnfinalizedReportsForApplication", [applicationId]);
 }

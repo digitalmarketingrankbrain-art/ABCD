@@ -222,14 +222,22 @@ export async function raiseNonConformity(input: RaiseNcInput, raisedById: string
   return { id: created.id, ncNumber: created.ncNumber };
 }
 
-/** Raises an NC directly from a NON_CONFORMANCE finding on an assessor's checklist — the missing link the gap analysis flagged. */
+/**
+ * Raises an NC directly from a NON_CONFORMANCE finding on an assessor's
+ * checklist — the missing link the gap analysis flagged. Takes
+ * (assignmentId, criterionId) rather than a raw findingId so the assessor
+ * frontend never needs to know the internal AssessmentFinding row id.
+ */
 export async function raiseNonConformityFromFinding(
-  findingId: string,
+  assignmentId: string,
+  criterionId: string,
   raisedById: string,
   extra: { standardReference: string; requirementText?: string; dueDate?: string },
 ): Promise<{ id: string; ncNumber: string } | undefined> {
+  const assessment = await prisma.assessment.findUnique({ where: { assignmentId } });
+  if (!assessment) return undefined;
   const finding = await prisma.assessmentFinding.findUnique({
-    where: { id: findingId },
+    where: { assessmentId_criterionId: { assessmentId: assessment.id, criterionId } },
     include: {
       assessment: {
         include: {
@@ -239,7 +247,7 @@ export async function raiseNonConformityFromFinding(
     },
   });
   if (!finding || finding.status !== "NON_CONFORMANCE") return undefined;
-  const existing = await prisma.nonConformity.findUnique({ where: { findingId } });
+  const existing = await prisma.nonConformity.findUnique({ where: { findingId: finding.id } });
   if (existing) return { id: existing.id, ncNumber: existing.ncNumber };
 
   return raiseNonConformity(

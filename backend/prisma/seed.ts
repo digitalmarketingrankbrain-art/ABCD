@@ -135,6 +135,19 @@ async function main() {
     },
   });
 
+  // FULL_ADMIN — without this, nobody could ever record a final decision,
+  // issue a certificate, or grant further permissions (AdminPermission is
+  // now actually enforced; previously it was defined in the schema but
+  // never checked, so this had no functional effect before).
+  const existingFullAdminGrant = await prisma.adminPermissionGrant.findFirst({
+    where: { userId: admin.id, permission: "FULL_ADMIN" },
+  });
+  if (!existingFullAdminGrant) {
+    await prisma.adminPermissionGrant.create({
+      data: { userId: admin.id, permission: "FULL_ADMIN", grantedById: admin.id },
+    });
+  }
+
   const assessorUser = await prisma.user.upsert({
     where: { email: "assessor@example.com" },
     update: {},

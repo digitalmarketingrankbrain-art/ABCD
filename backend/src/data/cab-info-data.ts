@@ -250,3 +250,14 @@ export async function getTeamMembers(userId: string): Promise<TeamMemberEntry[]>
     status: r.user.status,
   }));
 }
+
+/** Resolves the user to notify for an organisation-level event (NC raised/accepted/closed, etc.) — the org's primary contact, falling back to any member. */
+export async function getPrimaryContactUserId(organisationId: string): Promise<string | null> {
+  const primary = await prisma.organisationMembership.findFirst({
+    where: { organisationId, membershipRole: "PRIMARY_CONTACT" },
+    select: { userId: true },
+  });
+  if (primary) return primary.userId;
+  const any = await prisma.organisationMembership.findFirst({ where: { organisationId }, select: { userId: true } });
+  return any?.userId ?? null;
+}

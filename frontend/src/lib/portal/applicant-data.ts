@@ -222,8 +222,9 @@ export function assignAssessorToApplication(
   applicationId: string,
   assessorUserId: string,
   actorUserId: string,
+  dueDate?: string,
 ): Promise<boolean> {
-  return rpc(MODULE, "assignAssessorToApplication", [applicationId, assessorUserId, actorUserId]);
+  return rpc(MODULE, "assignAssessorToApplication", [applicationId, assessorUserId, actorUserId, dueDate]);
 }
 
 export function recordApplicationDecision(
@@ -231,6 +232,6 @@ export function recordApplicationDecision(
   outcome: "ACCREDIT" | "DECLINE" | "REQUEST_MORE_INFO",
   rationale: string,
   decidedByUserId: string,
-): Promise<boolean> {
+): Promise<{ ok: boolean; error?: string }> {
   return rpc(MODULE, "recordApplicationDecision", [applicationId, outcome, rationale, decidedByUserId]);
 }

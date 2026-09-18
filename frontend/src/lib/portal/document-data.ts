@@ -79,3 +79,24 @@ export interface AdminDocumentEntry {
 export function getAllDocumentsWithVersions(): Promise<AdminDocumentEntry[]> {
   return rpc(MODULE, "getAllDocumentsWithVersions", []);
 }
+
+export function reviewDocumentVersion(
+  versionId: string,
+  decision: "APPROVED" | "NEEDS_REVISION",
+  comment?: string,
+): Promise<boolean> {
+  return rpc(MODULE, "reviewDocumentVersion", [versionId, decision, comment]);
+}
+
+export interface DocumentWithVersionDetail {
+  id: string;
+  filename: string;
+  reviewStatus: "UNDER_REVIEW" | "APPROVED" | "NEEDS_REVISION";
+  reviewComment: string | null;
+  uploadedBy: { name: string };
+  document: { id: string; ownerType: DocumentOwnerType; ownerId: string; applicationId: string | null };
+}
+
+export function getDocumentWithVersionById(versionId: string): Promise<DocumentWithVersionDetail | null> {
+  return rpc(MODULE, "getDocumentWithVersionById", [versionId]);
+}

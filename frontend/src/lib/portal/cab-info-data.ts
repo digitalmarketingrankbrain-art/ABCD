@@ -111,3 +111,7 @@ export function addTeamMember(
 export function getTeamMembers(userId: string): Promise<TeamMemberEntry[]> {
   return rpc(MODULE, "getTeamMembers", [userId]);
 }
+
+export function getPrimaryContactUserId(organisationId: string): Promise<string | null> {
+  return rpc(MODULE, "getPrimaryContactUserId", [organisationId]);
+}

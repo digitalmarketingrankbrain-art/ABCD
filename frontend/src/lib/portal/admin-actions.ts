@@ -21,6 +21,7 @@ import { logAction } from "./audit-log";
 import { createNotification } from "@/lib/notifications";
 import { getClientIp } from "@/lib/request-ip";
 import { findUserById } from "@/lib/auth/store";
+import { hasAdminPermission } from "./admin-permissions-data";
 
 async function requireAdmin() {
   const session = await auth();
@@ -29,6 +30,24 @@ async function requireAdmin() {
   }
   const ip = await getClientIp();
   return { ...session.user, ip };
+}
+
+/**
+ * The final accreditation decision (and certificate issuance) requires
+ * FULL_ADMIN or DECISION_MAKER specifically — AdminPermission/
+ * AdminPermissionGrant existed in the schema since Milestone 11 but were
+ * never actually checked anywhere before this.
+ */
+export async function requireDecisionMaker() {
+  const admin = await requireAdmin();
+  const [isFullAdmin, isDecisionMaker] = await Promise.all([
+    hasAdminPermission(admin.id, "FULL_ADMIN"),
+    hasAdminPermission(admin.id, "DECISION_MAKER"),
+  ]);
+  if (!isFullAdmin && !isDecisionMaker) {
+    throw new Error("Recording a final accreditation decision requires the FULL_ADMIN or DECISION_MAKER permission.");
+  }
+  return admin;
 }
 
 export async function markInitialReviewComplete(applicationId: string) {
@@ -128,11 +147,12 @@ export async function recordDecision(
   outcome: "ACCREDIT" | "DECLINE" | "REQUEST_MORE_INFO",
   rationale: string,
 ) {
-  const admin = await requireAdmin();
+  const admin = await requireDecisionMaker();
   if (!rationale.trim()) return { ok: false as const, error: "A rationale is required to record a decision." };
   const app = await getApplicationByIdAdmin(applicationId);
   if (!app) return { ok: false as const, error: "Application not found." };
-  await recordApplicationDecision(applicationId, outcome, rationale.trim(), admin.id);
+  const result = await recordApplicationDecision(applicationId, outcome, rationale.trim(), admin.id);
+  if (!result.ok) return { ok: false as const, error: result.error ?? "Couldn't record this decision." };
   await logAction({
     actorUserId: admin.id,
     actorRole: "ADMIN",

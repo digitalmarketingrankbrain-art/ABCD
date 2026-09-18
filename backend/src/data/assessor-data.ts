@@ -339,6 +339,19 @@ export async function updateFinding(
   return true;
 }
 
+/** Returns (creating if needed) the Assessment id for this assignment — used as the Document ownerId when uploading evidence. */
+export async function getOrCreateAssessmentId(assignmentId: string, userId: string): Promise<string | undefined> {
+  const assessor = await getAssessorRowForUser(userId);
+  if (!assessor) return undefined;
+  const assignment = await prisma.assignment.findFirst({ where: { id: assignmentId, assessorId: assessor.id } });
+  if (!assignment) return undefined;
+  let assessment = await prisma.assessment.findUnique({ where: { assignmentId } });
+  if (!assessment) {
+    assessment = await prisma.assessment.create({ data: { assignmentId, startedAt: new Date() } });
+  }
+  return assessment.id;
+}
+
 /** Attaches an already-uploaded evidence Document to a finding — the schema slot (evidenceDocumentId) existed but nothing ever set it. */
 export async function attachEvidenceToFinding(
   assignmentId: string,
