@@ -1,4 +1,5 @@
 import { getAllDocumentsWithVersions, type AdminDocumentEntry } from "@/lib/portal/document-data";
+import { DocumentReviewButton } from "@/components/portal/document-review-button";
 
 /**
  * Global document oversight (Phase 10) — reads real Document/DocumentVersion
@@ -51,14 +52,19 @@ export default async function AdminDocumentsPage() {
                 </td>
                 <td className="px-4 py-3 text-text-muted">{d.currentVersion?.reviewStatus ?? "—"}</td>
                 <td className="px-4 py-3">
-                  {d.currentVersion && (
-                    <a
-                      href={`/api/documents/${d.currentVersion.id}`}
-                      className="font-sans text-sm font-medium text-secondary hover:underline"
-                    >
-                      Download
-                    </a>
-                  )}
+                  <div className="flex items-center gap-3">
+                    {d.currentVersion && (
+                      <a
+                        href={`/api/documents/${d.currentVersion.id}`}
+                        className="font-sans text-sm font-medium text-secondary hover:underline"
+                      >
+                        Download
+                      </a>
+                    )}
+                    {d.currentVersion && d.currentVersion.reviewStatus === "UNDER_REVIEW" && d.ownerType === "APPLICATION" && (
+                      <DocumentReviewButton versionId={d.currentVersion.id} applicationId={d.ownerId} />
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}

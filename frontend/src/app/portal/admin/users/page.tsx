@@ -1,5 +1,7 @@
 import { AdminUsersTable } from "@/components/portal/admin-users-table";
+import { AdminPermissionsPanel } from "@/components/portal/admin-permissions-panel";
 import { getAllUsersSafe } from "@/lib/auth/store";
+import { getAllAdminPermissions } from "@/lib/portal/admin-permissions-data";
 
 /**
  * getAllUsersSafe() selects only display-safe fields at the Prisma query
@@ -9,7 +11,7 @@ import { getAllUsersSafe } from "@/lib/auth/store";
  * Component" version of this rule; this applies it one layer earlier.
  */
 export default async function AdminUsersPage() {
-  const rows = await getAllUsersSafe();
+  const [rows, admins] = await Promise.all([getAllUsersSafe(), getAllAdminPermissions()]);
 
   return (
     <div className="px-6 py-8">
@@ -17,6 +19,7 @@ export default async function AdminUsersPage() {
       <div className="mt-6">
         <AdminUsersTable users={rows} />
       </div>
+      <AdminPermissionsPanel admins={admins} />
     </div>
   );
 }

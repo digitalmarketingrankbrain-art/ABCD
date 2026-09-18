@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { auth } from "@/auth";
 import { issueCertificate, revokeCertificate, type IssueCertificateInput } from "./certificate-data";
 import { getApplicationByIdAdmin } from "./applicant-data";
 import { requireDecisionMaker } from "./admin-actions";
