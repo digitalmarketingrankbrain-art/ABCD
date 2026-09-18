@@ -1,31 +1,15 @@
-import { prisma } from "@/lib/prisma";
+import { getAllDocumentsWithVersions, type AdminDocumentEntry } from "@/lib/portal/document-data";
 
 /**
  * Global document oversight (Phase 10) — reads real Document/DocumentVersion
- * rows from Postgres directly, with working authenticated download links via
- * /api/documents/[versionId] (Milestone 13). Applications themselves are
- * still in-memory (remaining Milestone 12 work), so ownerId below is shown
- * as a raw reference rather than a resolved organisation name for now.
+ * rows from Postgres via the backend RPC bridge, with working authenticated
+ * download links via /api/documents/[versionId] (Milestone 13). Applications
+ * themselves are still in-memory (remaining Milestone 12 work), so ownerId
+ * below is shown as a raw reference rather than a resolved organisation name
+ * for now.
  */
-type DocumentWithVersion = {
-  id: string;
-  ownerType: string;
-  ownerId: string;
-  documentKind: string;
-  currentVersion?: {
-    id: string;
-    filename: string;
-    sizeBytes: number;
-    uploadedAt: Date | string;
-    reviewStatus: string;
-  } | null;
-};
-
 export default async function AdminDocumentsPage() {
-  const documents = (await prisma.document.findMany({
-    include: { currentVersion: true },
-    orderBy: { createdAt: "desc" },
-  })) as unknown as DocumentWithVersion[];
+  const documents: AdminDocumentEntry[] = await getAllDocumentsWithVersions();
 
   return (
     <div className="px-6 py-8">
@@ -54,7 +38,7 @@ export default async function AdminDocumentsPage() {
                 </td>
               </tr>
             )}
-            {documents.map((d: DocumentWithVersion) => (
+            {documents.map((d) => (
               <tr key={d.id} className="border-b border-border last:border-b-0">
                 <td className="px-4 py-3 font-mono text-xs text-text">{d.ownerType} · {d.ownerId}</td>
                 <td className="px-4 py-3 text-text-muted">{d.documentKind}</td>
@@ -63,7 +47,7 @@ export default async function AdminDocumentsPage() {
                   {d.currentVersion ? `${(d.currentVersion.sizeBytes / 1024).toFixed(1)} KB` : "—"}
                 </td>
                 <td className="px-4 py-3 font-mono text-xs text-text-muted">
-                  {d.currentVersion ? new Date(d.currentVersion.uploadedAt).toISOString().slice(0, 19).replace("T", " ") : "—"}
+                  {d.currentVersion ? d.currentVersion.uploadedAt.slice(0, 19).replace("T", " ") : "—"}
                 </td>
                 <td className="px-4 py-3 text-text-muted">{d.currentVersion?.reviewStatus ?? "—"}</td>
                 <td className="px-4 py-3">

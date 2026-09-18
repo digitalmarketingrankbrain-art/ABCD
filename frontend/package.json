@@ -4,14 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 4000",
-    "build": "prisma generate && next build",
-    "postinstall": "prisma generate",
+    "build": "next build",
     "start": "next start -p 4000",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@prisma/client": "^6.19.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.43.0",
@@ -30,7 +28,6 @@
     "@types/react-dom": "^19.0.3",
     "eslint": "^9.18.0",
     "eslint-config-next": "15.5.25",
-    "prisma": "^6.19.3",
     "tailwindcss": "^4.1.13",
     "typescript": "^5.7.3"
   }

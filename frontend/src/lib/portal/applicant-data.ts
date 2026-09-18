@@ -1,6 +1,12 @@
-import { prisma } from "@/lib/prisma";
-import { getUserOrganisationId } from "@/lib/auth/store";
-import type { Prisma, Role } from "@prisma/client";
+import { rpc } from "@/lib/rpc-client";
+
+/**
+ * Thin proxy over the backend's data/applicant-data.ts — the actual Prisma
+ * queries now live there (backend/src/data/applicant-data.ts, moved
+ * verbatim from this file) since the frontend process no longer holds
+ * DATABASE_URL. Every exported name/signature below is kept identical so
+ * the ~25 consuming pages/components didn't need to change at all.
+ */
 
 export type ApplicationStage =
   | "DRAFT"
@@ -77,7 +83,6 @@ export interface Application {
   submittedAt: string | null;
   updatedAt: string;
   assessorName?: string;
-  /** Real FK, added alongside assessorName so authorization checks (e.g. the document download route) don't have to match on a display name. */
   assessorUserId?: string;
   decisionOutcome?: "ACCREDIT" | "DECLINE" | "REQUEST_MORE_INFO";
   decisionRationale?: string;
@@ -102,200 +107,46 @@ export interface Invoice {
   paidAt: string | null;
 }
 
-/**
- * Real Postgres-backed Application/Document/Invoice/Message data (Milestone
- * 12, continued) — replaces the in-memory placeholder store used since
- * Milestone 8. Public type shapes above are kept identical to the old
- * in-memory versions on purpose, so the ~25 consuming pages/components only
- * needed `await` added at call sites rather than a rewrite.
- */
+const MODULE = "applicant-data";
 
-function fmtDate(d: Date): string {
-  return d.toISOString().slice(0, 10);
+export function getApplicationsForUser(userId: string): Promise<Application[]> {
+  return rpc(MODULE, "getApplicationsForUser", [userId]);
 }
 
-function senderRoleFor(role: Role): Message["senderRole"] {
-  if (role === "ADMIN") return "ADMIN";
-  if (role === "ASSESSOR") return "ASSESSOR";
-  return "APPLICANT";
+export function getApplicationById(id: string, userId: string): Promise<Application | undefined> {
+  return rpc(MODULE, "getApplicationById", [id, userId]);
 }
 
-async function buildDocumentChecklist(programId: string, applicationId: string): Promise<RequiredDocument[]> {
-  const [types, docs] = await Promise.all([
-    prisma.requiredDocumentType.findMany({ where: { programId }, orderBy: { name: "asc" } }),
-    prisma.document.findMany({
-      where: { ownerType: "APPLICATION", ownerId: applicationId },
-      include: { versions: { orderBy: { versionNumber: "asc" } } },
-    }),
-  ]);
-
-  return types.map((t) => {
-    const doc = docs.find((d) => d.requiredDocumentTypeId === t.id);
-    if (!doc || doc.versions.length === 0) {
-      return { id: t.id, name: t.name, mandatory: t.isMandatory, status: "NOT_UPLOADED" as DocumentStatus, versions: [] };
-    }
-    const versions: DocumentVersion[] = doc.versions.map((v) => ({
-      version: v.versionNumber,
-      filename: v.filename,
-      uploadedAt: fmtDate(v.uploadedAt),
-      reviewComment: v.reviewComment ?? undefined,
-    }));
-    const latest = doc.versions[doc.versions.length - 1]!;
-    return { id: t.id, name: t.name, mandatory: t.isMandatory, status: latest.reviewStatus, versions };
-  });
+export function getInvoicesForUser(userId: string): Promise<Invoice[]> {
+  return rpc(MODULE, "getInvoicesForUser", [userId]);
 }
 
-const APPLICATION_INCLUDE = {
-  program: true,
-  assessor: { select: { id: true, name: true } },
-  stageHistory: { orderBy: { changedAt: "asc" } },
-  decision: { include: { decidedBy: { select: { name: true } } } },
-} satisfies Prisma.ApplicationInclude;
-
-type ApplicationRow = Prisma.ApplicationGetPayload<{ include: typeof APPLICATION_INCLUDE }>;
-
-async function mapApplication(row: ApplicationRow): Promise<Application> {
-  const documents = await buildDocumentChecklist(row.programId, row.id);
-  return {
-    id: row.id,
-    referenceNumber: row.referenceNumber,
-    applicantUserId: row.applicantUserId,
-    programSlug: row.program.slug,
-    programName: row.program.name,
-    stage: row.stage,
-    infoRequested: row.infoRequested,
-    infoRequestNote: row.infoRequestNote ?? undefined,
-    submittedAt: row.submittedAt ? fmtDate(row.submittedAt) : null,
-    updatedAt: fmtDate(row.updatedAt),
-    assessorName: row.assessor?.name,
-    assessorUserId: row.assessor?.id,
-    decisionOutcome: row.decision?.outcome,
-    decisionRationale: row.decision?.rationale,
-    decidedBy: row.decision?.decidedBy.name,
-    documents,
-    stageHistory: row.stageHistory.map((h) => ({
-      stage: h.toStage,
-      changedAt: fmtDate(h.changedAt),
-      note: h.reason ?? undefined,
-    })),
-  };
+export function getAllInvoices(): Promise<Invoice[]> {
+  return rpc(MODULE, "getAllInvoices", []);
 }
 
-// --- Accessors ---
-
-export async function getApplicationsForUser(userId: string): Promise<Application[]> {
-  const rows = await prisma.application.findMany({
-    where: { applicantUserId: userId },
-    include: APPLICATION_INCLUDE,
-    orderBy: { updatedAt: "desc" },
-  });
-  return Promise.all(rows.map(mapApplication));
+export function getInvoiceById(id: string, userId: string): Promise<Invoice | undefined> {
+  return rpc(MODULE, "getInvoiceById", [id, userId]);
 }
 
-export async function getApplicationById(id: string, userId: string): Promise<Application | undefined> {
-  const row = await prisma.application.findFirst({
-    where: { id, applicantUserId: userId },
-    include: APPLICATION_INCLUDE,
-  });
-  return row ? mapApplication(row) : undefined;
+export function getMessagesForApplication(applicationId: string): Promise<Message[]> {
+  return rpc(MODULE, "getMessagesForApplication", [applicationId]);
 }
 
-export async function getInvoicesForUser(userId: string): Promise<Invoice[]> {
-  const organisationId = await getUserOrganisationId(userId);
-  if (!organisationId) return [];
-  const rows = await prisma.invoice.findMany({
-    where: { organisationId },
-    include: { lineItems: true },
-    orderBy: { issuedAt: "desc" },
-  });
-  return rows.map((r) => mapInvoice(r, userId));
+export function getMessagesForApplicationByReference(reference: string): Promise<Message[]> {
+  return rpc(MODULE, "getMessagesForApplicationByReference", [reference]);
 }
 
-/** Admin cross-cutting view — every invoice, not scoped to one applicant. */
-export async function getAllInvoices(): Promise<Invoice[]> {
-  const rows = await prisma.invoice.findMany({
-    include: { lineItems: true, organisation: { include: { memberships: { take: 1 } } } },
-    orderBy: { issuedAt: "desc" },
-  });
-  return rows.map((r) => mapInvoice(r, r.organisation.memberships[0]?.userId ?? ""));
+export function getApplicationIdByReference(reference: string): Promise<string | null> {
+  return rpc(MODULE, "getApplicationIdByReference", [reference]);
 }
 
-export async function getInvoiceById(id: string, userId: string): Promise<Invoice | undefined> {
-  const organisationId = await getUserOrganisationId(userId);
-  if (!organisationId) return undefined;
-  const row = await prisma.invoice.findFirst({
-    where: { id, organisationId },
-    include: { lineItems: true },
-  });
-  return row ? mapInvoice(row, userId) : undefined;
+export function addMessage(applicationId: string, body: string, senderUserId: string): Promise<void> {
+  return rpc(MODULE, "addMessage", [applicationId, body, senderUserId]);
 }
 
-function mapInvoice(row: Prisma.InvoiceGetPayload<{ include: { lineItems: true } }>, applicantUserId: string): Invoice {
-  return {
-    id: row.id,
-    invoiceNumber: row.invoiceNumber,
-    applicantUserId,
-    applicationId: row.applicationId,
-    description: row.lineItems[0]?.description ?? "",
-    amount: Number(row.amount),
-    currency: row.currency,
-    status: row.status,
-    issuedAt: row.issuedAt ? fmtDate(row.issuedAt) : "",
-    dueAt: row.dueAt ? fmtDate(row.dueAt) : "",
-    paidAt: row.paidAt ? fmtDate(row.paidAt) : null,
-  };
-}
-
-export async function getMessagesForApplication(applicationId: string): Promise<Message[]> {
-  const thread = await prisma.messageThread.findUnique({
-    where: { applicationId },
-    include: { messages: { include: { sender: true }, orderBy: { createdAt: "asc" } } },
-  });
-  if (!thread) return [];
-  return thread.messages.map((m) => ({
-    id: m.id,
-    applicationId,
-    senderName: m.sender.name,
-    senderRole: senderRoleFor(m.sender.primaryRole),
-    body: m.body,
-    createdAt: fmtDate(m.createdAt),
-  }));
-}
-
-/** For the assessor side, which links to an application by reference number rather than id (see assessor-data.ts's linkedApplicationId). */
-export async function getMessagesForApplicationByReference(reference: string): Promise<Message[]> {
-  const id = await getApplicationIdByReference(reference);
-  if (!id) return [];
-  return getMessagesForApplication(id);
-}
-
-export async function getApplicationIdByReference(reference: string): Promise<string | null> {
-  const row = await prisma.application.findUnique({ where: { referenceNumber: reference }, select: { id: true } });
-  return row?.id ?? null;
-}
-
-export async function addMessage(applicationId: string, body: string, senderUserId: string): Promise<void> {
-  let thread = await prisma.messageThread.findUnique({ where: { applicationId } });
-  if (!thread) {
-    thread = await prisma.messageThread.create({ data: { contextType: "APPLICATION", applicationId } });
-  }
-  await prisma.message.create({ data: { threadId: thread.id, senderUserId, body: body.trim() } });
-}
-
-export async function createDraftApplication(userId: string, programSlug: string): Promise<{ id: string }> {
-  const program = await prisma.program.findUnique({ where: { slug: programSlug } });
-  if (!program) throw new Error(`Unknown program: ${programSlug}`);
-  const organisationId = await getUserOrganisationId(userId);
-  if (!organisationId) throw new Error("No organisation found for this applicant.");
-
-  const referenceNumber = `SAAF-APP-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
-  const app = await prisma.application.create({
-    data: { referenceNumber, organisationId, applicantUserId: userId, programId: program.id, stage: "DRAFT" },
-  });
-  await prisma.applicationStageHistory.create({
-    data: { applicationId: app.id, toStage: "DRAFT", changedById: userId },
-  });
-  return { id: app.id };
+export function createDraftApplication(userId: string, programSlug: string): Promise<{ id: string }> {
+  return rpc(MODULE, "createDraftApplication", [userId, programSlug]);
 }
 
 export interface ScopeExtensionDraftInput {
@@ -304,46 +155,12 @@ export interface ScopeExtensionDraftInput {
   draftData: Record<string, unknown>;
 }
 
-/** The CB Dashboard's "Apply → Scope Extension" wizard — one Application row (applicationType SCOPE_EXTENSION) can cover several schemes at once via `additionalScopeSlugs`. */
-export async function saveScopeExtensionDraft(
+export function saveScopeExtensionDraft(
   userId: string,
   input: ScopeExtensionDraftInput,
   existingApplicationId?: string,
 ): Promise<{ id: string; referenceNumber: string }> {
-  const program = await prisma.program.findUnique({ where: { slug: input.primaryProgramSlug } });
-  if (!program) throw new Error(`Unknown program: ${input.primaryProgramSlug}`);
-  const organisationId = await getUserOrganisationId(userId);
-  if (!organisationId) throw new Error("No organisation found for this applicant.");
-
-  if (existingApplicationId) {
-    const updated = await prisma.application.update({
-      where: { id: existingApplicationId, applicantUserId: userId, stage: "DRAFT" },
-      data: {
-        programId: program.id,
-        additionalScopeSlugs: input.additionalScopeSlugs,
-        draftData: input.draftData as Prisma.InputJsonValue,
-      },
-    });
-    return { id: updated.id, referenceNumber: updated.referenceNumber };
-  }
-
-  const referenceNumber = `SAAF-SE-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
-  const created = await prisma.application.create({
-    data: {
-      referenceNumber,
-      organisationId,
-      applicantUserId: userId,
-      programId: program.id,
-      applicationType: "SCOPE_EXTENSION",
-      additionalScopeSlugs: input.additionalScopeSlugs,
-      draftData: input.draftData as Prisma.InputJsonValue,
-      stage: "DRAFT",
-    },
-  });
-  await prisma.applicationStageHistory.create({
-    data: { applicationId: created.id, toStage: "DRAFT", changedById: userId },
-  });
-  return { id: created.id, referenceNumber: created.referenceNumber };
+  return rpc(MODULE, "saveScopeExtensionDraft", [userId, input, existingApplicationId]);
 }
 
 export interface ScopeExtensionDraftSummary {
@@ -354,21 +171,8 @@ export interface ScopeExtensionDraftSummary {
   draftData: Record<string, unknown>;
 }
 
-/** Lean resume-lookup for the Scope Extension wizard — doesn't build the full document checklist mapApplication() does, since the wizard only needs the raw selections. */
-export async function getDraftScopeExtensionSummary(userId: string): Promise<ScopeExtensionDraftSummary | undefined> {
-  const row = await prisma.application.findFirst({
-    where: { applicantUserId: userId, applicationType: "SCOPE_EXTENSION", stage: "DRAFT" },
-    include: { program: { select: { slug: true } } },
-    orderBy: { updatedAt: "desc" },
-  });
-  if (!row) return undefined;
-  return {
-    id: row.id,
-    referenceNumber: row.referenceNumber,
-    primaryProgramSlug: row.program.slug,
-    additionalScopeSlugs: row.additionalScopeSlugs,
-    draftData: (row.draftData as Record<string, unknown> | null) ?? {},
-  };
+export function getDraftScopeExtensionSummary(userId: string): Promise<ScopeExtensionDraftSummary | undefined> {
+  return rpc(MODULE, "getDraftScopeExtensionSummary", [userId]);
 }
 
 export interface ScopeExtensionApplicationRow {
@@ -381,138 +185,52 @@ export interface ScopeExtensionApplicationRow {
   updatedAt: string;
 }
 
-/** Past (non-draft) Scope Extension applications — shown alongside the wizard so a CB isn't limited to seeing only its current draft. */
-export async function getScopeExtensionApplicationsForUser(userId: string): Promise<ScopeExtensionApplicationRow[]> {
-  const rows = await prisma.application.findMany({
-    where: { applicantUserId: userId, applicationType: "SCOPE_EXTENSION", stage: { not: "DRAFT" } },
-    include: { program: { select: { name: true } } },
-    orderBy: { updatedAt: "desc" },
-  });
-  return rows.map((r) => ({
-    id: r.id,
-    referenceNumber: r.referenceNumber,
-    primaryProgramName: r.program.name,
-    additionalScopeCount: r.additionalScopeSlugs.length,
-    stage: r.stage,
-    submittedAt: r.submittedAt ? fmtDate(r.submittedAt) : null,
-    updatedAt: fmtDate(r.updatedAt),
-  }));
+export function getScopeExtensionApplicationsForUser(userId: string): Promise<ScopeExtensionApplicationRow[]> {
+  return rpc(MODULE, "getScopeExtensionApplicationsForUser", [userId]);
 }
 
-export async function submitApplication(applicationId: string, actorUserId: string): Promise<boolean> {
-  const app = await prisma.application.findUnique({ where: { id: applicationId } });
-  if (!app || app.stage !== "DRAFT") return false;
-  const now = new Date();
-  await prisma.application.update({ where: { id: applicationId }, data: { stage: "SUBMITTED", submittedAt: now } });
-  await prisma.applicationStageHistory.create({
-    data: { applicationId, fromStage: "DRAFT", toStage: "SUBMITTED", changedById: actorUserId, changedAt: now },
-  });
-  return true;
+export function submitApplication(applicationId: string, actorUserId: string): Promise<boolean> {
+  return rpc(MODULE, "submitApplication", [applicationId, actorUserId]);
 }
 
-// --- Admin accessors/mutators (see all applications, not scoped to one user) ---
-
-export async function getAllApplications(): Promise<Application[]> {
-  const rows = await prisma.application.findMany({ include: APPLICATION_INCLUDE, orderBy: { updatedAt: "desc" } });
-  return Promise.all(rows.map(mapApplication));
+export function getAllApplications(): Promise<Application[]> {
+  return rpc(MODULE, "getAllApplications", []);
 }
 
-export async function getApplicationByIdAdmin(id: string): Promise<Application | undefined> {
-  const row = await prisma.application.findUnique({ where: { id }, include: APPLICATION_INCLUDE });
-  return row ? mapApplication(row) : undefined;
+export function getApplicationByIdAdmin(id: string): Promise<Application | undefined> {
+  return rpc(MODULE, "getApplicationByIdAdmin", [id]);
 }
 
-export async function advanceApplicationStage(
+export function advanceApplicationStage(
   applicationId: string,
   stage: ApplicationStage,
   actorUserId: string,
   note?: string,
 ): Promise<boolean> {
-  const app = await prisma.application.findUnique({ where: { id: applicationId } });
-  if (!app) return false;
-  await prisma.application.update({ where: { id: applicationId }, data: { stage } });
-  await prisma.applicationStageHistory.create({
-    data: { applicationId, fromStage: app.stage, toStage: stage, changedById: actorUserId, reason: note },
-  });
-  return true;
+  return rpc(MODULE, "advanceApplicationStage", [applicationId, stage, actorUserId, note]);
 }
 
-export async function setInfoRequested(applicationId: string, note: string): Promise<boolean> {
-  const res = await prisma.application.updateMany({
-    where: { id: applicationId },
-    data: { infoRequested: true, infoRequestNote: note },
-  });
-  return res.count > 0;
+export function setInfoRequested(applicationId: string, note: string): Promise<boolean> {
+  return rpc(MODULE, "setInfoRequested", [applicationId, note]);
 }
 
-export async function clearInfoRequested(applicationId: string): Promise<boolean> {
-  const res = await prisma.application.updateMany({
-    where: { id: applicationId },
-    data: { infoRequested: false, infoRequestNote: null },
-  });
-  return res.count > 0;
+export function clearInfoRequested(applicationId: string): Promise<boolean> {
+  return rpc(MODULE, "clearInfoRequested", [applicationId]);
 }
 
-export async function assignAssessorToApplication(
+export function assignAssessorToApplication(
   applicationId: string,
   assessorUserId: string,
   actorUserId: string,
 ): Promise<boolean> {
-  const app = await prisma.application.findUnique({ where: { id: applicationId } });
-  if (!app) return false;
-
-  const movesToAssessment =
-    app.stage === "DOCUMENT_REVIEW" || app.stage === "INITIAL_REVIEW" || app.stage === "SUBMITTED";
-
-  await prisma.application.update({
-    where: { id: applicationId },
-    data: { assessorUserId, ...(movesToAssessment ? { stage: "ASSESSMENT" as const } : {}) },
-  });
-
-  if (movesToAssessment) {
-    await prisma.applicationStageHistory.create({
-      data: { applicationId, fromStage: app.stage, toStage: "ASSESSMENT", changedById: actorUserId },
-    });
-  }
-  return true;
+  return rpc(MODULE, "assignAssessorToApplication", [applicationId, assessorUserId, actorUserId]);
 }
 
-/**
- * Structurally distinct from the assessor's own recommendation — the
- * decider is always the authenticated admin session, which can never be
- * the same identity as the assigned assessor (Phase 6/10 governance rule),
- * and the rationale is required, not optional.
- */
-export async function recordApplicationDecision(
+export function recordApplicationDecision(
   applicationId: string,
   outcome: "ACCREDIT" | "DECLINE" | "REQUEST_MORE_INFO",
   rationale: string,
   decidedByUserId: string,
 ): Promise<boolean> {
-  const app = await prisma.application.findUnique({ where: { id: applicationId } });
-  if (!app) return false;
-
-  await prisma.decision.upsert({
-    where: { applicationId },
-    create: { applicationId, decidedById: decidedByUserId, outcome, rationale },
-    update: { decidedById: decidedByUserId, outcome, rationale, decidedAt: new Date() },
-  });
-
-  if (outcome === "ACCREDIT") {
-    await prisma.application.update({ where: { id: applicationId }, data: { stage: "ACCREDITED" } });
-    await prisma.applicationStageHistory.create({
-      data: { applicationId, fromStage: app.stage, toStage: "ACCREDITED", changedById: decidedByUserId, reason: rationale },
-    });
-  } else if (outcome === "DECLINE") {
-    await prisma.application.update({ where: { id: applicationId }, data: { stage: "DECLINED" } });
-    await prisma.applicationStageHistory.create({
-      data: { applicationId, fromStage: app.stage, toStage: "DECLINED", changedById: decidedByUserId, reason: rationale },
-    });
-  } else {
-    await prisma.application.update({
-      where: { id: applicationId },
-      data: { infoRequested: true, infoRequestNote: rationale },
-    });
-  }
-  return true;
+  return rpc(MODULE, "recordApplicationDecision", [applicationId, outcome, rationale, decidedByUserId]);
 }

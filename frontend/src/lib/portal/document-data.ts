@@ -1,103 +1,81 @@
-import { prisma } from "@/lib/prisma";
-import { saveDocumentFile, guessMimeType } from "@/lib/storage";
-import type { DocumentOwnerType, DocumentKind } from "@prisma/client";
+import { rpc } from "@/lib/rpc-client";
+
+export type DocumentOwnerType = "APPLICATION" | "ASSESSMENT" | "COMPETENCE" | "ORGANISATION";
+export type DocumentKind = "REQUIRED_SUBMISSION" | "EVIDENCE" | "CREDENTIAL" | "CERTIFICATE" | "GENERAL";
 
 /**
- * Real Prisma-backed Document/DocumentVersion records (Milestone 13, tied
- * into the real Application checklist in the Applications migration).
- * `ownerId` stays a plain string (not just a foreign key) since a document
- * can in principle belong to owner types other than APPLICATION (schema
- * allows ASSESSMENT/COMPETENCE/ORGANISATION too); `applicationId` is set
- * alongside it as the real FK whenever the owner is an application, which
- * is what src/lib/portal/applicant-data.ts's checklist builder queries by.
+ * Thin proxy over backend/src/data/document-data.ts — see applicant-data.ts's
+ * header comment for why. `uploadDocumentForOwner`'s `buffer` argument is a
+ * real Buffer; rpc-client.ts marks it as base64 for the trip over HTTP and
+ * the backend revives it before writing the file to its own local disk
+ * (backend/storage/documents), which is why documents written before this
+ * migration living on the frontend's disk won't be found anymore.
  */
+export interface DocumentVersionEntry {
+  id: string;
+  filename: string;
+  sizeBytes: number;
+  mimeType: string;
+  uploadedAt: string;
+  reviewStatus: "UNDER_REVIEW" | "APPROVED" | "NEEDS_REVISION";
+}
 
-export async function uploadDocumentForOwner(input: {
+export interface DocumentEntry {
+  id: string;
+  ownerType: DocumentOwnerType;
+  ownerId: string;
+  documentKind: DocumentKind;
+  currentVersion: DocumentVersionEntry | null;
+}
+
+export interface DocumentVersionForDownload {
+  id: string;
+  storageKey: string;
+  filename: string;
+  mimeType: string;
+  document: {
+    ownerId: string;
+    ownerType: DocumentOwnerType;
+  };
+}
+
+const MODULE = "document-data";
+
+export function uploadDocumentForOwner(input: {
   ownerType: DocumentOwnerType;
   ownerId: string;
   documentKind: DocumentKind;
   buffer: Buffer;
   filename: string;
   uploadedById: string;
-  /** Required-document-type checklist item this upload satisfies, if any. */
   requiredDocumentTypeId?: string;
-  /** If provided, adds a new version to this existing Document instead of creating one. */
   existingDocumentId?: string;
-}) {
-  const { storageKey, sizeBytes } = await saveDocumentFile(input.buffer, input.filename);
-  const mimeType = guessMimeType(input.filename);
-
-  // Re-uploading for a checklist item that already has a document should add
-  // a new version to it, not create a second, orphaned Document row for the
-  // same required-document-type — resolve that even when the caller didn't
-  // already know the existing document's id.
-  const existingDocumentId =
-    input.existingDocumentId ??
-    (input.requiredDocumentTypeId
-      ? (
-          await prisma.document.findFirst({
-            where: { ownerType: input.ownerType, ownerId: input.ownerId, requiredDocumentTypeId: input.requiredDocumentTypeId },
-            select: { id: true },
-          })
-        )?.id
-      : undefined);
-
-  if (existingDocumentId) {
-    const doc = await prisma.document.findUnique({ where: { id: existingDocumentId } });
-    if (!doc) throw new Error("Document not found.");
-    const versionCount = await prisma.documentVersion.count({ where: { documentId: doc.id } });
-    const version = await prisma.documentVersion.create({
-      data: {
-        documentId: doc.id,
-        versionNumber: versionCount + 1,
-        storageKey,
-        filename: input.filename,
-        mimeType,
-        sizeBytes,
-        uploadedById: input.uploadedById,
-        reviewStatus: "UNDER_REVIEW",
-      },
-    });
-    await prisma.document.update({ where: { id: doc.id }, data: { currentVersionId: version.id } });
-    return { documentId: doc.id, versionId: version.id };
-  }
-
-  const document = await prisma.document.create({
-    data: {
-      ownerType: input.ownerType,
-      ownerId: input.ownerId,
-      applicationId: input.ownerType === "APPLICATION" ? input.ownerId : undefined,
-      documentKind: input.documentKind,
-      requiredDocumentTypeId: input.requiredDocumentTypeId,
-    },
-  });
-  const version = await prisma.documentVersion.create({
-    data: {
-      documentId: document.id,
-      versionNumber: 1,
-      storageKey,
-      filename: input.filename,
-      mimeType,
-      sizeBytes,
-      uploadedById: input.uploadedById,
-      reviewStatus: "UNDER_REVIEW",
-    },
-  });
-  await prisma.document.update({ where: { id: document.id }, data: { currentVersionId: version.id } });
-  return { documentId: document.id, versionId: version.id };
+}): Promise<{ documentId: string; versionId: string }> {
+  return rpc(MODULE, "uploadDocumentForOwner", [input]);
 }
 
-export async function getDocumentsForOwner(ownerType: DocumentOwnerType, ownerId: string) {
-  return prisma.document.findMany({
-    where: { ownerType, ownerId },
-    include: { currentVersion: true, versions: { orderBy: { versionNumber: "desc" } } },
-    orderBy: { createdAt: "asc" },
-  });
+export function getDocumentsForOwner(ownerType: DocumentOwnerType, ownerId: string): Promise<DocumentEntry[]> {
+  return rpc(MODULE, "getDocumentsForOwner", [ownerType, ownerId]);
 }
 
-export async function getDocumentVersionForDownload(versionId: string) {
-  return prisma.documentVersion.findUnique({
-    where: { id: versionId },
-    include: { document: true },
-  });
+export function getDocumentVersionForDownload(versionId: string): Promise<DocumentVersionForDownload | null> {
+  return rpc(MODULE, "getDocumentVersionForDownload", [versionId]);
+}
+
+export interface AdminDocumentEntry {
+  id: string;
+  ownerType: string;
+  ownerId: string;
+  documentKind: string;
+  currentVersion?: {
+    id: string;
+    filename: string;
+    sizeBytes: number;
+    uploadedAt: string;
+    reviewStatus: string;
+  } | null;
+}
+
+export function getAllDocumentsWithVersions(): Promise<AdminDocumentEntry[]> {
+  return rpc(MODULE, "getAllDocumentsWithVersions", []);
 }

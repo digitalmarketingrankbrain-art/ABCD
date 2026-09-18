@@ -51,7 +51,7 @@ export default async function ProfilePage() {
       id: d.id,
       filename: d.currentVersion!.filename,
       sizeBytes: d.currentVersion!.sizeBytes,
-      uploadedAt: d.currentVersion!.uploadedAt.toISOString().slice(0, 10),
+      uploadedAt: d.currentVersion!.uploadedAt.slice(0, 10),
       currentVersionId: d.currentVersion!.id,
     }));
 

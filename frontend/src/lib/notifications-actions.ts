@@ -14,8 +14,8 @@ export async function getMyNotifications() {
     notifications: notifications.map((n) => ({
       id: n.id,
       type: n.type,
-      sentAt: n.sentAt?.toISOString() ?? null,
-      readAt: n.readAt?.toISOString() ?? null,
+      sentAt: n.sentAt,
+      readAt: n.readAt,
     })),
     unreadCount,
   };

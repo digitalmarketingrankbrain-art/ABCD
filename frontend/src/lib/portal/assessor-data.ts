@@ -1,18 +1,6 @@
-import { prisma } from "@/lib/prisma";
-import type { Prisma } from "@prisma/client";
+import { rpc } from "@/lib/rpc-client";
 
-/**
- * Real Postgres-backed Assessor Portal data (Milestone 18 follow-up) —
- * replaces the in-memory placeholder store used since Milestone 9. The
- * Assignment/Assessment/AssessmentFinding/AssessorCompetence/
- * AssessorAvailability tables themselves have existed since Milestone 11
- * and were already seeded for real; this file just never queried them,
- * reading a separate hand-maintained mock array instead — the exact split
- * Milestone 12's own notes flagged for Applications/Invoices/Messages, just
- * left unresolved for the assessor side until now. Public type shapes are
- * kept identical to the old in-memory versions on purpose, so the ~10
- * consuming pages/components only needed `await` added at call sites.
- */
+/** Thin proxy over backend/src/data/assessor-data.ts — see applicant-data.ts's header comment for why. */
 
 export type AssignmentStatus =
   | "PENDING"
@@ -70,9 +58,7 @@ export interface Assignment {
   criteria: AssessmentCriterion[];
   findings: Record<string, Finding>;
   reportSubmittedAt: string | null;
-  /** Documents shared into this assignment's context — read-only for the assessor. */
   sharedDocuments: { name: string; filename: string }[];
-  /** The linked Application's referenceNumber, resolved to a real id via getApplicationIdByReference() at read time — kept as a reference (not the raw id) so this stays stable across the existing message-thread lookup path. */
   linkedApplicationId: string | null;
 }
 
@@ -95,245 +81,58 @@ export interface AvailabilityBlackout {
   note: string;
 }
 
-function fmtDate(d: Date): string {
-  return d.toISOString().slice(0, 10);
+const MODULE = "assessor-data";
+
+export function getAssignmentsForUser(userId: string): Promise<Assignment[]> {
+  return rpc(MODULE, "getAssignmentsForUser", [userId]);
 }
 
-async function getAssessorRowForUser(userId: string) {
-  return prisma.assessor.findUnique({ where: { userId } });
+export function getAllAssignments(): Promise<Assignment[]> {
+  return rpc(MODULE, "getAllAssignments", []);
 }
 
-const ASSIGNMENT_INCLUDE = {
-  application: { include: { organisation: true, program: true } },
-  assessor: { select: { userId: true } },
-  assessment: { include: { findings: true } },
-} satisfies Prisma.AssignmentInclude;
-
-type AssignmentRow = Prisma.AssignmentGetPayload<{ include: typeof ASSIGNMENT_INCLUDE }>;
-
-async function getSharedDocumentsForApplication(applicationId: string, programId: string): Promise<{ name: string; filename: string }[]> {
-  const [types, docs] = await Promise.all([
-    prisma.requiredDocumentType.findMany({ where: { programId } }),
-    prisma.document.findMany({ where: { ownerType: "APPLICATION", ownerId: applicationId }, include: { currentVersion: true } }),
-  ]);
-  const nameById = new Map(types.map((t) => [t.id, t.name]));
-  return docs
-    .filter((d) => d.currentVersion)
-    .map((d) => ({
-      name: (d.requiredDocumentTypeId && nameById.get(d.requiredDocumentTypeId)) || "Document",
-      filename: d.currentVersion!.filename,
-    }));
+export function getAllCompetence(): Promise<CompetenceEntry[]> {
+  return rpc(MODULE, "getAllCompetence", []);
 }
 
-async function mapAssignment(row: AssignmentRow): Promise<Assignment> {
-  const criteria = (await prisma.assessmentCriterion.findMany({
-    where: { programId: row.application.programId },
-    orderBy: { sortOrder: "asc" },
-  })).map((c) => ({ id: c.id, requirementText: c.requirementText, category: c.category ?? "General" }));
-
-  const findings: Record<string, Finding> = {};
-  for (const f of row.assessment?.findings ?? []) {
-    findings[f.criterionId] = {
-      criterionId: f.criterionId,
-      status: f.status,
-      notes: f.notes ?? "",
-      severity: f.severity,
-      evidenceNote: null,
-    };
-  }
-
-  return {
-    id: row.id,
-    assessorUserId: row.assessor.userId,
-    applicationReference: row.application.referenceNumber,
-    organisationName: row.application.organisation.displayName,
-    programSlug: row.application.program.slug,
-    programName: row.application.program.name,
-    status: row.status,
-    assignedAt: fmtDate(row.assignedAt),
-    dueDate: fmtDate(row.dueDate),
-    respondedAt: row.respondedAt ? fmtDate(row.respondedAt) : null,
-    declineReason: row.declineReason,
-    criteria,
-    findings,
-    reportSubmittedAt: row.assessment?.reportSubmittedAt ? fmtDate(row.assessment.reportSubmittedAt) : null,
-    sharedDocuments: await getSharedDocumentsForApplication(row.applicationId, row.application.programId),
-    linkedApplicationId: row.application.referenceNumber,
-  };
+export function getAssignmentById(id: string, userId: string): Promise<Assignment | undefined> {
+  return rpc(MODULE, "getAssignmentById", [id, userId]);
 }
 
-// --- Accessors ---
-
-export async function getAssignmentsForUser(userId: string): Promise<Assignment[]> {
-  const assessor = await getAssessorRowForUser(userId);
-  if (!assessor) return [];
-  const rows = await prisma.assignment.findMany({
-    where: { assessorId: assessor.id },
-    include: ASSIGNMENT_INCLUDE,
-    orderBy: { assignedAt: "desc" },
-  });
-  return Promise.all(rows.map(mapAssignment));
+export function getCompetenceForUser(userId: string): Promise<CompetenceEntry[]> {
+  return rpc(MODULE, "getCompetenceForUser", [userId]);
 }
 
-/** Admin cross-cutting view — every assignment, not scoped to one assessor. */
-export async function getAllAssignments(): Promise<Assignment[]> {
-  const rows = await prisma.assignment.findMany({ include: ASSIGNMENT_INCLUDE, orderBy: { assignedAt: "desc" } });
-  return Promise.all(rows.map(mapAssignment));
+export function getBlackoutsForUser(userId: string): Promise<AvailabilityBlackout[]> {
+  return rpc(MODULE, "getBlackoutsForUser", [userId]);
 }
 
-export async function getAllCompetence(): Promise<CompetenceEntry[]> {
-  const rows = await prisma.assessorCompetence.findMany({ include: { assessor: true, program: true } });
-  return rows.map(mapCompetence);
+export function addBlackout(userId: string, startDate: string, endDate: string, note: string): Promise<void> {
+  return rpc(MODULE, "addBlackout", [userId, startDate, endDate, note]);
 }
 
-export async function getAssignmentById(id: string, userId: string): Promise<Assignment | undefined> {
-  const assessor = await getAssessorRowForUser(userId);
-  if (!assessor) return undefined;
-  const row = await prisma.assignment.findFirst({ where: { id, assessorId: assessor.id }, include: ASSIGNMENT_INCLUDE });
-  return row ? mapAssignment(row) : undefined;
+export function removeBlackout(id: string, userId: string): Promise<void> {
+  return rpc(MODULE, "removeBlackout", [id, userId]);
 }
 
-function mapCompetence(row: Prisma.AssessorCompetenceGetPayload<{ include: { assessor: true; program: true } }>): CompetenceEntry {
-  return {
-    id: row.id,
-    assessorUserId: row.assessor.userId,
-    programSlug: row.program.slug,
-    programName: row.program.name,
-    qualifyingBasis: row.qualifyingBasis,
-    dateQualified: fmtDate(row.dateQualified),
-    expiryDate: row.expiryDate ? fmtDate(row.expiryDate) : null,
-    status: row.status,
-  };
-}
-
-export async function getCompetenceForUser(userId: string): Promise<CompetenceEntry[]> {
-  const assessor = await getAssessorRowForUser(userId);
-  if (!assessor) return [];
-  const rows = await prisma.assessorCompetence.findMany({
-    where: { assessorId: assessor.id },
-    include: { assessor: true, program: true },
-  });
-  return rows.map(mapCompetence);
-}
-
-export async function getBlackoutsForUser(userId: string): Promise<AvailabilityBlackout[]> {
-  const assessor = await getAssessorRowForUser(userId);
-  if (!assessor) return [];
-  const rows = await prisma.assessorAvailability.findMany({ where: { assessorId: assessor.id }, orderBy: { startDate: "asc" } });
-  return rows.map((b) => ({
-    id: b.id,
-    assessorUserId: userId,
-    startDate: fmtDate(b.startDate),
-    endDate: fmtDate(b.endDate),
-    note: b.note ?? "",
-  }));
-}
-
-export async function addBlackout(userId: string, startDate: string, endDate: string, note: string): Promise<void> {
-  const assessor = await getAssessorRowForUser(userId);
-  if (!assessor) return;
-  await prisma.assessorAvailability.create({
-    data: { assessorId: assessor.id, startDate: new Date(startDate), endDate: new Date(endDate), note: note || null },
-  });
-}
-
-export async function removeBlackout(id: string, userId: string): Promise<void> {
-  const assessor = await getAssessorRowForUser(userId);
-  if (!assessor) return;
-  await prisma.assessorAvailability.deleteMany({ where: { id, assessorId: assessor.id } });
-}
-
-export async function respondToAssignment(
+export function respondToAssignment(
   id: string,
   userId: string,
   decision: "ACCEPTED" | "DECLINED",
   declineReason?: string,
 ): Promise<boolean> {
-  const assessor = await getAssessorRowForUser(userId);
-  if (!assessor) return false;
-  const assignment = await prisma.assignment.findFirst({ where: { id, assessorId: assessor.id } });
-  if (!assignment || assignment.status !== "PENDING") return false;
-
-  await prisma.assignment.update({
-    where: { id },
-    data: {
-      status: decision,
-      respondedAt: new Date(),
-      declineReason: decision === "DECLINED" ? (declineReason ?? null) : null,
-    },
-  });
-
-  if (decision === "ACCEPTED") {
-    const existing = await prisma.assessment.findUnique({ where: { assignmentId: id } });
-    if (!existing) {
-      await prisma.assessment.create({ data: { assignmentId: id, startedAt: new Date() } });
-    }
-  }
-  return true;
+  return rpc(MODULE, "respondToAssignment", [id, userId, decision, declineReason]);
 }
 
-export async function updateFinding(
+export function updateFinding(
   assignmentId: string,
   userId: string,
   criterionId: string,
   update: Partial<Omit<Finding, "criterionId">>,
 ): Promise<boolean> {
-  const assessor = await getAssessorRowForUser(userId);
-  if (!assessor) return false;
-  const assignment = await prisma.assignment.findFirst({ where: { id: assignmentId, assessorId: assessor.id } });
-  if (!assignment) return false;
-
-  let assessment = await prisma.assessment.findUnique({ where: { assignmentId } });
-  if (!assessment) {
-    assessment = await prisma.assessment.create({ data: { assignmentId, startedAt: new Date() } });
-  }
-
-  const existing = await prisma.assessmentFinding.findUnique({
-    where: { assessmentId_criterionId: { assessmentId: assessment.id, criterionId } },
-  });
-  const resolvedStatus = update.status ?? "UNANSWERED";
-
-  if (resolvedStatus === "UNANSWERED") {
-    // The checklist lets an assessor explicitly reset a criterion back to
-    // "not yet assessed" — there's no such Prisma enum value, so that means
-    // removing any existing finding row rather than storing an invalid one.
-    await prisma.assessmentFinding.deleteMany({ where: { assessmentId: assessment.id, criterionId } });
-  } else {
-    await prisma.assessmentFinding.upsert({
-      where: { assessmentId_criterionId: { assessmentId: assessment.id, criterionId } },
-      create: {
-        assessmentId: assessment.id,
-        criterionId,
-        status: resolvedStatus,
-        notes: update.notes ?? "",
-        severity: update.severity !== undefined ? update.severity : null,
-      },
-      update: {
-        status: resolvedStatus,
-        notes: update.notes ?? existing?.notes ?? "",
-        severity: update.severity !== undefined ? update.severity : (existing?.severity ?? null),
-      },
-    });
-  }
-
-  if (assignment.status === "ACCEPTED") {
-    await prisma.assignment.update({ where: { id: assignmentId }, data: { status: "IN_PROGRESS" } });
-  }
-  return true;
+  return rpc(MODULE, "updateFinding", [assignmentId, userId, criterionId, update]);
 }
 
-export async function submitAssignmentReport(assignmentId: string, userId: string): Promise<boolean> {
-  const assessor = await getAssessorRowForUser(userId);
-  if (!assessor) return false;
-  const assignment = await prisma.assignment.findFirst({ where: { id: assignmentId, assessorId: assessor.id } });
-  if (!assignment) return false;
-
-  const assessment = await prisma.assessment.findUnique({ where: { assignmentId } });
-  if (assessment) {
-    await prisma.assessment.update({ where: { id: assessment.id }, data: { reportSubmittedAt: new Date() } });
-  } else {
-    await prisma.assessment.create({ data: { assignmentId, startedAt: new Date(), reportSubmittedAt: new Date() } });
-  }
-  await prisma.assignment.update({ where: { id: assignmentId }, data: { status: "REPORT_SUBMITTED" } });
-  return true;
+export function submitAssignmentReport(assignmentId: string, userId: string): Promise<boolean> {
+  return rpc(MODULE, "submitAssignmentReport", [assignmentId, userId]);
 }

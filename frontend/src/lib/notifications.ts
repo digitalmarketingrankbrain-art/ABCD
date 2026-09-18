@@ -1,71 +1,50 @@
-import { prisma } from "@/lib/prisma";
-import type { NotificationChannel } from "@prisma/client";
+import { rpc } from "@/lib/rpc-client";
+
+export type NotificationChannel = "EMAIL" | "IN_APP";
 
 /**
- * Real Notification rows in Postgres (Milestone 14) drive the in-app
- * notification list for real. Email delivery has no real provider wired up
- * yet (Phase 11: Resend, vendor TBD, no API key available in this
- * environment) — sendEmail logs what would have been sent instead of
- * silently pretending it happened, matching the same honesty principle
- * used for the dev-only password-reset link in Milestone 7.
+ * Thin proxy over backend/src/data/notifications.ts. Note getNotificationCopy
+ * is NOT re-exported here (as the old file did) — it's pure/no-DB and lives
+ * in ./notification-copy so the client-side notification bell can import it
+ * without pulling this RPC-backed module into the browser bundle; its one
+ * real caller already imports it from there directly.
  */
-export async function createNotification(input: {
+export interface NotificationRecord {
+  id: string;
+  userId: string;
+  type: string;
+  relatedType: string | null;
+  relatedId: string | null;
+  channel: NotificationChannel;
+  status: "PENDING" | "SENT" | "FAILED";
+  sentAt: string | null;
+  readAt: string | null;
+}
+
+const MODULE = "notifications";
+
+export function createNotification(input: {
   userId: string;
   type: string;
   relatedType?: string;
   relatedId?: string;
   channel: NotificationChannel;
-}) {
-  const notification = await prisma.notification.create({
-    data: {
-      userId: input.userId,
-      type: input.type,
-      relatedType: input.relatedType,
-      relatedId: input.relatedId,
-      channel: input.channel,
-      status: "PENDING",
-    },
-  });
-
-  if (input.channel === "EMAIL") {
-    await sendEmail(input.userId, input.type);
-  }
-
-  return prisma.notification.update({
-    where: { id: notification.id },
-    data: { status: "SENT", sentAt: new Date() },
-  });
+}): Promise<NotificationRecord> {
+  return rpc(MODULE, "createNotification", [input]);
 }
 
-async function sendEmail(userId: string, type: string) {
-  const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
-  console.log(`[EMAIL — no provider configured, logged instead of sent] To: ${user?.email} · Event: ${type}`);
+export function getNotificationsForUser(userId: string): Promise<NotificationRecord[]> {
+  return rpc(MODULE, "getNotificationsForUser", [userId]);
 }
 
-export async function getNotificationsForUser(userId: string) {
-  return prisma.notification.findMany({
-    where: { userId, channel: "IN_APP" },
-    orderBy: { sentAt: "desc" },
-    take: 20,
-  });
+export function getUnreadNotificationCount(userId: string): Promise<number> {
+  return rpc(MODULE, "getUnreadNotificationCount", [userId]);
 }
 
-export async function getUnreadNotificationCount(userId: string) {
-  return prisma.notification.count({ where: { userId, channel: "IN_APP", readAt: null } });
+export function markNotificationRead(notificationId: string, userId: string): Promise<void> {
+  return rpc(MODULE, "markNotificationRead", [notificationId, userId]);
 }
 
-export async function markNotificationRead(notificationId: string, userId: string) {
-  await prisma.notification.updateMany({
-    where: { id: notificationId, userId },
-    data: { readAt: new Date() },
-  });
+export function markAllNotificationsRead(userId: string): Promise<void> {
+  return rpc(MODULE, "markAllNotificationsRead", [userId]);
 }
-
-export async function markAllNotificationsRead(userId: string) {
-  await prisma.notification.updateMany({
-    where: { userId, channel: "IN_APP", readAt: null },
-    data: { readAt: new Date() },
-  });
-}
-
-export { getNotificationCopy } from "./notification-copy";

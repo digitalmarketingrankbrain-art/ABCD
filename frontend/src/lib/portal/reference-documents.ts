@@ -1,4 +1,6 @@
-import { prisma } from "@/lib/prisma";
+import { rpc } from "@/lib/rpc-client";
+
+/** Thin proxy over backend/src/data/reference-documents.ts — see applicant-data.ts's header comment for why. */
 
 export interface ReferenceDocumentEntry {
   id: string;
@@ -6,12 +8,21 @@ export interface ReferenceDocumentEntry {
   filename: string;
 }
 
-/** AB-issued checklists/forms visible to every CB — not organisation-scoped, read-only from the CB side. */
-export async function getReferenceDocuments(): Promise<ReferenceDocumentEntry[]> {
-  const rows = await prisma.referenceDocument.findMany({ orderBy: { sortOrder: "asc" } });
-  return rows.map((r) => ({ id: r.id, description: r.description, filename: r.filename }));
+export interface ReferenceDocumentForDownload {
+  id: string;
+  description: string;
+  filename: string;
+  storageKey: string;
+  mimeType: string;
+  sizeBytes: number;
 }
 
-export async function getReferenceDocumentForDownload(id: string) {
-  return prisma.referenceDocument.findUnique({ where: { id } });
+const MODULE = "reference-documents";
+
+export function getReferenceDocuments(): Promise<ReferenceDocumentEntry[]> {
+  return rpc(MODULE, "getReferenceDocuments", []);
+}
+
+export function getReferenceDocumentForDownload(id: string): Promise<ReferenceDocumentForDownload | null> {
+  return rpc(MODULE, "getReferenceDocumentForDownload", [id]);
 }

@@ -1,21 +1,22 @@
-import { prisma } from "@/lib/prisma";
+import { rpc } from "@/lib/rpc-client";
 
+/**
+ * Thin proxy over backend/src/data/program-fees.ts. Wrapped in try/catch to
+ * safely return an empty fee object if the backend is not reachable during
+ * Vercel build prerendering (same resilience the old direct-Prisma version
+ * had for "database not reachable at build time" — now "backend not
+ * reachable" covers that plus the backend simply not having started yet).
+ */
 export interface ProgramFee {
   amount: number;
   currency: string;
 }
 
-/**
- * Real fee data from the Prisma `Program` table.
- * Wrapped in try/catch to safely return an empty fee object if the database
- * is not reachable during Vercel build prerendering.
- */
 export async function getProgramFees(): Promise<Record<string, ProgramFee>> {
   try {
-    const rows = await prisma.program.findMany({ select: { slug: true, feeAmount: true, currency: true } });
-    return Object.fromEntries(rows.map((r) => [r.slug, { amount: Number(r.feeAmount), currency: r.currency }]));
+    return await rpc("program-fees", "getProgramFees", []);
   } catch (err) {
-    console.warn("Database unreachable during build or request fallback:", err);
+    console.warn("Backend unreachable during build or request fallback:", err);
     return {};
   }
 }

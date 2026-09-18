@@ -1,9 +1,11 @@
 import Link from "next/link";
-import { FileClock, ClipboardCheck, ShieldAlert, Receipt } from "lucide-react";
+import { FileClock, ClipboardCheck, ShieldAlert, Receipt, Server } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { getAllApplications, getAllInvoices, STAGE_LABEL } from "@/lib/portal/applicant-data";
 import { getAllAssignments } from "@/lib/portal/assessor-data";
 import { VERIFICATION_RECORDS } from "@/lib/verification-records";
+import { getBackendHealth } from "@/lib/backend-client";
 
 const today = new Date().toISOString().slice(0, 10);
 
@@ -11,6 +13,7 @@ export default async function AdminDashboardPage() {
   const applications = await getAllApplications();
   const invoices = await getAllInvoices();
   const allAssignments = await getAllAssignments();
+  const backendHealth = await getBackendHealth();
 
   const awaitingAction = applications
     .filter((a) => a.stage !== "ACCREDITED" && a.stage !== "DECLINED" && a.stage !== "DRAFT")
@@ -81,6 +84,27 @@ export default async function AdminDashboardPage() {
           </CardHeader>
           <CardContent>
             <p className="font-mono text-2xl text-text">{overdueInvoices.length}</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="mt-6">
+        <Card>
+          <CardHeader className="flex-row items-center justify-between space-y-0">
+            <div className="flex items-center gap-2">
+              <Server className="size-5 text-secondary" strokeWidth={1.5} />
+              <CardTitle>Backend Connection</CardTitle>
+            </div>
+            <StatusBadge tone={backendHealth.ok ? "success" : "error"} label={backendHealth.ok ? "Online" : "Unreachable"} size="sm" />
+          </CardHeader>
+          <CardContent>
+            {backendHealth.ok ? (
+              <p className="text-xs text-text-muted">
+                Responded in {backendHealth.latencyMs}ms (status {backendHealth.status}).
+              </p>
+            ) : (
+              <p className="text-xs text-error-text">{backendHealth.error}</p>
+            )}
           </CardContent>
         </Card>
       </div>
