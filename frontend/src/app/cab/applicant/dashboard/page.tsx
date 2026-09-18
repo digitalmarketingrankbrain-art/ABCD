@@ -27,7 +27,7 @@ export default async function ApplicantDashboardPage() {
     getNonConformitiesForUser(userId),
     getAssessmentsForUser(userId),
   ]);
-  const openNcs = nonConformities.filter((n) => n.status === "OPEN");
+  const openNcs = nonConformities.filter((n) => n.status !== "CLOSED");
   const upcomingAssessments = assessments.filter((a) => a.status === "SCHEDULED" || a.status === "IN_PROGRESS");
 
   const requiredActions = [

@@ -5,7 +5,16 @@ import { useRouter } from "next/navigation";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { StatusBadge, type StatusTone } from "@/components/ui/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import type { NonConformitySummary } from "@/lib/portal/nc-data";
+import { NC_STATUS_LABEL, type NonConformitySummary, type NcStatus } from "@/lib/portal/nc-data";
+
+const STATUS_TONE: Record<NcStatus, StatusTone> = {
+  OPEN: "warning",
+  RESPONSE_SUBMITTED: "info",
+  UNDER_REVIEW: "info",
+  ACCEPTED: "success",
+  REJECTED: "error",
+  CLOSED: "success",
+};
 
 const CATEGORY_TONE: Record<NonConformitySummary["category"], StatusTone> = {
   MAJOR: "error",
@@ -26,12 +35,13 @@ function NcTable({ items, basePath }: { items: NonConformitySummary[]; basePath:
 
   const counts = {
     ALL: items.length,
-    OPEN: items.filter((n) => n.status === "OPEN").length,
+    OPEN: items.filter((n) => n.status !== "CLOSED").length,
     CLOSED: items.filter((n) => n.status === "CLOSED").length,
   };
 
   const visible = items.filter((n) => {
-    if (filter !== "ALL" && n.status !== filter) return false;
+    if (filter === "OPEN" && n.status === "CLOSED") return false;
+    if (filter === "CLOSED" && n.status !== "CLOSED") return false;
     if (!query.trim()) return true;
     const q = query.toLowerCase();
     return (
@@ -47,7 +57,7 @@ function NcTable({ items, basePath }: { items: NonConformitySummary[]; basePath:
     { key: "category", header: "Category", render: (n) => <StatusBadge tone={CATEGORY_TONE[n.category]} label={CATEGORY_LABEL[n.category]} size="sm" /> },
     { key: "standardReference", header: "Standard", render: (n) => n.standardReference },
     { key: "raisedAt", header: "Raise Date", mono: true, render: (n) => n.raisedAt },
-    { key: "status", header: "Status", render: (n) => <StatusBadge tone={n.status === "OPEN" ? "warning" : "success"} label={n.status === "OPEN" ? "Open" : "Closed"} size="sm" /> },
+    { key: "status", header: "Status", render: (n) => <StatusBadge tone={STATUS_TONE[n.status]} label={NC_STATUS_LABEL[n.status]} size="sm" /> },
     { key: "progressStage", header: "Progress Stage", render: (n) => n.progressStage },
     { key: "raisedByName", header: "Raised By", render: (n) => n.raisedByName ?? "—" },
     { key: "teamLeadName", header: "Team Lead", render: (n) => n.teamLeadName ?? "—" },
