@@ -45,7 +45,7 @@ export default auth((req) => {
     return response;
   };
 
-  if (pathname.startsWith("/portal")) {
+  if (pathname.startsWith("/portal") || pathname.startsWith("/cab") || pathname.startsWith("/assessor")) {
     if (!session?.user) {
       const loginUrl = new URL("/login", req.nextUrl.origin);
       loginUrl.searchParams.set("callbackUrl", pathname);
@@ -55,14 +55,14 @@ export default auth((req) => {
     const { role } = session.user;
 
     const roleHome: Record<string, string> = {
-      APPLICANT: "/portal/applicant",
-      ASSESSOR: "/portal/assessor",
+      APPLICANT: "/cab/applicant",
+      ASSESSOR: "/assessor",
       ADMIN: "/portal/admin",
     };
 
     const subtreesByRole: Record<string, string> = {
-      "/portal/applicant": "APPLICANT",
-      "/portal/assessor": "ASSESSOR",
+      "/cab/applicant": "APPLICANT",
+      "/assessor": "ASSESSOR",
       "/portal/admin": "ADMIN",
     };
     for (const [prefix, requiredRole] of Object.entries(subtreesByRole)) {

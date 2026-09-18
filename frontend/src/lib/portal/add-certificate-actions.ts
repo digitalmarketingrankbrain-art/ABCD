@@ -62,8 +62,8 @@ export async function addCertificateAction(input: AddCertificateInput) {
   if (!input.city.trim()) return { ok: false as const, error: "City is required." };
   if (!input.country) return { ok: false as const, error: "Country is required." };
 
-  revalidatePath("/portal/applicant/profile");
-  revalidatePath("/portal/applicant/accreditation");
+  revalidatePath("/cab/applicant/profile");
+  revalidatePath("/cab/applicant/accreditation");
 
   return { ok: true as const, certificateId: input.certificateId };
 }

@@ -19,7 +19,7 @@ export async function saveScopeExtensionDraftAction(input: ScopeExtensionDraftIn
   }
   try {
     const result = await saveScopeExtensionDraft(user.id, input, existingApplicationId);
-    revalidatePath("/portal/applicant/apply/scope-extension");
+    revalidatePath("/cab/applicant/apply/scope-extension");
     return { ok: true as const, ...result };
   } catch (e) {
     return { ok: false as const, error: e instanceof Error ? e.message : "Couldn't save draft." };
@@ -35,7 +35,7 @@ export async function submitScopeExtensionAction(input: ScopeExtensionDraftInput
   const ok = await submitApplication(saved.id, user.id);
   if (!ok) return { ok: false as const, error: "Couldn't submit application." };
 
-  revalidatePath("/portal/applicant/apply/scope-extension");
-  revalidatePath("/portal/applicant/applications");
+  revalidatePath("/cab/applicant/apply/scope-extension");
+  revalidatePath("/cab/applicant/applications");
   return { ok: true as const, id: saved.id, referenceNumber: saved.referenceNumber };
 }

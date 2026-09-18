@@ -2,8 +2,8 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 
 const ROLE_HOME: Record<string, string> = {
-  APPLICANT: "/portal/applicant",
-  ASSESSOR: "/portal/assessor",
+  APPLICANT: "/cab/applicant",
+  ASSESSOR: "/assessor",
   ADMIN: "/portal/admin",
 };
 

@@ -42,7 +42,7 @@ function ApplicationsTable({ applications }: { applications: Application[] }) {
       columns={columns}
       rows={applications}
       getRowKey={(a) => a.id}
-      onRowClick={(a) => router.push(`/portal/applicant/applications/${a.id}`)}
+      onRowClick={(a) => router.push(`/cab/applicant/applications/${a.id}`)}
     />
   );
 }

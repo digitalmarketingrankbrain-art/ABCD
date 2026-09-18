@@ -26,14 +26,14 @@ async function requireApplicant() {
 export async function saveBasicDetails(data: Partial<Omit<CabDetails, "organisationId" | "cabNumber">>) {
   const user = await requireApplicant();
   await updateCabBasicDetails(user.id, data);
-  revalidatePath("/portal/applicant/profile");
+  revalidatePath("/cab/applicant/profile");
   return { ok: true as const };
 }
 
 export async function saveAppliedCountries(countryCodes: string[]) {
   const user = await requireApplicant();
   await setAppliedCountries(user.id, countryCodes);
-  revalidatePath("/portal/applicant/profile");
+  revalidatePath("/cab/applicant/profile");
   return { ok: true as const };
 }
 
@@ -41,7 +41,7 @@ export async function addLocationAction(data: Omit<LocationEntry, "id">) {
   const user = await requireApplicant();
   if (!data.address.trim()) return { ok: false as const, error: "Address is required." };
   await addLocation(user.id, data);
-  revalidatePath("/portal/applicant/profile");
+  revalidatePath("/cab/applicant/profile");
   return { ok: true as const };
 }
 
@@ -52,7 +52,7 @@ export async function addTeamMemberAction(input: AddTeamMemberInput) {
   }
   const result = await addTeamMember(user.id, input);
   if (!result.ok) return { ok: false as const, error: result.error };
-  revalidatePath("/portal/applicant/profile");
+  revalidatePath("/cab/applicant/profile");
   return { ok: true as const };
 }
 
@@ -74,6 +74,6 @@ export async function uploadOrganisationDocument(file: File) {
     uploadedById: user.id,
   });
 
-  revalidatePath("/portal/applicant/profile");
+  revalidatePath("/cab/applicant/profile");
   return { ok: true as const };
 }

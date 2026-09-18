@@ -23,7 +23,7 @@ function NewApplicationButton() {
       toast({ tone: "error", persistent: true, title: "Couldn't start application", description: result.error });
       return;
     }
-    router.push(`/portal/applicant/applications/${result.applicationId}`);
+    router.push(`/cab/applicant/applications/${result.applicationId}`);
   }
 
   return (

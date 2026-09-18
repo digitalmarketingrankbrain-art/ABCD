@@ -60,7 +60,7 @@ function AssignmentsTable({ assignments }: { assignments: Assignment[] }) {
         columns={columns}
         rows={sorted}
         getRowKey={(a) => a.id}
-        onRowClick={(a) => router.push(`/portal/assessor/assignments/${a.id}`)}
+        onRowClick={(a) => router.push(`/assessor/assignments/${a.id}`)}
       />
     </div>
   );

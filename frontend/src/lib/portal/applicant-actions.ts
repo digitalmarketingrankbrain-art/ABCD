@@ -21,7 +21,7 @@ export async function sendApplicationMessage(applicationId: string, body: string
   if (!app) return { ok: false as const, error: "Application not found." };
   if (!body.trim()) return { ok: false as const, error: "Message can't be empty." };
   await addMessage(applicationId, body.trim(), user.id);
-  revalidatePath(`/portal/applicant/applications/${applicationId}`);
+  revalidatePath(`/cab/applicant/applications/${applicationId}`);
   return { ok: true as const };
 }
 
@@ -50,7 +50,7 @@ export async function uploadApplicationDocument(applicationId: string, requiredD
     uploadedById: user.id,
   });
 
-  revalidatePath(`/portal/applicant/applications/${applicationId}`);
+  revalidatePath(`/cab/applicant/applications/${applicationId}`);
   return { ok: true as const };
 }
 
@@ -59,7 +59,7 @@ export async function startNewApplication(programSlug: string) {
   const program = PROGRAMS.find((p) => p.slug === programSlug);
   if (!program) return { ok: false as const, error: "Unknown program." };
   const app = await createDraftApplication(user.id, program.slug);
-  revalidatePath("/portal/applicant/applications");
+  revalidatePath("/cab/applicant/applications");
   return { ok: true as const, applicationId: app.id };
 }
 
@@ -71,7 +71,7 @@ export async function submitApplicationForReview(applicationId: string) {
     return { ok: false as const, error: "All mandatory documents must be uploaded before submitting." };
   }
   await submitApplication(applicationId, user.id);
-  revalidatePath(`/portal/applicant/applications/${applicationId}`);
-  revalidatePath("/portal/applicant/applications");
+  revalidatePath(`/cab/applicant/applications/${applicationId}`);
+  revalidatePath("/cab/applicant/applications");
   return { ok: true as const };
 }

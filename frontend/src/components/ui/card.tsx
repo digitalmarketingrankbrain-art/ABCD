@@ -4,15 +4,18 @@ import { cn } from "@/lib/utils";
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Interactive cards get a hover shadow; static cards stay flat (Phase 4: no shadow at rest). */
   interactive?: boolean;
+  variant?: "default" | "glass" | "gradient";
 }
 
-function Card({ className, interactive, ...props }: CardProps) {
+function Card({ className, interactive, variant = "default", ...props }: CardProps) {
   return (
     <div
       className={cn(
-        "rounded-lg border border-border bg-surface p-6 transition duration-150",
+        "rounded-xl border border-slate-200/90 bg-white p-6 transition-all duration-200 shadow-xs",
+        variant === "glass" && "glass-card",
+        variant === "gradient" && "bg-gradient-to-br from-slate-50 to-blue-50/30 border-blue-100",
         interactive &&
-          "hover:-translate-y-0.5 hover:border-secondary hover:shadow-[0_2px_12px_rgba(13,43,32,0.08)]",
+          "cursor-pointer hover:-translate-y-1 hover:border-blue-300 hover:shadow-lg hover:shadow-blue-900/5",
         className,
       )}
       {...props}

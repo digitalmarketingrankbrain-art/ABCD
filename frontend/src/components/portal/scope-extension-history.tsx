@@ -36,7 +36,7 @@ function ScopeExtensionHistory({ items }: { items: ScopeExtensionApplicationRow[
     <div className="mb-8">
       <h2 className="font-sans text-sm font-semibold text-text">Previous Scope Extension Applications</h2>
       <div className="mt-3">
-        <DataTable columns={columns} rows={items} getRowKey={(a) => a.id} onRowClick={(a) => router.push(`/portal/applicant/applications/${a.id}`)} />
+        <DataTable columns={columns} rows={items} getRowKey={(a) => a.id} onRowClick={(a) => router.push(`/cab/applicant/applications/${a.id}`)} />
       </div>
     </div>
   );

@@ -4,11 +4,11 @@ import { LayoutDashboard, ClipboardList, User, CalendarOff, MessageSquare } from
 import { PortalSidebar } from "./portal-sidebar";
 
 const NAV_ITEMS = [
-  { label: "Dashboard", href: "/portal/assessor/dashboard", icon: LayoutDashboard },
-  { label: "Assignments", href: "/portal/assessor/assignments", icon: ClipboardList },
-  { label: "Competence", href: "/portal/assessor/competence", icon: User },
-  { label: "Availability", href: "/portal/assessor/availability", icon: CalendarOff },
-  { label: "Messages", href: "/portal/assessor/messages", icon: MessageSquare },
+  { label: "Dashboard", href: "/assessor/dashboard", icon: LayoutDashboard },
+  { label: "Assignments", href: "/assessor/assignments", icon: ClipboardList },
+  { label: "Competence", href: "/assessor/competence", icon: User },
+  { label: "Availability", href: "/assessor/availability", icon: CalendarOff },
+  { label: "Messages", href: "/assessor/messages", icon: MessageSquare },
 ];
 
 function AssessorSidebar() {

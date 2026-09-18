@@ -54,7 +54,7 @@ function RegisterForm() {
       setError("That code didn't match or has expired. Try again.");
       return;
     }
-    router.push("/portal/applicant");
+    router.push("/cab/applicant");
   }
 
   if (step === "otp") {

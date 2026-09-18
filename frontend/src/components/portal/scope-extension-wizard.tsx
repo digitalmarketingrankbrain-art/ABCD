@@ -117,7 +117,7 @@ function ScopeExtensionWizard({
           Your Scope Extension application has been submitted for review.
         </p>
         <p className="mt-4 font-mono text-sm text-text">{submitted.referenceNumber}</p>
-        <Button className="mt-6" onClick={() => router.push(`/portal/applicant/applications/${submitted.id}`)}>
+        <Button className="mt-6" onClick={() => router.push(`/cab/applicant/applications/${submitted.id}`)}>
           View Application
         </Button>
       </div>
@@ -181,7 +181,7 @@ function ScopeExtensionWizard({
             <h2 className="font-sans text-lg font-semibold text-text">CAB Information</h2>
             <p className="mt-1 font-sans text-sm text-text-muted">
               This is the information currently on file for your organisation.{" "}
-              <Link href="/portal/applicant/profile?tab=cab-info" className="text-secondary hover:underline">
+              <Link href="/cab/applicant/profile?tab=cab-info" className="text-secondary hover:underline">
                 Edit in CAB Info →
               </Link>
             </p>

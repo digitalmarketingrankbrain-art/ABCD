@@ -62,7 +62,7 @@ function Tabs({ items, defaultValue, className, queryParam }: TabsProps) {
           />
         </React.Suspense>
       )}
-      <div role="tablist" className="flex gap-6 border-b border-border">
+      <div role="tablist" className="flex flex-wrap gap-1.5 rounded-xl border border-slate-200/80 bg-slate-100/80 p-1.5 backdrop-blur-xs">
         {items.map((item) => {
           const isActive = item.value === active;
           return (
@@ -72,10 +72,10 @@ function Tabs({ items, defaultValue, className, queryParam }: TabsProps) {
               aria-selected={isActive}
               onClick={() => setActive(item.value)}
               className={cn(
-                "-mb-px border-b-2 px-1 py-3 font-sans text-sm font-medium transition-colors",
+                "rounded-lg px-4 py-2 font-sans text-xs sm:text-sm font-semibold transition-all duration-200",
                 isActive
-                  ? "border-accent text-text"
-                  : "border-transparent text-text-muted hover:text-text",
+                  ? "bg-white text-blue-900 shadow-sm shadow-slate-200 ring-1 ring-slate-200/60"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-white/50",
               )}
             >
               {item.label}

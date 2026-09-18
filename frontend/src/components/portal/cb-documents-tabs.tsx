@@ -37,8 +37,8 @@ function CbDocumentsTabs({
   }
 
   return (
-    <div>
-      <div role="tablist" className="mb-5 flex gap-6 border-b border-border">
+    <div className="space-y-6">
+      <div role="tablist" className="flex items-center gap-2 border-b border-slate-200 pb-3">
         {(["documents", "saaf"] as const).map((key) => (
           <button
             key={key}
@@ -46,38 +46,42 @@ function CbDocumentsTabs({
             aria-selected={tab === key}
             onClick={() => setTab(key)}
             className={cn(
-              "-mb-px border-b-2 px-1 py-3 font-sans text-sm font-medium transition-colors",
-              tab === key ? "border-accent text-text" : "border-transparent text-text-muted hover:text-text",
+              "rounded-lg px-4 py-2 font-sans text-xs font-bold transition-all duration-200",
+              tab === key
+                ? "bg-blue-700 text-white shadow-sm shadow-blue-900/15"
+                : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
             )}
           >
-            {key === "documents" ? "Documents" : "SAAF"}
+            {key === "documents" ? "My Organization Documents" : "SAAF Published References"}
           </button>
         ))}
       </div>
 
       {tab === "documents" ? (
         <div className="flex flex-col gap-6">
-          <FileUploader onUpload={handleUpload} className="max-w-lg" />
+          <FileUploader onUpload={handleUpload} className="max-w-xl" />
           {orgDocuments.length === 0 ? (
-            <EmptyState title="No documents uploaded yet." description="Files you upload will appear here." />
+            <EmptyState title="No organization documents uploaded yet." description="Files you upload will appear here." />
           ) : (
-            <ul className="divide-y divide-border rounded-lg border border-border">
+            <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {orgDocuments.map((doc) => (
-                <li key={doc.id} className="flex items-center justify-between gap-4 px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <FileText className="size-4 shrink-0 text-text-muted" strokeWidth={1.75} />
-                    <div>
-                      <p className="font-sans text-sm text-text">{doc.filename}</p>
-                      <p className="font-sans text-xs text-text-muted">
-                        {formatBytes(doc.sizeBytes)} · Uploaded {doc.uploadedAt}
+                <li key={doc.id} className="flex items-center justify-between gap-4 rounded-xl border border-slate-200/90 bg-white p-4 shadow-xs hover:border-blue-300 hover:shadow-md transition-all">
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700 border border-blue-100">
+                      <FileText className="size-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate font-sans text-xs sm:text-sm font-bold text-slate-900">{doc.filename}</p>
+                      <p className="font-sans text-[11px] text-slate-500 font-medium">
+                        {formatBytes(doc.sizeBytes)} · {doc.uploadedAt}
                       </p>
                     </div>
                   </div>
                   <a
                     href={`/api/documents/${doc.currentVersionId}`}
-                    className="flex items-center gap-1.5 font-sans text-sm text-secondary hover:underline"
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-slate-100 px-3 py-1.5 font-sans text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-colors border border-slate-200"
                   >
-                    <Download className="size-3.5" strokeWidth={1.75} /> Download
+                    <Download className="size-3.5" /> Download
                   </a>
                 </li>
               ))}
@@ -89,23 +93,23 @@ function CbDocumentsTabs({
           {referenceDocuments.length === 0 ? (
             <EmptyState title="No reference documents published yet." description="Checklists and forms issued by SAAF will appear here." />
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-border">
-              <table className="w-full border-collapse text-sm">
-                <thead className="bg-background-portal">
-                  <tr>
-                    <th className="border-b border-border px-4 py-3 text-left font-sans text-xs font-medium uppercase tracking-[0.02em] text-text-muted">S.No</th>
-                    <th className="border-b border-border px-4 py-3 text-left font-sans text-xs font-medium uppercase tracking-[0.02em] text-text-muted">Description</th>
-                    <th className="border-b border-border px-4 py-3 text-left font-sans text-xs font-medium uppercase tracking-[0.02em] text-text-muted">Document</th>
+            <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-xs">
+              <table className="w-full border-collapse text-xs">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-50/80 font-semibold text-slate-600">
+                    <th className="px-4 py-3 text-left w-16">#</th>
+                    <th className="px-4 py-3 text-left">Document Description</th>
+                    <th className="px-4 py-3 text-right">Download Link</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-slate-100">
                   {referenceDocuments.map((doc, i) => (
-                    <tr key={doc.id} className="border-b border-border last:border-b-0">
-                      <td className="px-4 py-3 text-text-muted">{i + 1}</td>
-                      <td className="px-4 py-3 text-text">{doc.description}</td>
-                      <td className="px-4 py-3">
-                        <a href={`/api/reference-documents/${doc.id}`} className="flex items-center gap-1.5 font-sans text-secondary hover:underline">
-                          <FileText className="size-3.5" strokeWidth={1.75} /> {doc.filename}
+                    <tr key={doc.id} className="hover:bg-slate-50/60 transition-colors">
+                      <td className="px-4 py-3 font-mono font-medium text-slate-400">{i + 1}</td>
+                      <td className="px-4 py-3 font-medium text-slate-800">{doc.description}</td>
+                      <td className="px-4 py-3 text-right">
+                        <a href={`/api/reference-documents/${doc.id}`} className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 hover:underline">
+                          <FileText className="size-3.5" /> {doc.filename}
                         </a>
                       </td>
                     </tr>

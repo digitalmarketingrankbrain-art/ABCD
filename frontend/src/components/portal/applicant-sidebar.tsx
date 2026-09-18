@@ -13,14 +13,14 @@ import {
 import { PortalSidebar } from "./portal-sidebar";
 
 const NAV_ITEMS = [
-  { label: "Dashboard", href: "/portal/applicant/dashboard", icon: LayoutDashboard },
-  { label: "Profile", href: "/portal/applicant/profile", icon: User },
-  { label: "Applications", href: "/portal/applicant/applications", icon: FileText },
-  { label: "Scope Extension", href: "/portal/applicant/apply/scope-extension", icon: ClipboardPlus },
-  { label: "Invoices", href: "/portal/applicant/invoices", icon: Receipt },
-  { label: "Accreditation", href: "/portal/applicant/accreditation", icon: ShieldCheck },
-  { label: "Messages", href: "/portal/applicant/messages", icon: MessageSquare },
-  { label: "Security", href: "/portal/applicant/security", icon: Lock },
+  { label: "Dashboard", href: "/cab/applicant/dashboard", icon: LayoutDashboard },
+  { label: "Profile", href: "/cab/applicant/profile", icon: User },
+  { label: "Applications", href: "/cab/applicant/applications", icon: FileText },
+  { label: "Scope Extension", href: "/cab/applicant/apply/scope-extension", icon: ClipboardPlus },
+  { label: "Invoices", href: "/cab/applicant/invoices", icon: Receipt },
+  { label: "Accreditation", href: "/cab/applicant/accreditation", icon: ShieldCheck },
+  { label: "Messages", href: "/cab/applicant/messages", icon: MessageSquare },
+  { label: "Security", href: "/cab/applicant/security", icon: Lock },
 ];
 
 /**

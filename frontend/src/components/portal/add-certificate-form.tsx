@@ -125,7 +125,7 @@ export function AddCertificateForm({ cabDetails }: AddCertificateFormProps) {
     });
 
     setTimeout(() => {
-      router.push("/portal/applicant/profile");
+      router.push("/cab/applicant/profile");
     }, 1500);
   }
 
@@ -135,7 +135,7 @@ export function AddCertificateForm({ cabDetails }: AddCertificateFormProps) {
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border pb-4">
         <div>
           <Link
-            href="/portal/applicant/profile"
+            href="/cab/applicant/profile"
             className="inline-flex items-center gap-1.5 font-sans text-xs font-semibold text-text-muted hover:text-text transition-colors mb-1"
           >
             <ArrowLeft className="size-3.5" /> Back to Profile
