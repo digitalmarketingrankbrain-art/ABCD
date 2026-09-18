@@ -109,3 +109,24 @@ export async function getAllDocumentsWithVersions() {
     orderBy: { createdAt: "desc" },
   });
 }
+
+/**
+ * Approve/request-revision on a document's CURRENT version — previously no
+ * mutator existed anywhere for this at all (confirmed by grep); the admin
+ * Documents page could only display reviewStatus, never change it.
+ */
+export async function reviewDocumentVersion(
+  versionId: string,
+  decision: "APPROVED" | "NEEDS_REVISION",
+  comment?: string,
+): Promise<boolean> {
+  const res = await prisma.documentVersion.updateMany({
+    where: { id: versionId },
+    data: { reviewStatus: decision, reviewComment: comment || null },
+  });
+  return res.count > 0;
+}
+
+export async function getDocumentWithVersionById(versionId: string) {
+  return prisma.documentVersion.findUnique({ where: { id: versionId }, include: { document: true, uploadedBy: { select: { name: true } } } });
+}
