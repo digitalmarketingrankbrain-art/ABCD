@@ -8,6 +8,7 @@ import { AssignmentAcceptDecline } from "@/components/portal/assignment-accept-d
 import { AssignmentChecklist } from "@/components/portal/assignment-checklist";
 import { AssignmentMessagesThread } from "@/components/portal/assignment-messages-thread";
 import { SubmitReportButton } from "@/components/portal/submit-report-button";
+import { EvidenceUploadField, RaiseNcButton, ReportContentEditor } from "@/components/portal/assignment-report-tools";
 import {
   getAssignmentById,
   ASSIGNMENT_STATUS_LABEL,
@@ -145,6 +146,11 @@ export default async function AssignmentDetailPage({
                           </p>
                           <p className="mt-1 font-sans text-sm text-text">{criterion.requirementText}</p>
                           <p className="mt-1 font-sans text-sm text-text-muted">{finding!.notes}</p>
+                          {finding!.status === "NON_CONFORMANCE" && (
+                            <div className="mt-3">
+                              <RaiseNcButton assignmentId={assignment.id} criterionId={criterion.id} requirementText={criterion.requirementText} />
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -155,18 +161,20 @@ export default async function AssignmentDetailPage({
                 label: "Evidence",
                 content: (
                   <div className="flex flex-col gap-3">
-                    {assignment.criteria.filter((c) => assignment.findings[c.id]?.evidenceNote).length === 0 ? (
-                      <p className="font-sans text-sm text-text-muted">No evidence notes recorded yet — add them from the Checklist tab.</p>
-                    ) : (
-                      assignment.criteria
-                        .filter((c) => assignment.findings[c.id]?.evidenceNote)
-                        .map((c) => (
-                          <div key={c.id} className="rounded-md border border-border bg-surface px-4 py-3">
-                            <p className="font-sans text-xs text-text-muted">{c.requirementText}</p>
-                            <p className="mt-1 font-mono text-xs text-text">{assignment.findings[c.id]?.evidenceNote}</p>
-                          </div>
-                        ))
-                    )}
+                    {assignment.criteria
+                      .filter((c) => assignment.findings[c.id]?.status && assignment.findings[c.id]?.status !== "UNANSWERED")
+                      .map((c) => (
+                        <div key={c.id} className="rounded-md border border-border bg-surface px-4 py-3">
+                          <p className="font-sans text-xs text-text-muted">{c.requirementText}</p>
+                          {assignment.findings[c.id]?.evidenceDocumentId ? (
+                            <p className="mt-1 font-mono text-xs text-success-text">Evidence attached</p>
+                          ) : (
+                            <div className="mt-2">
+                              <EvidenceUploadField assignmentId={assignment.id} criterionId={c.id} />
+                            </div>
+                          )}
+                        </div>
+                      ))}
                   </div>
                 ),
               },
@@ -184,8 +192,14 @@ export default async function AssignmentDetailPage({
                   <div className="flex flex-col gap-4">
                     <p className="font-sans text-sm text-text-muted">
                       {assignment.criteria.filter((c) => assignment.findings[c.id]?.status && assignment.findings[c.id]?.status !== "UNANSWERED").length} of{" "}
-                      {assignment.criteria.length} checklist items assessed.
+                      {assignment.criteria.length} checklist items assessed. Report status: {assignment.reportStatus}.
                     </p>
+                    <ReportContentEditor
+                      assignmentId={assignment.id}
+                      initialSummary={assignment.reportSummary}
+                      initialRecommendation={assignment.reportRecommendation}
+                      readOnly={assignment.reportStatus !== "DRAFT"}
+                    />
                     {assignment.status === "REPORT_SUBMITTED" || assignment.status === "COMPLETED" ? (
                       <Alert tone="success" title="Report submitted">
                         Submitted {assignment.reportSubmittedAt}.
