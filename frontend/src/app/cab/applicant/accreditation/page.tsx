@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { auth } from "@/auth";
 import { StatusBadge, VERIFICATION_STATUS } from "@/components/ui/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { STATUS_EXPLANATION, findByReferenceAdmin } from "@/lib/verification-records";
+import { getCertificatesForUser } from "@/lib/portal/certificate-data";
 
 /**
  * Uses the identical status badge system as the public /verify page —
@@ -9,11 +11,37 @@ import { STATUS_EXPLANATION, findByReferenceAdmin } from "@/lib/verification-rec
  * public sees, not a different private truth (Phase 8).
  */
 export default async function AccreditationPage() {
+  const session = await auth();
   const accreditation = findByReferenceAdmin("SAAF-2026-00417");
+  const certificates = await getCertificatesForUser(session!.user.id);
 
   return (
     <div className="px-6 py-8">
       <h1 className="font-display text-2xl font-semibold text-text">Accreditation</h1>
+
+      {certificates.length > 0 && (
+        <div className="mt-6 max-w-lg rounded-lg border border-border bg-surface p-6">
+          <h2 className="font-sans text-sm font-semibold text-text">Issued Certificates</h2>
+          <ul className="mt-3 flex flex-col gap-2">
+            {certificates.map((c) => (
+              <li key={c.id} className="flex items-center justify-between rounded-md border border-border px-4 py-2">
+                <div>
+                  <p className="font-mono text-sm text-text">{c.certificateNumber}</p>
+                  <p className="font-sans text-xs text-text-muted">
+                    {c.status} · v{c.version} · valid until {c.validUntil ?? "—"}
+                  </p>
+                </div>
+                <a
+                  href={`/api/certificates/${c.id}`}
+                  className="font-sans text-sm text-secondary hover:underline"
+                >
+                  Download
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {!accreditation ? (
         <div className="mt-6">

@@ -4,10 +4,14 @@ import { StatusBadge, type StatusTone } from "@/components/ui/status-badge";
 import { Alert } from "@/components/ui/alert";
 import { ApplicationTimeline } from "@/components/portal/application-timeline";
 import { AdminApplicationActions } from "@/components/portal/admin-application-actions";
+import { AdminCertificateActions } from "@/components/portal/admin-certificate-actions";
 import { getApplicationByIdAdmin, STAGE_LABEL, type ApplicationStage } from "@/lib/portal/applicant-data";
 import { getUserOrgName } from "@/lib/portal/admin-data";
 import { getUsersByRoleSafe } from "@/lib/auth/store";
 import { getAuditLogForTarget } from "@/lib/portal/audit-log";
+import { countOpenNonConformitiesForApplication } from "@/lib/portal/nc-data";
+import { countUnfinalizedReportsForApplication } from "@/lib/portal/assessor-data";
+import { getCertificatesForApplication } from "@/lib/portal/certificate-data";
 
 const STAGE_TONE: Record<ApplicationStage, StatusTone> = {
   DRAFT: "neutral",
@@ -33,6 +37,11 @@ export default async function AdminApplicationDetailPage({
   const assessorUsers = await getUsersByRoleSafe("ASSESSOR");
   const assessorOptions = assessorUsers.map((u) => ({ id: u.id, name: u.name }));
   const auditEntries = await getAuditLogForTarget("Application", application.id);
+  const [openNcCount, unfinalizedReportCount, certificates] = await Promise.all([
+    countOpenNonConformitiesForApplication(application.id),
+    countUnfinalizedReportsForApplication(application.id),
+    getCertificatesForApplication(application.id),
+  ]);
 
   return (
     <div className="px-6 py-8">
@@ -55,6 +64,14 @@ export default async function AdminApplicationDetailPage({
         </Alert>
       )}
 
+      {application.stage === "ASSESSMENT" && (openNcCount > 0 || unfinalizedReportCount > 0) && (
+        <Alert tone="warning" title="Decision blocked" className="mt-4">
+          {openNcCount > 0 && `${openNcCount} non-conformit${openNcCount === 1 ? "y is" : "ies are"} still open. `}
+          {unfinalizedReportCount > 0 && `${unfinalizedReportCount} assessment report(s) still need to be finalized. `}
+          These must be resolved before a final decision can be recorded.
+        </Alert>
+      )}
+
       <div className="mt-6">
         <AdminApplicationActions
           applicationId={application.id}
@@ -63,6 +80,18 @@ export default async function AdminApplicationDetailPage({
           assessorOptions={assessorOptions}
         />
       </div>
+
+      {application.stage === "ACCREDITED" && (
+        <div className="mt-6">
+          <h2 className="mb-3 font-sans text-sm font-semibold text-text">Accreditation Certificate</h2>
+          <AdminCertificateActions
+            applicationId={application.id}
+            defaultScope={application.programName}
+            defaultStandard=""
+            existingCertificates={certificates}
+          />
+        </div>
+      )}
 
       <div className="mt-8 overflow-x-auto">
         <ApplicationTimeline stage={application.stage} />
