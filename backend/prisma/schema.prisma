@@ -30,6 +30,12 @@ enum AdminPermission {
   FULL_ADMIN
   REVIEWER
   FINANCE
+  /**
+   * Authorizes recording the final accreditation decision and issuing
+   * certificates — deliberately separate from FULL_ADMIN so an org can grant
+   * broad admin access without also granting decision authority.
+   */
+  DECISION_MAKER
 }
 
 // Real DB storage (not in-memory) is required here: Next.js dev-mode
@@ -47,36 +53,44 @@ model LoginOtp {
 }
 
 model User {
-  id           String     @id @default(cuid())
-  email        String     @unique
-  name         String
-  primaryRole  Role       @map("primary_role")
-  status       UserStatus @default(ACTIVE)
-  createdAt    DateTime   @default(now()) @map("created_at")
-  updatedAt    DateTime   @updatedAt @map("updated_at")
+  id          String     @id @default(cuid())
+  email       String     @unique
+  name        String
+  primaryRole Role       @map("primary_role")
+  status      UserStatus @default(ACTIVE)
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
 
-  adminPermissions             AdminPermissionGrant[]       @relation("GrantedTo")
-  adminPermissionsGiven        AdminPermissionGrant[]       @relation("GrantedBy")
-  organisationMemberships      OrganisationMembership[]
-  assessorProfile              Assessor?
-  applicationsSubmitted        Application[]                @relation("ApplicantApplications")
-  decisionsRecorded            Decision[]
-  documentVersionsUploaded     DocumentVersion[]
-  invoicesRecorded             Payment[]
-  messagesSent                 Message[]
-  notifications                Notification[]
-  notificationTemplatesUpdated NotificationTemplate[]
-  resourcesPublished           Resource[]
-  newsPublished                NewsArticle[]
-  auditLogEntries              AuditLog[]
-  assignedApplications         Application[]                @relation("AssessorAssignedApplications")
-  complaintsSubmitted          ComplaintOrReport[]          @relation("ComplaintSubmittedBy")
-  complaintsAssigned           ComplaintOrReport[]          @relation("ComplaintAssignedTo")
-  applicationStageChanges      ApplicationStageHistory[]
-  accreditationStatusChanges   AccreditationStatusHistory[]
-  assignmentsMade              Assignment[]                 @relation("AssignmentAssignedBy")
-  nonConformitiesRaised        NonConformity[]              @relation("NcRaisedBy")
-  nonConformitiesLed           NonConformity[]              @relation("NcTeamLead")
+  adminPermissions               AdminPermissionGrant[]       @relation("GrantedTo")
+  adminPermissionsGiven          AdminPermissionGrant[]       @relation("GrantedBy")
+  organisationMemberships        OrganisationMembership[]
+  assessorProfile                Assessor?
+  applicationsSubmitted          Application[]                @relation("ApplicantApplications")
+  decisionsRecorded              Decision[]
+  documentVersionsUploaded       DocumentVersion[]
+  invoicesRecorded               Payment[]
+  messagesSent                   Message[]
+  notifications                  Notification[]
+  notificationTemplatesUpdated   NotificationTemplate[]
+  resourcesPublished             Resource[]
+  newsPublished                  NewsArticle[]
+  auditLogEntries                AuditLog[]
+  assignedApplications           Application[]                @relation("AssessorAssignedApplications")
+  complaintsSubmitted            ComplaintOrReport[]          @relation("ComplaintSubmittedBy")
+  complaintsAssigned             ComplaintOrReport[]          @relation("ComplaintAssignedTo")
+  applicationStageChanges        ApplicationStageHistory[]
+  accreditationStatusChanges     AccreditationStatusHistory[]
+  assignmentsMade                Assignment[]                 @relation("AssignmentAssignedBy")
+  nonConformitiesRaised          NonConformity[]              @relation("NcRaisedBy")
+  nonConformitiesLed             NonConformity[]              @relation("NcTeamLead")
+  nonConformitiesReviewed        NonConformity[]              @relation("NcReviewedBy")
+  ncResponseEntriesSubmitted     NcResponseEntry[]
+  assessorTeamProposalsSubmitted AssessorTeamProposal[]       @relation("TeamProposalSubmittedBy")
+  assessorTeamProposalsReviewed  AssessorTeamProposal[]       @relation("TeamProposalReviewedBy")
+  assessmentNotificationsSent    AssessmentNotification[]     @relation("NotificationSentBy")
+  assessmentAcknowledgements     AssessmentAcknowledgement[]  @relation("AcknowledgedBy")
+  assessmentReportsFinalized     Assessment[]                 @relation("ReportFinalizedBy")
+  certificatesIssued             AccreditationCertificate[]
 
   @@map("users")
 }
@@ -220,6 +234,14 @@ model RequiredDocumentType {
   description String?
   isMandatory Boolean @default(true) @map("is_mandatory")
 
+  // Configurable required-forms system (admin-managed, not hardcoded).
+  deadlineDays       Int?               @map("deadline_days")
+  applicableStage    ApplicationStage?  @map("applicable_stage")
+  isActive           Boolean            @default(true) @map("is_active")
+  sortOrder          Int                @default(0) @map("sort_order")
+  templateDocumentId String?            @map("template_document_id")
+  templateDocument   ReferenceDocument? @relation(fields: [templateDocumentId], references: [id])
+
   @@map("required_document_types")
 }
 
@@ -281,13 +303,14 @@ model Application {
   createdAt            DateTime         @default(now()) @map("created_at")
   updatedAt            DateTime         @updatedAt @map("updated_at")
 
-  stageHistory        ApplicationStageHistory[]
-  decision            Decision?
-  documents           Document[]
-  assignments         Assignment[]
-  invoices            Invoice[]
-  messageThread       MessageThread?
-  accreditationRecord AccreditationRecord?
+  stageHistory          ApplicationStageHistory[]
+  decision              Decision?
+  documents             Document[]
+  assignments           Assignment[]
+  invoices              Invoice[]
+  messageThread         MessageThread?
+  accreditationRecord   AccreditationRecord?
+  assessorTeamProposals AssessorTeamProposal[]
 
   @@map("applications")
 }
@@ -339,9 +362,10 @@ model Assessor {
   bio    String?
   status AssessorStatus @default(ACTIVE)
 
-  competence   AssessorCompetence[]
-  availability AssessorAvailability[]
-  assignments  Assignment[]
+  competence      AssessorCompetence[]
+  availability    AssessorAvailability[]
+  assignments     Assignment[]
+  teamMemberLinks AssessorTeamMember[]
 
   @@map("assessors")
 }
@@ -418,8 +442,16 @@ model Assignment {
 
   assessment      Assessment?
   nonConformities NonConformity[]
+  notifications   AssessmentNotification[]
 
   @@map("assignments")
+}
+
+enum AssessmentReportStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  FINALIZED
 }
 
 model Assessment {
@@ -428,6 +460,14 @@ model Assessment {
   assignment        Assignment @relation(fields: [assignmentId], references: [id])
   startedAt         DateTime?  @map("started_at")
   reportSubmittedAt DateTime?  @map("report_submitted_at")
+
+  // Report content + lifecycle (previously just timestamps with no content).
+  reportSummary        String?                @map("report_summary")
+  reportRecommendation String?                @map("report_recommendation")
+  reportStatus         AssessmentReportStatus @default(DRAFT) @map("report_status")
+  finalizedAt          DateTime?              @map("finalized_at")
+  finalizedById        String?                @map("finalized_by_user_id")
+  finalizedBy          User?                  @relation("ReportFinalizedBy", fields: [finalizedById], references: [id])
 
   findings AssessmentFinding[]
 
@@ -457,6 +497,8 @@ model AssessmentFinding {
   severity           FindingSeverity?
   evidenceDocumentId String?             @map("evidence_document_id")
 
+  nonConformity NonConformity?
+
   @@unique([assessmentId, criterionId])
   @@map("assessment_findings")
 }
@@ -467,35 +509,93 @@ enum NcSeverity {
   OBSERVATION
 }
 
+/**
+ * OPEN → RESPONSE_SUBMITTED → UNDER_REVIEW → ACCEPTED → CLOSED is the happy
+ * path. REJECTED sends it back to the CB (they resubmit, returning to
+ * RESPONSE_SUBMITTED). "Overdue" is deliberately NOT a stored status — it's
+ * computed from dueDate vs. now so it can never go stale.
+ */
 enum NcStatus {
   OPEN
+  RESPONSE_SUBMITTED
+  UNDER_REVIEW
+  ACCEPTED
+  REJECTED
   CLOSED
+}
+
+enum NcResponseType {
+  ROOT_CAUSE
+  CORRECTION
+  CORRECTIVE_ACTION
+  ASSESSOR_REMARK
 }
 
 /**
  * Non-conformity raised against a CB during an assessment — CB Dashboard's "NC" tab.
+ * Field shape follows the AB's real NCR form (UAF-F-045): requirement text,
+ * scheme, standard/clause, category, team leader/member, CAB representative.
  */
 model NonConformity {
-  id                String       @id @default(cuid())
-  ncNumber          String       @unique @map("nc_number")
-  organisationId    String       @map("organisation_id")
-  organisation      Organisation @relation(fields: [organisationId], references: [id])
-  assignmentId      String?      @map("assignment_id")
-  assignment        Assignment?  @relation(fields: [assignmentId], references: [id])
-  category          NcSeverity
-  standardReference String       @map("standard_reference")
-  status            NcStatus     @default(OPEN)
-  progressStage     String       @map("progress_stage")
-  raisedById        String?      @map("raised_by_user_id")
-  raisedBy          User?        @relation("NcRaisedBy", fields: [raisedById], references: [id])
-  teamLeadId        String?      @map("team_lead_user_id")
-  teamLead          User?        @relation("NcTeamLead", fields: [teamLeadId], references: [id])
-  finding           String
-  correctiveAction  String?      @map("corrective_action")
-  raisedAt          DateTime     @default(now()) @map("raised_at")
-  closedAt          DateTime?    @map("closed_at")
+  id                    String             @id @default(cuid())
+  ncNumber              String             @unique @map("nc_number")
+  organisationId        String             @map("organisation_id")
+  organisation          Organisation       @relation(fields: [organisationId], references: [id])
+  assignmentId          String?            @map("assignment_id")
+  assignment            Assignment?        @relation(fields: [assignmentId], references: [id])
+  /**
+   * The assessment finding that raised this NC, if it came from a checklist item rather than being raised manually.
+   */
+  findingId             String?            @unique @map("finding_id")
+  sourceFinding         AssessmentFinding? @relation(fields: [findingId], references: [id])
+  category              NcSeverity
+  requirementText       String?            @map("requirement_text")
+  schemeText            String?            @map("scheme_text")
+  standardReference     String             @map("standard_reference")
+  status                NcStatus           @default(OPEN)
+  progressStage         String             @map("progress_stage")
+  raisedById            String?            @map("raised_by_user_id")
+  raisedBy              User?              @relation("NcRaisedBy", fields: [raisedById], references: [id])
+  teamLeadId            String?            @map("team_lead_user_id")
+  teamLead              User?              @relation("NcTeamLead", fields: [teamLeadId], references: [id])
+  cabRepresentativeName String?            @map("cab_representative_name")
+  finding               String
+  correctiveAction      String?            @map("corrective_action")
+  dueDate               DateTime?          @map("due_date")
+  respondedAt           DateTime?          @map("responded_at")
+  reviewedById          String?            @map("reviewed_by_user_id")
+  reviewedBy            User?              @relation("NcReviewedBy", fields: [reviewedById], references: [id])
+  reviewedAt            DateTime?          @map("reviewed_at")
+  reviewNote            String?            @map("review_note")
+  /**
+   * Set once an AB reviewer accepts the RCA — mirrors the real form's "Assessor has already approved this RCA. Further changes are disabled."
+   */
+  locked                Boolean            @default(false)
+  raisedAt              DateTime           @default(now()) @map("raised_at")
+  closedAt              DateTime?          @map("closed_at")
+
+  responses NcResponseEntry[]
 
   @@map("non_conformities")
+}
+
+/**
+ * Append-only conversation thread on an NC — Root Cause Analysis / Proposed
+ * Correction / Proposed Corrective Action from the CB, and Assessor Remarks
+ * from the AB reviewer, each a dated, immutable entry (matches the real
+ * "Previous Remarks" structure in UAF-F-045 exactly).
+ */
+model NcResponseEntry {
+  id            String         @id @default(cuid())
+  ncId          String         @map("nc_id")
+  nonConformity NonConformity  @relation(fields: [ncId], references: [id])
+  type          NcResponseType
+  body          String
+  submittedById String         @map("submitted_by_user_id")
+  submittedBy   User           @relation(fields: [submittedById], references: [id])
+  submittedAt   DateTime       @default(now()) @map("submitted_at")
+
+  @@map("nc_response_entries")
 }
 
 // --- 5. Documents ---
@@ -505,6 +605,14 @@ enum DocumentOwnerType {
   ASSESSMENT
   COMPETENCE
   ORGANISATION
+  /**
+   * Corrective-action evidence a CB attaches to an NC response.
+   */
+  NON_CONFORMITY
+  /**
+   * Supporting documents attached to an assessor team proposal.
+   */
+  ASSESSOR_TEAM_PROPOSAL
 }
 
 enum DocumentKind {
@@ -576,6 +684,8 @@ model ReferenceDocument {
   sortOrder   Int      @default(0) @map("sort_order")
   createdAt   DateTime @default(now()) @map("created_at")
 
+  requiredDocumentTypesUsingAsTemplate RequiredDocumentType[]
+
   @@map("reference_documents")
 }
 
@@ -606,6 +716,7 @@ model AccreditationRecord {
   statusHistory      AccreditationStatusHistory[]
   verificationRecord VerificationRecord?
   invoices           Invoice[]
+  certificates       AccreditationCertificate[]
 
   @@map("accreditation_records")
 }
@@ -881,4 +992,138 @@ model AuditLog {
   createdAt   DateTime @default(now()) @map("created_at")
 
   @@map("audit_logs")
+}
+
+// --- 12. Assessor Team Proposal (CB proposes, AB approves) ---
+
+enum AssessorTeamProposalStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  CHANGES_REQUESTED
+  REJECTED
+}
+
+model AssessorTeamProposal {
+  id            String                     @id @default(cuid())
+  applicationId String                     @map("application_id")
+  application   Application                @relation(fields: [applicationId], references: [id])
+  status        AssessorTeamProposalStatus @default(DRAFT)
+  submittedById String?                    @map("submitted_by_user_id")
+  submittedBy   User?                      @relation("TeamProposalSubmittedBy", fields: [submittedById], references: [id])
+  submittedAt   DateTime?                  @map("submitted_at")
+  reviewedById  String?                    @map("reviewed_by_user_id")
+  reviewedBy    User?                      @relation("TeamProposalReviewedBy", fields: [reviewedById], references: [id])
+  reviewedAt    DateTime?                  @map("reviewed_at")
+  reviewNote    String?                    @map("review_note")
+  createdAt     DateTime                   @default(now()) @map("created_at")
+  updatedAt     DateTime                   @updatedAt @map("updated_at")
+
+  members AssessorTeamMember[]
+
+  @@map("assessor_team_proposals")
+}
+
+model AssessorTeamMember {
+  id                 String               @id @default(cuid())
+  proposalId         String               @map("proposal_id")
+  proposal           AssessorTeamProposal @relation(fields: [proposalId], references: [id])
+  name               String
+  role               String
+  expertise          String?
+  qualification      String?
+  experienceYears    Int?                 @map("experience_years")
+  proposedScopeSlugs String[]             @default([]) @map("proposed_scope_slugs")
+  availabilityNote   String?              @map("availability_note")
+  /**
+   * Set once this proposed member is matched to a real Assessor user — approving the proposal creates a real Assignment for each linked member.
+   */
+  linkedAssessorId   String?              @map("linked_assessor_id")
+  linkedAssessor     Assessor?            @relation(fields: [linkedAssessorId], references: [id])
+
+  @@map("assessor_team_members")
+}
+
+// --- 13. Assessment Notification + Acknowledgement (digital sign-off) ---
+
+enum AssessmentNotificationStatus {
+  SENT
+  ACKNOWLEDGED
+}
+
+model AssessmentNotification {
+  id                      String                       @id @default(cuid())
+  assignmentId            String                       @map("assignment_id")
+  assignment              Assignment                   @relation(fields: [assignmentId], references: [id])
+  version                 Int                          @default(1)
+  assessmentDate          DateTime                     @map("assessment_date")
+  assessmentType          AssessmentType               @map("assessment_type")
+  location                String
+  scopeText               String                       @map("scope_text")
+  instructions            String?
+  preparationNotes        String?                      @map("preparation_notes")
+  acknowledgementDeadline DateTime?                    @map("acknowledgement_deadline")
+  status                  AssessmentNotificationStatus @default(SENT)
+  sentById                String                       @map("sent_by_user_id")
+  sentBy                  User                         @relation("NotificationSentBy", fields: [sentById], references: [id])
+  sentAt                  DateTime                     @default(now()) @map("sent_at")
+
+  acknowledgement AssessmentAcknowledgement?
+
+  @@map("assessment_notifications")
+}
+
+/**
+ * Immutable once written — DB grants (grants.sql) give app_user SELECT+INSERT
+ * only, no UPDATE/DELETE, same append-only guarantee as AuditLog. A changed
+ * assessment date issues a new AssessmentNotification (incrementing
+ * `version`) rather than editing this record.
+ */
+model AssessmentAcknowledgement {
+  id                  String                 @id @default(cuid())
+  notificationId      String                 @unique @map("notification_id")
+  notification        AssessmentNotification @relation(fields: [notificationId], references: [id])
+  notificationVersion Int                    @map("notification_version")
+  acknowledgedById    String                 @map("acknowledged_by_user_id")
+  acknowledgedBy      User                   @relation("AcknowledgedBy", fields: [acknowledgedById], references: [id])
+  acknowledgedAt      DateTime               @default(now()) @map("acknowledged_at")
+  signatureName       String                 @map("signature_name")
+  ipAddress           String?                @map("ip_address")
+  userAgent           String?                @map("user_agent")
+
+  @@map("assessment_acknowledgements")
+}
+
+// --- 14. Accreditation Certificate ---
+
+enum CertificateStatus {
+  ISSUED
+  REVOKED
+  REISSUED
+}
+
+model AccreditationCertificate {
+  id                       String                    @id @default(cuid())
+  accreditationRecordId    String                    @map("accreditation_record_id")
+  accreditationRecord      AccreditationRecord       @relation(fields: [accreditationRecordId], references: [id])
+  certificateNumber        String                    @unique @map("certificate_number")
+  version                  Int                       @default(1)
+  status                   CertificateStatus         @default(ISSUED)
+  issueDate                DateTime                  @map("issue_date")
+  validUntil               DateTime?                 @map("valid_until")
+  scopeText                String                    @map("scope_text")
+  standardReference        String?                   @map("standard_reference")
+  authorizedSignatoryName  String                    @map("authorized_signatory_name")
+  authorizedSignatoryTitle String?                   @map("authorized_signatory_title")
+  storageKey               String                    @map("storage_key")
+  filename                 String
+  issuedById               String                    @map("issued_by_user_id")
+  issuedBy                 User                      @relation(fields: [issuedById], references: [id])
+  issuedAt                 DateTime                  @default(now()) @map("issued_at")
+  supersedesId             String?                   @unique @map("supersedes_id")
+  supersedes               AccreditationCertificate? @relation("CertificateSupersedes", fields: [supersedesId], references: [id])
+  supersededBy             AccreditationCertificate? @relation("CertificateSupersedes")
+
+  @@map("accreditation_certificates")
 }

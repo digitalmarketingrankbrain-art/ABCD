@@ -17,10 +17,16 @@ $$;
 GRANT CONNECT ON DATABASE meridian_accreditation TO app_user;
 GRANT USAGE ON SCHEMA public TO app_user;
 
--- Full CRUD on every table except audit_logs.
+-- Full CRUD on every table except the append-only ones below.
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO app_user;
 REVOKE UPDATE, DELETE ON audit_logs FROM app_user;
 GRANT SELECT, INSERT ON audit_logs TO app_user;
+
+-- Assessment notification acknowledgements are a digital-signature record —
+-- immutable once written, same append-only guarantee as audit_logs (see
+-- schema.prisma's AssessmentAcknowledgement doc comment).
+REVOKE UPDATE, DELETE ON assessment_acknowledgements FROM app_user;
+GRANT SELECT, INSERT ON assessment_acknowledgements TO app_user;
 
 -- Sequences (for any serial/identity columns) and future tables.
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO app_user;
