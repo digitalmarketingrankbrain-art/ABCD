@@ -19,6 +19,10 @@ export interface CbAssessmentDetail extends CbAssessmentSummary {
   respondedAt: string | null;
   startedAt: string | null;
   reportSubmittedAt: string | null;
+  /** Only populated once the AB has finalized the report — Assessment.reportStatus === "FINALIZED". Before that, the CB sees the assessment is in progress but not the report content itself. */
+  reportFinalized: boolean;
+  reportSummary: string | null;
+  reportRecommendation: string | null;
   findings: { criterion: string; status: string; severity: string | null; notes: string | null }[];
 }
 
@@ -106,6 +110,9 @@ export async function getAssessmentByIdForUser(id: string, userId: string): Prom
     respondedAt: r.respondedAt ? fmtDate(r.respondedAt) : null,
     startedAt: r.assessment?.startedAt ? fmtDate(r.assessment.startedAt) : null,
     reportSubmittedAt: r.assessment?.reportSubmittedAt ? fmtDate(r.assessment.reportSubmittedAt) : null,
+    reportFinalized: r.assessment?.reportStatus === "FINALIZED",
+    reportSummary: r.assessment?.reportStatus === "FINALIZED" ? (r.assessment.reportSummary ?? null) : null,
+    reportRecommendation: r.assessment?.reportStatus === "FINALIZED" ? (r.assessment.reportRecommendation ?? null) : null,
     findings: (r.assessment?.findings ?? []).map((f) => ({
       criterion: f.criterion.requirementText,
       status: f.status,

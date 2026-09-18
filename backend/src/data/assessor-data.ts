@@ -53,7 +53,17 @@ export interface Finding {
   notes: string;
   severity: "MINOR" | "MAJOR" | null;
   evidenceNote: string | null;
+  evidenceDocumentId: string | null;
 }
+
+export type AssessmentReportStatus = "DRAFT" | "SUBMITTED" | "UNDER_REVIEW" | "FINALIZED";
+
+export const REPORT_STATUS_LABEL: Record<AssessmentReportStatus, string> = {
+  DRAFT: "Draft",
+  SUBMITTED: "Submitted",
+  UNDER_REVIEW: "Under AB review",
+  FINALIZED: "Finalized",
+};
 
 export interface Assignment {
   id: string;
@@ -70,6 +80,9 @@ export interface Assignment {
   criteria: AssessmentCriterion[];
   findings: Record<string, Finding>;
   reportSubmittedAt: string | null;
+  reportSummary: string;
+  reportRecommendation: string;
+  reportStatus: AssessmentReportStatus;
   /** Documents shared into this assignment's context — read-only for the assessor. */
   sharedDocuments: { name: string; filename: string }[];
   /** The linked Application's referenceNumber, resolved to a real id via getApplicationIdByReference() at read time — kept as a reference (not the raw id) so this stays stable across the existing message-thread lookup path. */
@@ -139,6 +152,7 @@ async function mapAssignment(row: AssignmentRow): Promise<Assignment> {
       notes: f.notes ?? "",
       severity: f.severity,
       evidenceNote: null,
+      evidenceDocumentId: f.evidenceDocumentId,
     };
   }
 
@@ -157,6 +171,9 @@ async function mapAssignment(row: AssignmentRow): Promise<Assignment> {
     criteria,
     findings,
     reportSubmittedAt: row.assessment?.reportSubmittedAt ? fmtDate(row.assessment.reportSubmittedAt) : null,
+    reportSummary: row.assessment?.reportSummary ?? "",
+    reportRecommendation: row.assessment?.reportRecommendation ?? "",
+    reportStatus: row.assessment?.reportStatus ?? "DRAFT",
     sharedDocuments: await getSharedDocumentsForApplication(row.applicationId, row.application.programId),
     linkedApplicationId: row.application.referenceNumber,
   };
@@ -322,6 +339,53 @@ export async function updateFinding(
   return true;
 }
 
+/** Attaches an already-uploaded evidence Document to a finding — the schema slot (evidenceDocumentId) existed but nothing ever set it. */
+export async function attachEvidenceToFinding(
+  assignmentId: string,
+  userId: string,
+  criterionId: string,
+  documentId: string,
+): Promise<boolean> {
+  const assessor = await getAssessorRowForUser(userId);
+  if (!assessor) return false;
+  const assignment = await prisma.assignment.findFirst({ where: { id: assignmentId, assessorId: assessor.id } });
+  if (!assignment) return false;
+  const assessment = await prisma.assessment.findUnique({ where: { assignmentId } });
+  if (!assessment) return false;
+
+  const res = await prisma.assessmentFinding.updateMany({
+    where: { assessmentId: assessment.id, criterionId },
+    data: { evidenceDocumentId: documentId },
+  });
+  return res.count > 0;
+}
+
+export async function updateReportContent(
+  assignmentId: string,
+  userId: string,
+  content: { summary?: string; recommendation?: string },
+): Promise<boolean> {
+  const assessor = await getAssessorRowForUser(userId);
+  if (!assessor) return false;
+  const assignment = await prisma.assignment.findFirst({ where: { id: assignmentId, assessorId: assessor.id } });
+  if (!assignment) return false;
+
+  let assessment = await prisma.assessment.findUnique({ where: { assignmentId } });
+  if (!assessment) {
+    assessment = await prisma.assessment.create({ data: { assignmentId, startedAt: new Date() } });
+  }
+  if (assessment.reportStatus === "FINALIZED") return false;
+
+  await prisma.assessment.update({
+    where: { id: assessment.id },
+    data: {
+      reportSummary: content.summary !== undefined ? content.summary : undefined,
+      reportRecommendation: content.recommendation !== undefined ? content.recommendation : undefined,
+    },
+  });
+  return true;
+}
+
 export async function submitAssignmentReport(assignmentId: string, userId: string): Promise<boolean> {
   const assessor = await getAssessorRowForUser(userId);
   if (!assessor) return false;
@@ -330,10 +394,51 @@ export async function submitAssignmentReport(assignmentId: string, userId: strin
 
   const assessment = await prisma.assessment.findUnique({ where: { assignmentId } });
   if (assessment) {
-    await prisma.assessment.update({ where: { id: assessment.id }, data: { reportSubmittedAt: new Date() } });
+    await prisma.assessment.update({
+      where: { id: assessment.id },
+      data: { reportSubmittedAt: new Date(), reportStatus: "SUBMITTED" },
+    });
   } else {
-    await prisma.assessment.create({ data: { assignmentId, startedAt: new Date(), reportSubmittedAt: new Date() } });
+    await prisma.assessment.create({
+      data: { assignmentId, startedAt: new Date(), reportSubmittedAt: new Date(), reportStatus: "SUBMITTED" },
+    });
   }
   await prisma.assignment.update({ where: { id: assignmentId }, data: { status: "REPORT_SUBMITTED" } });
   return true;
+}
+
+// --- Admin (AB) report review ---
+
+export async function markReportUnderReview(assignmentId: string): Promise<boolean> {
+  const assessment = await prisma.assessment.findUnique({ where: { assignmentId } });
+  if (!assessment || assessment.reportStatus !== "SUBMITTED") return false;
+  await prisma.assessment.update({ where: { id: assessment.id }, data: { reportStatus: "UNDER_REVIEW" } });
+  return true;
+}
+
+/** Finalizing releases the report to the CB (cb-assessments-data gates report content on this) and marks the Assignment COMPLETED. */
+export async function finalizeAssessmentReport(assignmentId: string, adminUserId: string): Promise<boolean> {
+  const assessment = await prisma.assessment.findUnique({ where: { assignmentId } });
+  if (!assessment) return false;
+  if (assessment.reportStatus !== "SUBMITTED" && assessment.reportStatus !== "UNDER_REVIEW") return false;
+
+  await prisma.$transaction([
+    prisma.assessment.update({
+      where: { id: assessment.id },
+      data: { reportStatus: "FINALIZED", finalizedAt: new Date(), finalizedById: adminUserId },
+    }),
+    prisma.assignment.update({ where: { id: assignmentId }, data: { status: "COMPLETED" } }),
+  ]);
+  return true;
+}
+
+/** Decision-gating: counts assignments for this application whose assessment report has been submitted but not yet finalized. */
+export async function countUnfinalizedReportsForApplication(applicationId: string): Promise<number> {
+  return prisma.assessment.count({
+    where: {
+      assignment: { applicationId },
+      reportSubmittedAt: { not: null },
+      reportStatus: { not: "FINALIZED" },
+    },
+  });
 }

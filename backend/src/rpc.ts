@@ -11,6 +11,11 @@ import * as ncData from "./data/nc-data";
 import * as referenceDocuments from "./data/reference-documents";
 import * as programFees from "./data/program-fees";
 import * as storage from "./data/storage";
+import * as assessorTeamData from "./data/assessor-team-data";
+import * as adminPermissionsData from "./data/admin-permissions-data";
+import * as assessmentNotificationData from "./data/assessment-notification-data";
+import * as certificateData from "./data/certificate-data";
+import * as accreditationRecordData from "./data/accreditation-record-data";
 
 const MODULES: Record<string, Record<string, unknown>> = {
   "auth-store": authStore,
@@ -26,6 +31,11 @@ const MODULES: Record<string, Record<string, unknown>> = {
   "reference-documents": referenceDocuments,
   "program-fees": programFees,
   storage,
+  "assessor-team-data": assessorTeamData,
+  "admin-permissions-data": adminPermissionsData,
+  "assessment-notification-data": assessmentNotificationData,
+  "certificate-data": certificateData,
+  "accreditation-record-data": accreditationRecordData,
 };
 
 interface BufferMarker {

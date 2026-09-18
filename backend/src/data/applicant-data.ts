@@ -1,5 +1,6 @@
 import { prisma } from "../prisma";
 import { getUserOrganisationId } from "./auth-store";
+import { ensureAccreditationRecordForApplication } from "./accreditation-record-data";
 import type { Prisma, Role } from "@prisma/client";
 
 export type ApplicationStage =
@@ -453,16 +454,38 @@ export async function clearInfoRequested(applicationId: string): Promise<boolean
   return res.count > 0;
 }
 
+/**
+ * Manual single-assessor override path (kept alongside the Assessor Team
+ * Proposal flow in assessor-team-data.ts for cases too simple to need a full
+ * team proposal). Previously this only set Application.assessorUserId and
+ * never created a real Assignment row — meaning the entire assessor
+ * workspace (getAssignmentsForUser, respondToAssignment, updateFinding,
+ * submitAssignmentReport) and the CB's Assessments tab never saw it. Fixed
+ * to create/reuse a real Assignment so both paths converge on the same
+ * table.
+ */
 export async function assignAssessorToApplication(
   applicationId: string,
   assessorUserId: string,
   actorUserId: string,
+  dueDate?: string,
 ): Promise<boolean> {
   const app = await prisma.application.findUnique({ where: { id: applicationId } });
   if (!app) return false;
 
+  const assessor = await prisma.assessor.findUnique({ where: { userId: assessorUserId } });
+  if (!assessor) return false;
+
   const movesToAssessment =
     app.stage === "DOCUMENT_REVIEW" || app.stage === "INITIAL_REVIEW" || app.stage === "SUBMITTED";
+
+  const existingAssignment = await prisma.assignment.findFirst({ where: { applicationId, assessorId: assessor.id } });
+  if (!existingAssignment) {
+    const due = dueDate ? new Date(dueDate) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    await prisma.assignment.create({
+      data: { applicationId, assessorId: assessor.id, assignedById: actorUserId, dueDate: due },
+    });
+  }
 
   await prisma.application.update({
     where: { id: applicationId },
@@ -481,16 +504,37 @@ export async function assignAssessorToApplication(
  * Structurally distinct from the assessor's own recommendation — the
  * decider is always the authenticated admin session, which can never be
  * the same identity as the assigned assessor (Phase 6/10 governance rule),
- * and the rationale is required, not optional.
+ * and the rationale is required, not optional. Also enforces business rule
+ * 9/business rule "decision must consider NC/report state" — an ACCREDIT
+ * outcome is blocked while any NC on this application isn't CLOSED or any
+ * submitted assessment report isn't FINALIZED yet. (Permission-level
+ * authorization — is this admin actually a DECISION_MAKER/FULL_ADMIN — is
+ * checked one layer up, in the frontend Server Action, since that's where
+ * the session lives.)
  */
 export async function recordApplicationDecision(
   applicationId: string,
   outcome: "ACCREDIT" | "DECLINE" | "REQUEST_MORE_INFO",
   rationale: string,
   decidedByUserId: string,
-): Promise<boolean> {
+): Promise<{ ok: boolean; error?: string }> {
   const app = await prisma.application.findUnique({ where: { id: applicationId } });
-  if (!app) return false;
+  if (!app) return { ok: false, error: "Application not found." };
+
+  if (outcome === "ACCREDIT") {
+    const [openNcCount, unfinalizedReportCount] = await Promise.all([
+      prisma.nonConformity.count({ where: { assignment: { applicationId }, status: { notIn: ["CLOSED"] } } }),
+      prisma.assessment.count({
+        where: { assignment: { applicationId }, reportSubmittedAt: { not: null }, reportStatus: { not: "FINALIZED" } },
+      }),
+    ]);
+    if (openNcCount > 0) {
+      return { ok: false, error: `${openNcCount} non-conformit${openNcCount === 1 ? "y is" : "ies are"} still open — all must be closed before accrediting.` };
+    }
+    if (unfinalizedReportCount > 0) {
+      return { ok: false, error: "One or more assessment reports haven't been finalized yet — finalize them before recording a decision." };
+    }
+  }
 
   await prisma.decision.upsert({
     where: { applicationId },
@@ -503,6 +547,7 @@ export async function recordApplicationDecision(
     await prisma.applicationStageHistory.create({
       data: { applicationId, fromStage: app.stage, toStage: "ACCREDITED", changedById: decidedByUserId, reason: rationale },
     });
+    await ensureAccreditationRecordForApplication(applicationId);
   } else if (outcome === "DECLINE") {
     await prisma.application.update({ where: { id: applicationId }, data: { stage: "DECLINED" } });
     await prisma.applicationStageHistory.create({
@@ -514,5 +559,5 @@ export async function recordApplicationDecision(
       data: { infoRequested: true, infoRequestNote: rationale },
     });
   }
-  return true;
+  return { ok: true };
 }
