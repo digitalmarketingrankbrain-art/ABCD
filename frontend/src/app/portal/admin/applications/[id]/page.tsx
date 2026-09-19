@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { StatusBadge, type StatusTone } from "@/components/ui/status-badge";
 import { Alert } from "@/components/ui/alert";
-import { ApplicationTimeline } from "@/components/portal/application-timeline";
 import { AdminApplicationActions } from "@/components/portal/admin-application-actions";
 import { AdminCertificateActions } from "@/components/portal/admin-certificate-actions";
 import { getApplicationByIdAdmin, STAGE_LABEL, type ApplicationStage } from "@/lib/portal/applicant-data";
@@ -12,6 +11,8 @@ import { getAuditLogForTarget } from "@/lib/portal/audit-log";
 import { countOpenNonConformitiesForApplication } from "@/lib/portal/nc-data";
 import { countUnfinalizedReportsForApplication } from "@/lib/portal/assessor-data";
 import { getCertificatesForApplication } from "@/lib/portal/certificate-data";
+import { getWorkflowProgressForApplication } from "@/lib/portal/workflow-progress-data";
+import { WorkflowProgressTracker } from "@/components/portal/workflow-progress-tracker";
 
 const STAGE_TONE: Record<ApplicationStage, StatusTone> = {
   DRAFT: "neutral",
@@ -37,10 +38,11 @@ export default async function AdminApplicationDetailPage({
   const assessorUsers = await getUsersByRoleSafe("ASSESSOR");
   const assessorOptions = assessorUsers.map((u) => ({ id: u.id, name: u.name }));
   const auditEntries = await getAuditLogForTarget("Application", application.id);
-  const [openNcCount, unfinalizedReportCount, certificates] = await Promise.all([
+  const [openNcCount, unfinalizedReportCount, certificates, workflowSteps] = await Promise.all([
     countOpenNonConformitiesForApplication(application.id),
     countUnfinalizedReportsForApplication(application.id),
     getCertificatesForApplication(application.id),
+    getWorkflowProgressForApplication(application.id),
   ]);
 
   return (
@@ -93,8 +95,9 @@ export default async function AdminApplicationDetailPage({
         </div>
       )}
 
-      <div className="mt-8 overflow-x-auto">
-        <ApplicationTimeline stage={application.stage} />
+      <div className="mt-8 max-w-xl">
+        <h2 className="mb-4 font-sans text-sm font-semibold text-text">Workflow Progress</h2>
+        <WorkflowProgressTracker steps={workflowSteps} />
       </div>
 
       <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2">

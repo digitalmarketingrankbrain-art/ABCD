@@ -16,21 +16,43 @@ import { getApplicationsForUser, getInvoicesForUser } from "@/lib/portal/applica
 import { getCertificationSummary } from "@/lib/portal/cb-dashboard-data";
 import { getNonConformitiesForUser } from "@/lib/portal/nc-data";
 import { getAssessmentsForUser } from "@/lib/portal/cb-assessments-data";
+import { getProposalForApplication } from "@/lib/portal/assessor-team-data";
+import { getNotificationsForUserOrg } from "@/lib/portal/assessment-notification-data";
 
 export default async function ApplicantDashboardPage() {
   const session = await auth();
   const userId = session!.user.id;
-  const [apps, userInvoices, certSummary, nonConformities, assessments] = await Promise.all([
+  const [apps, userInvoices, certSummary, nonConformities, assessments, assessmentNotifications] = await Promise.all([
     getApplicationsForUser(userId),
     getInvoicesForUser(userId),
     getCertificationSummary(userId),
     getNonConformitiesForUser(userId),
     getAssessmentsForUser(userId),
+    getNotificationsForUserOrg(userId),
   ]);
   const openNcs = nonConformities.filter((n) => n.status !== "CLOSED");
   const upcomingAssessments = assessments.filter((a) => a.status === "SCHEDULED" || a.status === "IN_PROGRESS");
+  const unacknowledgedNotifications = assessmentNotifications.filter((n) => n.status !== "ACKNOWLEDGED");
+
+  const teamProposals = await Promise.all(
+    apps.map(async (a) => ({ app: a, proposal: await getProposalForApplication(a.id, userId) })),
+  );
+  const teamActionsNeeded = teamProposals.filter(
+    ({ proposal }) => proposal && (proposal.status === "DRAFT" || proposal.status === "CHANGES_REQUESTED"),
+  );
 
   const requiredActions = [
+    ...teamActionsNeeded.map(({ app, proposal }) => ({
+      text:
+        proposal!.status === "CHANGES_REQUESTED"
+          ? `${app.referenceNumber}: assessor team changes requested`
+          : `${app.referenceNumber}: propose an assessment team`,
+      href: `/cab/applicant/applications/${app.id}?tab=assessor-team`,
+    })),
+    ...unacknowledgedNotifications.map((n) => ({
+      text: `Assessment notification for ${n.applicationReference} needs your signature`,
+      href: `/cab/applicant/profile/assessments`,
+    })),
     ...apps
       .filter((a) => a.infoRequested)
       .map((a) => ({

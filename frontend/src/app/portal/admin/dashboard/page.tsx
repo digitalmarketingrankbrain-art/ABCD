@@ -1,9 +1,11 @@
 import Link from "next/link";
-import { FileClock, ClipboardCheck, ShieldAlert, Receipt, Server } from "lucide-react";
+import { FileClock, ClipboardCheck, ShieldAlert, Receipt, Server, Users, FileCheck, AlertTriangle } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { getAllApplications, getAllInvoices, STAGE_LABEL } from "@/lib/portal/applicant-data";
 import { getAllAssignments } from "@/lib/portal/assessor-data";
+import { getAllProposalsForAdmin } from "@/lib/portal/assessor-team-data";
+import { getAllNonConformitiesForAdmin } from "@/lib/portal/nc-data";
 import { VERIFICATION_RECORDS } from "@/lib/verification-records";
 import { getBackendHealth } from "@/lib/backend-client";
 
@@ -13,6 +15,8 @@ export default async function AdminDashboardPage() {
   const applications = await getAllApplications();
   const invoices = await getAllInvoices();
   const allAssignments = await getAllAssignments();
+  const teamProposals = await getAllProposalsForAdmin();
+  const nonConformities = await getAllNonConformitiesForAdmin();
   const backendHealth = await getBackendHealth();
 
   const awaitingAction = applications
@@ -30,6 +34,10 @@ export default async function AdminDashboardPage() {
   );
 
   const overdueInvoices = invoices.filter((i) => i.status === "ISSUED" && i.dueAt < today);
+
+  const pendingTeamProposals = teamProposals.filter((p) => p.status === "SUBMITTED");
+  const reportsAwaitingReview = allAssignments.filter((a) => a.reportStatus === "SUBMITTED" || a.reportStatus === "UNDER_REVIEW");
+  const ncsAwaitingReview = nonConformities.filter((n) => n.status === "RESPONSE_SUBMITTED" || n.status === "UNDER_REVIEW");
 
   return (
     <div className="px-6 py-8">
@@ -84,6 +92,41 @@ export default async function AdminDashboardPage() {
           </CardHeader>
           <CardContent>
             <p className="font-mono text-2xl text-text">{overdueInvoices.length}</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <Card>
+          <CardHeader>
+            <Users className="mb-1 size-5 text-secondary" strokeWidth={1.5} />
+            <CardTitle>Assessor team proposals pending</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="font-mono text-2xl text-text">{pendingTeamProposals.length}</p>
+            <Link href="/portal/admin/assessor-teams" className="mt-2 block text-xs text-secondary hover:underline">Review proposals →</Link>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <FileCheck className="mb-1 size-5 text-secondary" strokeWidth={1.5} />
+            <CardTitle>Assessment reports awaiting review</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="font-mono text-2xl text-text">{reportsAwaitingReview.length}</p>
+            <Link href="/portal/admin/assessments" className="mt-2 block text-xs text-secondary hover:underline">Review reports →</Link>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <AlertTriangle className="mb-1 size-5 text-secondary" strokeWidth={1.5} />
+            <CardTitle>NCs awaiting review</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="font-mono text-2xl text-text">{ncsAwaitingReview.length}</p>
+            <Link href="/portal/admin/non-conformities" className="mt-2 block text-xs text-secondary hover:underline">Review non-conformities →</Link>
           </CardContent>
         </Card>
       </div>

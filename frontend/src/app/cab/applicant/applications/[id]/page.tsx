@@ -18,6 +18,8 @@ import {
   type Application,
 } from "@/lib/portal/applicant-data";
 import { loadOrCreateTeamProposal } from "@/lib/portal/assessor-team-actions";
+import { getWorkflowProgressForApplication, type WorkflowStep } from "@/lib/portal/workflow-progress-data";
+import { WorkflowProgressTracker } from "@/components/portal/workflow-progress-tracker";
 
 const STAGE_TONE: Record<string, "success" | "warning" | "info" | "neutral"> = {
   DRAFT: "neutral",
@@ -30,9 +32,14 @@ const STAGE_TONE: Record<string, "success" | "warning" | "info" | "neutral"> = {
   DECLINED: "warning",
 };
 
-function OverviewTab({ application }: { application: Application }) {
+function OverviewTab({ application, workflowSteps }: { application: Application; workflowSteps: WorkflowStep[] }) {
   return (
     <div className="flex flex-col gap-6">
+      <div>
+        <p className="mb-3 font-sans text-sm font-semibold text-text">Workflow progress</p>
+        <WorkflowProgressTracker steps={workflowSteps} />
+      </div>
+
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         <div>
           <p className="font-sans text-xs text-text-muted">Program</p>
@@ -110,10 +117,11 @@ export default async function ApplicationDetailPage({
 
   const showAssessorTeamTab = !["DRAFT", "SUBMITTED", "INITIAL_REVIEW"].includes(application.stage);
 
-  const [messages, userInvoices, teamProposalResult] = await Promise.all([
+  const [messages, userInvoices, teamProposalResult, workflowSteps] = await Promise.all([
     getMessagesForApplication(application.id),
     getInvoicesForUser(session!.user.id),
     showAssessorTeamTab ? loadOrCreateTeamProposal(application.id) : Promise.resolve(null),
+    getWorkflowProgressForApplication(application.id),
   ]);
 
   return (
@@ -143,7 +151,7 @@ export default async function ApplicationDetailPage({
       <div className="mt-8">
         <Tabs
           items={[
-            { value: "overview", label: "Overview", content: <OverviewTab application={application} /> },
+            { value: "overview", label: "Overview", content: <OverviewTab application={application} workflowSteps={workflowSteps} /> },
             {
               value: "documents",
               label: "Documents",
@@ -168,6 +176,7 @@ export default async function ApplicationDetailPage({
               content: <ApplicationInvoicesTab invoices={userInvoices.filter((i) => i.applicationId === application.id)} />,
             },
           ]}
+          queryParam="tab"
         />
       </div>
     </div>

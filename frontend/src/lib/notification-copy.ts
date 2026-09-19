@@ -11,6 +11,10 @@ const NOTIFICATION_COPY: Record<string, { title: string; body: string }> = {
     title: "New application submitted",
     body: "A certification body has submitted a new accreditation application for review.",
   },
+  "application.approved": {
+    title: "Application approved",
+    body: "Your application has passed initial review — required forms and documents are now available.",
+  },
   "application.information_requested": {
     title: "Information requested",
     body: "A reviewer has requested more information on your application.",

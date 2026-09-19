@@ -18,6 +18,7 @@ import { addMessage, getApplicationIdByReference, getApplicationByIdAdmin } from
 import { uploadDocumentForOwner } from "./document-data";
 import { raiseNonConformityFromFinding } from "./nc-data";
 import { createNotification } from "@/lib/notifications";
+import { notifyAllAdmins } from "@/lib/notify-admins";
 import { MAX_UPLOAD_BYTES } from "@/lib/storage";
 
 async function requireAssessor() {
@@ -71,6 +72,7 @@ export async function submitReport(assignmentId: string) {
     return { ok: false as const, error: `${unanswered.length} checklist item(s) still need a finding before you can submit.` };
   }
   await submitAssignmentReport(assignmentId, user.id);
+  await notifyAllAdmins({ type: "assessment.report_submitted", relatedType: "Assignment", relatedId: assignmentId });
   revalidatePath(`/assessor/assignments/${assignmentId}`);
   revalidatePath("/assessor/assignments");
   return { ok: true as const };

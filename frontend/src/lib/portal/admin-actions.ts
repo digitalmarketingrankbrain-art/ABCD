@@ -63,6 +63,8 @@ export async function markInitialReviewComplete(applicationId: string) {
     targetType: "Application",
     targetId: applicationId,
   });
+  await createNotification({ userId: app.applicantUserId, type: "application.approved", relatedType: "Application", relatedId: applicationId, channel: "IN_APP" });
+  await createNotification({ userId: app.applicantUserId, type: "application.approved", relatedType: "Application", relatedId: applicationId, channel: "EMAIL" });
   revalidatePath(`/portal/admin/applications/${applicationId}`);
   return { ok: true as const };
 }
