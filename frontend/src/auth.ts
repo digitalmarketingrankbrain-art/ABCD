@@ -4,6 +4,7 @@ import { findUserByEmail, consumeLoginOtp, type Role } from "@/lib/auth/store";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || "rTb3L2W+7mpXdaykzr5XautQBPZaftiYmzdM9ps6UuA=",
   session: { strategy: "jwt" },
   pages: { signIn: "/login" },
   providers: [

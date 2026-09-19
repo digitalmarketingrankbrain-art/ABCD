@@ -1,80 +1,70 @@
+"use client";
+
+import React, { useState } from "react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import type { Metadata } from "next";
-import { SearchForm, type SearchMode } from "@/components/verify/search-form";
-import { ResultsList } from "@/components/verify/results-list";
-import { EmptyState } from "@/components/ui/empty-state";
-import { findByReference, searchRecords } from "@/lib/verification-records";
+import { ChevronRight, ShieldCheck, Building2, CheckCircle2 } from "lucide-react";
+import { AccreditedBodySearch } from "@/components/verification/accredited-body-search";
+import { CertifiedOrgSearch } from "@/components/verification/certified-org-search";
 
-export const metadata: Metadata = {
-  title: "Verify an Accreditation | SAAF",
-  description: "Search by accreditation number or organisation name to check a current, unambiguous status. No account required.",
-};
-
-/**
- * Status must reflect current data on every load — no long-TTL caching
- * (Phase 7/11). Data is a static placeholder today (Milestone 11 wires the
- * real database), but the page is built dynamic from the start so nothing
- * has to change structurally later.
- */
-export const dynamic = "force-dynamic";
-
-export default async function VerifyPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ q?: string; mode?: string }>;
-}) {
-  const { q, mode: rawMode } = await searchParams;
-  const mode: SearchMode = rawMode === "name" ? "name" : "number";
-  const query = q?.trim() ?? "";
-
-  // Exact number-mode match navigates straight to the detail page — Phase 7.
-  if (query && mode === "number") {
-    const exact = findByReference(query);
-    if (exact) redirect(`/verify/${exact.reference}`);
-  }
-
-  const results = query ? searchRecords(query) : [];
+export default function VerifyPage() {
+  const [activeTab, setActiveTab] = useState<"CAB" | "ORG">("CAB");
 
   return (
-    <div className="mx-auto max-w-2xl px-6 py-16">
-      <div className="text-center">
-        <h1 className="font-display text-3xl font-semibold text-text sm:text-4xl">
-          Verify an Accreditation
-        </h1>
-        <p className="mt-3 font-sans text-base text-text-muted">
-          Search by accreditation number or organisation name. No account required.
-        </p>
+    <div className="bg-slate-50/50 min-h-screen pb-16">
+      {/* Header Banner */}
+      <div className="border-b border-slate-200 bg-white py-8 sm:py-10">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 text-center">
+          <nav className="mb-3 flex items-center justify-center gap-2 text-xs text-slate-500 font-medium">
+            <Link href="/" className="hover:text-slate-800 transition-colors">Home</Link>
+            <ChevronRight className="size-3 text-slate-400" />
+            <span className="text-blue-600 font-semibold">Verify Certificate</span>
+          </nav>
+
+          <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3.5 py-1 text-xs font-semibold text-blue-700 mb-2">
+            <ShieldCheck className="size-3.5 text-blue-600" />
+            <span>Official SAAF Verification Register</span>
+          </div>
+
+          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
+            Verify Accreditation & Certificate Status
+          </h1>
+        </div>
       </div>
 
-      <div className="mt-8">
-        <SearchForm initialQuery={query} initialMode={mode} />
+      {/* Main Container */}
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+        {/* Tab Switcher */}
+        <div className="mb-8 flex flex-wrap items-center justify-center gap-2 border-b border-slate-200 pb-4">
+          <button
+            onClick={() => setActiveTab("CAB")}
+            className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs sm:text-sm font-bold transition-all ${
+              activeTab === "CAB"
+                ? "bg-[#006699] text-white shadow"
+                : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
+            }`}
+          >
+            <Building2 className="size-4" />
+            <span>Accredited Body Search</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("ORG")}
+            className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs sm:text-sm font-bold transition-all ${
+              activeTab === "ORG"
+                ? "bg-[#006699] text-white shadow"
+                : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
+            }`}
+          >
+            <CheckCircle2 className="size-4" />
+            <span>Certified Organization Search</span>
+          </button>
+        </div>
+
+        {/* Tab Panels */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-10 shadow-xs">
+          {activeTab === "CAB" ? <AccreditedBodySearch /> : <CertifiedOrgSearch />}
+        </div>
       </div>
-
-      {query && results.length > 0 && (
-        <div className="mt-10">
-          <ResultsList results={results} />
-        </div>
-      )}
-
-      {query && results.length === 0 && (
-        <div className="mt-10">
-          <EmptyState
-            title={`No accreditation records matched "${query}".`}
-            description="Check the spelling or accreditation number, or try searching by organisation name instead of number (or vice versa)."
-            action={
-              <p className="font-sans text-sm text-text-muted">
-                If you were shown this as a valid accreditation and it isn&apos;t
-                listed here, you can{" "}
-                <Link href="/report-fraud" className="text-secondary hover:underline">
-                  report it
-                </Link>
-                .
-              </p>
-            }
-          />
-        </div>
-      )}
     </div>
   );
 }
