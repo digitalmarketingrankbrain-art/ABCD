@@ -1,7 +1,9 @@
 import "dotenv/config";
-import express from "express";
+import express, { Request, Response } from "express";
 import cors from "cors";
 import { dispatch, RpcError } from "./rpc";
+
+const app = express();
 
 const rawCorsOrigin = process.env.CORS_ORIGIN || process.env.FRONTEND_URL || "*";
 const allowedOrigins = rawCorsOrigin.split(",").map((s) => s.trim());
@@ -23,7 +25,7 @@ app.use(
 // to comfortably clear the app's 25MB upload cap plus base64's ~33% overhead.
 app.use(express.json({ limit: "40mb" }));
 
-app.get("/health", (_req, res) => {
+app.get("/health", (_req: Request, res: Response) => {
   res.json({ ok: true });
 });
 
@@ -35,7 +37,7 @@ app.get("/health", (_req, res) => {
  * than a hand-written route per function. Never exposed to browsers:
  * gated by a shared secret only the frontend's own server process holds.
  */
-app.post("/rpc", async (req, res) => {
+app.post("/rpc", async (req: Request, res: Response) => {
   const key = req.headers["x-internal-key"];
   if (!process.env.INTERNAL_API_KEY || key !== process.env.INTERNAL_API_KEY) {
     return res.status(401).json({ ok: false, error: "Unauthorized" });
@@ -60,3 +62,4 @@ const PORT = process.env.PORT ? Number(process.env.PORT) : 4001;
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`backend listening on 0.0.0.0:${PORT}`);
 });
+
