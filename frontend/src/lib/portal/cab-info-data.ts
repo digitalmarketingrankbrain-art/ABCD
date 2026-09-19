@@ -22,6 +22,9 @@ export interface CabDetails {
   contactLastName: string | null;
   contactEmail: string | null;
   contactPhone: string | null;
+  dateOfEstablishment: string | null;
+  alreadyAccreditedElsewhere: boolean;
+  alreadyAccreditedDetails: string | null;
 }
 
 export interface SchemeEntry {

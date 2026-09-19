@@ -27,9 +27,13 @@ function CabBasicDetailsForm({ details }: { details: CabDetails }) {
     contactPhone: details.contactPhone ?? "",
     director: details.director ?? "",
     certificationManager: details.certificationManager ?? "",
+    registrationNumber: details.registrationNumber ?? "",
+    dateOfEstablishment: details.dateOfEstablishment ?? "",
+    alreadyAccreditedElsewhere: details.alreadyAccreditedElsewhere,
+    alreadyAccreditedDetails: details.alreadyAccreditedDetails ?? "",
   });
 
-  function set<K extends keyof typeof form>(key: K, value: string) {
+  function set<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
     setForm((f) => ({ ...f, [key]: value }));
   }
 
@@ -94,6 +98,30 @@ function CabBasicDetailsForm({ details }: { details: CabDetails }) {
       <FormField label="Certification manager" htmlFor="certManager">
         <Input id="certManager" value={form.certificationManager} onChange={(e) => set("certificationManager", e.target.value)} />
       </FormField>
+      <FormField label="License / Registration Number" htmlFor="registrationNumber">
+        <Input id="registrationNumber" value={form.registrationNumber} onChange={(e) => set("registrationNumber", e.target.value)} />
+      </FormField>
+      <FormField label="Date of Establishment" htmlFor="dateOfEstablishment">
+        <Input id="dateOfEstablishment" type="date" value={form.dateOfEstablishment} onChange={(e) => set("dateOfEstablishment", e.target.value)} />
+      </FormField>
+      <div className="sm:col-span-2">
+        <label className="flex items-center gap-2 font-sans text-sm text-text">
+          <input
+            type="checkbox"
+            checked={form.alreadyAccreditedElsewhere}
+            onChange={(e) => set("alreadyAccreditedElsewhere", e.target.checked)}
+          />
+          Already accredited by another IAF MLA accreditation body
+        </label>
+        {form.alreadyAccreditedElsewhere && (
+          <Input
+            className="mt-2"
+            placeholder="Which body, scope, and accreditation number"
+            value={form.alreadyAccreditedDetails}
+            onChange={(e) => set("alreadyAccreditedDetails", e.target.value)}
+          />
+        )}
+      </div>
 
       <div className="flex gap-3 sm:col-span-2">
         <Button onClick={handleSave} loading={saving}>

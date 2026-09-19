@@ -22,6 +22,9 @@ export interface CabDetails {
   contactLastName: string | null;
   contactEmail: string | null;
   contactPhone: string | null;
+  dateOfEstablishment: string | null;
+  alreadyAccreditedElsewhere: boolean;
+  alreadyAccreditedDetails: string | null;
 }
 
 export interface SchemeEntry {
@@ -81,6 +84,9 @@ export async function getCabDetails(userId: string): Promise<CabDetails> {
     contactLastName: org.contactLastName,
     contactEmail: org.contactEmail,
     contactPhone: org.contactPhone,
+    dateOfEstablishment: org.dateOfEstablishment ? org.dateOfEstablishment.toISOString().slice(0, 10) : null,
+    alreadyAccreditedElsewhere: org.alreadyAccreditedElsewhere,
+    alreadyAccreditedDetails: org.alreadyAccreditedDetails,
   };
 }
 
@@ -107,6 +113,10 @@ export async function updateCabBasicDetails(
       contactPhone: data.contactPhone,
       director: data.director,
       certificationManager: data.certificationManager,
+      registrationNumber: data.registrationNumber,
+      dateOfEstablishment: data.dateOfEstablishment ? new Date(data.dateOfEstablishment) : undefined,
+      alreadyAccreditedElsewhere: data.alreadyAccreditedElsewhere,
+      alreadyAccreditedDetails: data.alreadyAccreditedDetails,
     },
   });
 }

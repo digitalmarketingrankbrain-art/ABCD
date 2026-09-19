@@ -154,6 +154,11 @@ model Organisation {
   contactEmail         String? @map("contact_email")
   contactPhone         String? @map("contact_phone")
 
+  // Application-intake fields, aligned to the AB's real application form (screenshot blueprint).
+  dateOfEstablishment        DateTime? @map("date_of_establishment")
+  alreadyAccreditedElsewhere Boolean   @default(false) @map("already_accredited_elsewhere")
+  alreadyAccreditedDetails   String?   @map("already_accredited_details")
+
   memberships          OrganisationMembership[]
   applications         Application[]
   accreditationRecords AccreditationRecord[]

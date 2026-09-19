@@ -20,6 +20,7 @@ import {
 import { loadOrCreateTeamProposal } from "@/lib/portal/assessor-team-actions";
 import { getWorkflowProgressForApplication, type WorkflowStep } from "@/lib/portal/workflow-progress-data";
 import { WorkflowProgressTracker } from "@/components/portal/workflow-progress-tracker";
+import { PROGRAMS } from "@/lib/programs";
 
 const STAGE_TONE: Record<string, "success" | "warning" | "info" | "neutral"> = {
   DRAFT: "neutral",
@@ -57,6 +58,16 @@ function OverviewTab({ application, workflowSteps }: { application: Application;
           <div>
             <p className="font-sans text-xs text-text-muted">Assessor</p>
             <p className="font-sans text-sm text-text">{application.assessorName}</p>
+          </div>
+        )}
+        {application.additionalScopeSlugs.length > 0 && (
+          <div className="sm:col-span-3">
+            <p className="font-sans text-xs text-text-muted">Additional schemes applied for</p>
+            <p className="font-sans text-sm text-text">
+              {application.additionalScopeSlugs
+                .map((slug) => PROGRAMS.find((p) => p.slug === slug)?.name ?? slug)
+                .join(", ")}
+            </p>
           </div>
         )}
       </div>

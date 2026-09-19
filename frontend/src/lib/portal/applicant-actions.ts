@@ -56,11 +56,11 @@ export async function uploadApplicationDocument(applicationId: string, requiredD
   return { ok: true as const };
 }
 
-export async function startNewApplication(programSlug: string) {
+export async function startNewApplication(programSlug: string, additionalScopeSlugs: string[] = []) {
   const user = await requireApplicant();
   const program = PROGRAMS.find((p) => p.slug === programSlug);
   if (!program) return { ok: false as const, error: "Unknown program." };
-  const app = await createDraftApplication(user.id, program.slug);
+  const app = await createDraftApplication(user.id, program.slug, additionalScopeSlugs);
   revalidatePath("/cab/applicant/applications");
   return { ok: true as const, applicationId: app.id };
 }

@@ -89,6 +89,7 @@ export interface Application {
   decidedBy?: string;
   documents: RequiredDocument[];
   stageHistory: StageHistoryEntry[];
+  additionalScopeSlugs: string[];
 }
 
 export type InvoiceStatus = "DRAFT" | "ISSUED" | "PAID" | "OVERDUE" | "VOID";
@@ -145,8 +146,12 @@ export function addMessage(applicationId: string, body: string, senderUserId: st
   return rpc(MODULE, "addMessage", [applicationId, body, senderUserId]);
 }
 
-export function createDraftApplication(userId: string, programSlug: string): Promise<{ id: string }> {
-  return rpc(MODULE, "createDraftApplication", [userId, programSlug]);
+export function createDraftApplication(
+  userId: string,
+  programSlug: string,
+  additionalScopeSlugs?: string[],
+): Promise<{ id: string }> {
+  return rpc(MODULE, "createDraftApplication", [userId, programSlug, additionalScopeSlugs]);
 }
 
 export interface ScopeExtensionDraftInput {

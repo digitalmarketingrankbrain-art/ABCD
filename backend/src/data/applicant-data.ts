@@ -85,6 +85,8 @@ export interface Application {
   decidedBy?: string;
   documents: RequiredDocument[];
   stageHistory: StageHistoryEntry[];
+  /** Additional schemes applied for alongside the primary program — populated on both initial applications ("Apply for" multi-select) and Scope Extension applications. */
+  additionalScopeSlugs: string[];
 }
 
 export type InvoiceStatus = "DRAFT" | "ISSUED" | "PAID" | "OVERDUE" | "VOID";
@@ -179,6 +181,7 @@ async function mapApplication(row: ApplicationRow): Promise<Application> {
       changedAt: fmtDate(h.changedAt),
       note: h.reason ?? undefined,
     })),
+    additionalScopeSlugs: row.additionalScopeSlugs,
   };
 }
 
@@ -283,7 +286,11 @@ export async function addMessage(applicationId: string, body: string, senderUser
   await prisma.message.create({ data: { threadId: thread.id, senderUserId, body: body.trim() } });
 }
 
-export async function createDraftApplication(userId: string, programSlug: string): Promise<{ id: string }> {
+export async function createDraftApplication(
+  userId: string,
+  programSlug: string,
+  additionalScopeSlugs: string[] = [],
+): Promise<{ id: string }> {
   const program = await prisma.program.findUnique({ where: { slug: programSlug } });
   if (!program) throw new Error(`Unknown program: ${programSlug}`);
   const organisationId = await getUserOrganisationId(userId);
@@ -291,7 +298,14 @@ export async function createDraftApplication(userId: string, programSlug: string
 
   const referenceNumber = `SAAF-APP-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
   const app = await prisma.application.create({
-    data: { referenceNumber, organisationId, applicantUserId: userId, programId: program.id, stage: "DRAFT" },
+    data: {
+      referenceNumber,
+      organisationId,
+      applicantUserId: userId,
+      programId: program.id,
+      stage: "DRAFT",
+      additionalScopeSlugs: additionalScopeSlugs.filter((s) => s !== programSlug),
+    },
   });
   await prisma.applicationStageHistory.create({
     data: { applicationId: app.id, toStage: "DRAFT", changedById: userId },
