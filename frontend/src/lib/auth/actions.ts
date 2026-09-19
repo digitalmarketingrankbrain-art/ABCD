@@ -24,22 +24,30 @@ import { getClientIp } from "@/lib/request-ip";
  * same pattern as the dev-only password-reset link this replaced.
  */
 export async function requestLoginOtp(email: string, allowedRoles?: Role[]) {
-  const ip = await getClientIp();
-  const limit = checkRateLimit(`login-otp:${ip}:${email.toLowerCase()}`, 5, 15 * 60 * 1000);
-  if (!limit.allowed) {
-    return { ok: false as const, error: "Too many attempts. Wait 15 minutes and try again." };
-  }
+  try {
+    const ip = await getClientIp();
+    const limit = checkRateLimit(`login-otp:${ip}:${email.toLowerCase()}`, 5, 15 * 60 * 1000);
+    if (!limit.allowed) {
+      return { ok: false as const, error: "Too many attempts. Wait 15 minutes and try again." };
+    }
 
-  const user = await findUserByEmail(email);
-  if (!user || user.status !== "ACTIVE") {
-    return { ok: false as const, error: "No account found for that email." };
-  }
-  if (allowedRoles && !allowedRoles.includes(user.primaryRole)) {
-    return { ok: false as const, wrongPortal: true as const };
-  }
+    const user = await findUserByEmail(email);
+    if (!user || user.status !== "ACTIVE") {
+      return { ok: false as const, error: "No account found for that email." };
+    }
+    if (allowedRoles && !allowedRoles.includes(user.primaryRole)) {
+      return { ok: false as const, wrongPortal: true as const };
+    }
 
-  const code = await createLoginOtp(email);
-  return { ok: true as const, devCode: code };
+    const code = await createLoginOtp(email);
+    return { ok: true as const, devCode: code };
+  } catch (err) {
+    console.error("[requestLoginOtp Error]", err);
+    return {
+      ok: false as const,
+      error: "Unable to connect to authentication server. Please verify BACKEND_URL environment variable on Vercel.",
+    };
+  }
 }
 
 export async function registerApplicant(input: {
@@ -47,14 +55,22 @@ export async function registerApplicant(input: {
   name: string;
   organisationName: string;
 }) {
-  const ip = await getClientIp();
-  const limit = checkRateLimit(`register:${ip}`, 5, 60 * 60 * 1000);
-  if (!limit.allowed) {
-    return { ok: false as const, error: "Too many attempts. Try again later." };
+  try {
+    const ip = await getClientIp();
+    const limit = checkRateLimit(`register:${ip}`, 5, 60 * 60 * 1000);
+    if (!limit.allowed) {
+      return { ok: false as const, error: "Too many attempts. Try again later." };
+    }
+    if (await findUserByEmail(input.email)) {
+      return { ok: false as const, error: "An account with this email already exists." };
+    }
+    await createApplicantUser(input);
+    return { ok: true as const };
+  } catch (err) {
+    console.error("[registerApplicant Error]", err);
+    return {
+      ok: false as const,
+      error: "Registration failed. Unable to connect to backend database.",
+    };
   }
-  if (await findUserByEmail(input.email)) {
-    return { ok: false as const, error: "An account with this email already exists." };
-  }
-  await createApplicantUser(input);
-  return { ok: true as const };
 }

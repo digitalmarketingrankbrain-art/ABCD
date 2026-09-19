@@ -3,9 +3,21 @@ import express from "express";
 import cors from "cors";
 import { dispatch, RpcError } from "./rpc";
 
-const app = express();
-app.set("trust proxy", true);
-app.use(cors());
+const rawCorsOrigin = process.env.CORS_ORIGIN || process.env.FRONTEND_URL || "*";
+const allowedOrigins = rawCorsOrigin.split(",").map((s) => s.trim());
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow server-to-server RPC (no origin header) or matched origins / wildcard
+      if (!origin || allowedOrigins.includes("*") || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    },
+    credentials: true,
+  })
+);
 // Document uploads are sent as base64 inside the JSON body (see
 // frontend's rpc-client.ts), so the default ~100kb body limit has to grow
 // to comfortably clear the app's 25MB upload cap plus base64's ~33% overhead.
@@ -45,6 +57,6 @@ app.post("/rpc", async (req, res) => {
 });
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 4001;
-app.listen(PORT, () => {
-  console.log(`backend listening on http://localhost:${PORT}`);
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`backend listening on 0.0.0.0:${PORT}`);
 });
