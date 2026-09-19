@@ -28,7 +28,7 @@ function WhyItMatters() {
         
         {/* Left Visual Card */}
         <div className="lg:col-span-5">
-          <div className="relative min-h-[360px] overflow-hidden rounded-3xl bg-[#062863] p-8 text-white shadow-2xl saaf-gradient-hero">
+          <div className="relative min-h-[360px] overflow-hidden rounded-3xl bg-slate-900 border border-slate-800 p-8 text-white">
             <div className="pointer-events-none absolute -right-16 -top-16 opacity-40">
               <HeroMotif className="h-80 w-80" tone="dark" />
             </div>

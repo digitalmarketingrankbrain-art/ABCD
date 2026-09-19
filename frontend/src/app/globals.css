@@ -1,32 +1,32 @@
 @import "tailwindcss";
 
 :root {
-  /* SAAF Official Brand Palette derived from SAAF Oval Logo */
-  --color-primary: #0B4DA2;
-  --color-primary-hover: #083B7E;
-  --color-secondary: #1E6091;
+  /* SAAF Minimal & Refined Brand Palette */
+  --color-primary: #2563EB;
+  --color-primary-hover: #1D4ED8;
+  --color-secondary: #475569;
   --color-accent: #D97706;
   --color-accent-hover: #B45309;
 
-  --color-background: #F8FAFC;
-  --color-background-portal: #F1F5F9;
+  --color-background: #FAFAFA;
+  --color-background-portal: #F8FAFC;
   --color-surface: #FFFFFF;
 
   --color-border: #E2E8F0;
   --color-border-portal: #CBD5E1;
 
   --color-text: #0F172A;
-  --color-text-muted: #475569;
+  --color-text-muted: #64748B;
   --color-text-inverse: #FFFFFF;
 
-  --color-success-text: #15803D;
-  --color-success-surface: #DCFCE7;
-  --color-warning-text: #B45309;
-  --color-warning-surface: #FEF3C7;
-  --color-error-text: #B91C1C;
-  --color-error-surface: #FEE2E2;
+  --color-success-text: #166534;
+  --color-success-surface: #F0FDF4;
+  --color-warning-text: #9A3412;
+  --color-warning-surface: #FFF7ED;
+  --color-error-text: #991B1B;
+  --color-error-surface: #FEF2F2;
   --color-info-text: #1E40AF;
-  --color-info-surface: #DBEAFE;
+  --color-info-surface: #EFF6FF;
 
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -69,77 +69,61 @@ body {
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 
-/* Glassmorphism & Trust Card Effects */
+/* Glassmorphism & Minimal Card Effects */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(226, 232, 240, 0.8);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid #E2E8F0;
 }
 
 .glass-panel-dark {
-  background: rgba(11, 37, 69, 0.75);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(147, 197, 253, 0.2);
+  background: rgba(15, 23, 42, 0.9);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .saaf-gradient-hero {
-  background: radial-gradient(125% 125% at 50% 10%, #062863 0%, #0B4DA2 45%, #0F52BA 80%, #03112B 100%);
+  background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
 }
 
 .saaf-glow-border {
-  position: relative;
-}
-.saaf-glow-border::after {
-  content: "";
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.5), rgba(217, 119, 6, 0.5), rgba(11, 77, 162, 0.1));
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
+  border: 1px solid #E2E8F0;
 }
 
-/* Scroll-triggered entrance with fail-safe visibility */
+/* Scroll-triggered entrance */
 .reveal {
   opacity: 1;
   transform: translateY(0);
-  transition: opacity 500ms var(--ease-out), transform 500ms var(--ease-out);
+  transition: opacity 400ms var(--ease-out), transform 400ms var(--ease-out);
 }
 .reveal[data-visible="false"] {
   opacity: 0;
-  transform: translateY(12px);
+  transform: translateY(8px);
 }
 .reveal[data-visible="true"] {
   opacity: 1;
   transform: translateY(0);
 }
 
-/* CAB Premium Portal Utilities */
+/* Minimal Card Utilities */
 .glass-card {
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(226, 232, 240, 0.9);
-  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
 }
 
 .glass-card-hover {
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.2s ease-in-out;
 }
 .glass-card-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 28px -4px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(11, 77, 162, 0.06);
-  border-color: rgba(147, 197, 253, 0.7);
+  border-color: #CBD5E1;
+  box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.05);
 }
 
 .cab-gradient-hero {
-  background: linear-gradient(135deg, #0B2545 0%, #0B4DA2 50%, #134074 100%);
+  background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
   position: relative;
   overflow: hidden;
 }

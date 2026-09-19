@@ -24,7 +24,7 @@ export function SaafLogo({
   const logoSvg = (
     <svg
       viewBox="0 0 400 240"
-      className={cn(sizeClasses[size], "shrink-0 transition-transform duration-200 hover:scale-[1.02]", className)}
+      className={cn(sizeClasses[size], "shrink-0", className)}
       {...props}
     >
       <defs>
@@ -87,15 +87,15 @@ export function SaafLogo({
           <span
             className={cn(
               "font-display font-extrabold uppercase tracking-wider text-base sm:text-lg",
-              lightMode ? "text-white" : "text-[#062863]"
+              lightMode ? "text-white" : "text-blue-950"
             )}
           >
             South Asia
           </span>
           <span
             className={cn(
-              "font-sans font-extrabold uppercase tracking-wide text-[11px] sm:text-xs text-blue-900 mt-0.5",
-              lightMode ? "text-amber-300" : "text-[#0B4DA2]"
+              "font-sans font-extrabold uppercase tracking-wide text-[11px] sm:text-xs mt-0.5",
+              lightMode ? "text-amber-300" : "text-blue-700 font-bold"
             )}
           >
             Accreditation Foundation

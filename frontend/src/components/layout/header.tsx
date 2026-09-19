@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Menu, X, Search, Lock, ChevronDown, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
@@ -9,9 +10,10 @@ import { HEADER_NAV, HEADER_SIMPLE_LINKS } from "@/lib/nav";
 import { SaafLogo } from "@/components/ui/saaf-logo";
 
 /**
- * Ultra-sleek Header featuring SAAF logo emblem with slim navbar height.
+ * Ultra-sleek Header featuring active route tab indicators.
  */
 function Header() {
+  const pathname = usePathname();
   const [openMenu, setOpenMenu] = React.useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const headerRef = React.useRef<HTMLElement>(null);
@@ -43,112 +45,167 @@ function Header() {
     };
   }, [mobileOpen]);
 
+  const isVerifyActive = pathname === "/verify" || pathname.startsWith("/verify");
+  const isApplyActive = pathname === "/accreditation/apply";
+
   return (
-    <header ref={headerRef} className="sticky top-0 z-40 bg-surface shadow-sm">
-      {/* Top Utility & Trust Bar - Slimmed */}
-      <div className="bg-[#062863] text-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-1 text-[11px] font-semibold sm:px-6">
-          <div className="flex items-center gap-2 tracking-wide text-blue-100">
-            <CheckCircle2 className="size-3.5 text-amber-400" />
+    <header ref={headerRef} className="sticky top-0 z-40 bg-white">
+      {/* Top Utility & Trust Bar - Minimal & Refined */}
+      <div className="border-b border-slate-200/60 bg-slate-50/90 text-slate-600">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-1.5 text-[11px] font-medium sm:px-6">
+          <div className="flex items-center gap-2 text-slate-600">
+            <CheckCircle2 className="size-3.5 text-blue-600" />
             <span>South Asia Accreditation Foundation — Official Institutional Portal</span>
           </div>
-          <div className="hidden items-center gap-6 sm:flex">
+          <div className="hidden items-center gap-5 sm:flex">
             <Link
               href="/verify"
-              className="flex items-center gap-1.5 text-amber-300 transition-colors hover:text-white"
+              className={cn(
+                "flex items-center gap-1.5 transition-colors font-semibold",
+                isVerifyActive ? "text-blue-600 font-bold" : "text-slate-600 hover:text-slate-900"
+              )}
             >
-              <Search className="size-3" />
+              <Search className="size-3 text-slate-400" />
               <span>Public Verification Register</span>
             </Link>
-            <span className="text-blue-400/50">|</span>
+            <span className="text-slate-300">|</span>
             <Link
               href="/login"
-              className="flex items-center gap-1 text-blue-100 transition-colors hover:text-white"
+              className={cn(
+                "flex items-center gap-1 transition-colors",
+                pathname === "/login" ? "text-blue-600 font-bold" : "text-slate-600 hover:text-slate-900"
+              )}
             >
-              <Lock className="size-3" />
+              <Lock className="size-3 text-slate-400" />
               <span>Portal Sign In</span>
             </Link>
           </div>
         </div>
       </div>
 
-      {/* Main Slim Navbar (h-13 sm:h-14) */}
-      <div className="border-b border-slate-200/80 bg-white/95 backdrop-blur-md">
-        <div className="mx-auto flex h-13 sm:h-14 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
-          {/* SAAF Official Brand Logo - Reduced by 10px more */}
+      {/* Main Slim Navbar */}
+      <div className="border-b border-slate-200/70 bg-white">
+        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
+          {/* SAAF Official Brand Logo */}
           <Link href="/" className="flex items-center gap-3 shrink-0">
-            <SaafLogo variant="horizontal" size="md" className="h-[39px] sm:h-[49px] transition-transform hover:scale-105" />
+            <SaafLogo variant="horizontal" size="md" className="h-[39px] sm:h-[49px]" />
           </Link>
 
           {/* Desktop Nav */}
           <nav className="hidden items-center gap-1 lg:flex">
-            {HEADER_NAV.map((group) => (
-              <div key={group.label} className="relative">
-                <button
-                  aria-expanded={openMenu === group.label}
-                  onClick={() =>
-                    setOpenMenu(openMenu === group.label ? null : group.label)
-                  }
-                  className={cn(
-                    "flex items-center gap-1 rounded-md px-3 py-1 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-100 hover:text-blue-900",
-                    openMenu === group.label && "bg-blue-50 text-blue-900"
-                  )}
+            {HEADER_NAV.map((group) => {
+              const isGroupActive =
+                (group.href && pathname.startsWith(group.href)) ||
+                group.links.some((l) => pathname === l.href || pathname.startsWith(l.href));
+              const isOpen = openMenu === group.label;
+
+              return (
+                <div
+                  key={group.label}
+                  className="relative group"
+                  onMouseEnter={() => setOpenMenu(group.label)}
+                  onMouseLeave={() => setOpenMenu(null)}
                 >
-                  <span>{group.label}</span>
-                  <ChevronDown
+                  <button
+                    aria-expanded={isOpen}
+                    onClick={() => setOpenMenu(isOpen ? null : group.label)}
                     className={cn(
-                      "size-4 text-slate-400 transition-transform duration-200",
-                      openMenu === group.label && "rotate-180 text-blue-700"
+                      "flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors relative",
+                      isGroupActive
+                        ? "text-blue-700 bg-blue-50/90 font-bold border-b-2 border-blue-600 rounded-b-none"
+                        : "text-slate-700 hover:bg-slate-100 hover:text-slate-900",
+                      isOpen && "bg-blue-50 text-blue-900"
                     )}
-                  />
-                </button>
-                {openMenu === group.label && (
-                  <div className="absolute left-0 top-full mt-2 w-80 rounded-xl border border-slate-200 bg-white p-2.5 shadow-2xl ring-1 ring-black/5 animate-fade-up">
-                    {group.links.map((link) => (
-                      <Link
-                        key={link.href}
-                        href={link.href}
-                        onClick={() => setOpenMenu(null)}
-                        className="block rounded-lg px-3.5 py-2.5 transition-colors hover:bg-blue-50/80"
-                      >
-                        <p className="text-sm font-semibold text-slate-900">
-                          {link.label}
-                        </p>
-                        {link.description && (
-                          <p className="mt-0.5 text-xs text-slate-500">
-                            {link.description}
-                          </p>
-                        )}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
+                  >
+                    <span>{group.label}</span>
+                    <ChevronDown
+                      className={cn(
+                        "size-3.5 transition-transform duration-200",
+                        isGroupActive ? "text-blue-600" : "text-slate-400",
+                        isOpen && "rotate-180 text-blue-700"
+                      )}
+                    />
+                  </button>
+
+                  {isOpen && (
+                    <div className="absolute left-0 top-full pt-1.5 w-80 z-50">
+                      <div className="rounded-xl border border-slate-200 bg-white p-2 shadow-xl ring-1 ring-black/5 animate-fade-up">
+                        {group.links.map((link) => {
+                          const isLinkActive = pathname === link.href;
+                          return (
+                            <Link
+                              key={link.href}
+                              href={link.href}
+                              onClick={() => setOpenMenu(null)}
+                              className={cn(
+                                "block rounded-lg px-3.5 py-2 transition-colors",
+                                isLinkActive
+                                  ? "bg-blue-50 text-blue-800 font-bold border-l-2 border-blue-600 pl-3"
+                                  : "hover:bg-slate-50"
+                              )}
+                            >
+                              <div className="flex items-center justify-between">
+                                <p className={cn("text-sm font-semibold", isLinkActive ? "text-blue-900 font-bold" : "text-slate-900")}>
+                                  {link.label}
+                                </p>
+                                {isLinkActive && <span className="size-1.5 rounded-full bg-blue-600" />}
+                              </div>
+                              {link.description && (
+                                <p className="mt-0.5 text-xs text-slate-500 font-normal">
+                                  {link.description}
+                                </p>
+                              )}
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
 
             <Link
               href="/verify"
-              className="rounded-md px-3 py-1 text-sm font-bold text-blue-700 transition-colors hover:bg-blue-50"
+              className={cn(
+                "rounded-md px-3 py-1.5 text-sm font-bold transition-colors",
+                isVerifyActive
+                  ? "bg-blue-50 text-blue-700 border-b-2 border-blue-600 rounded-b-none"
+                  : "text-blue-700 hover:bg-blue-50"
+              )}
             >
               Verify Certificate
             </Link>
 
-            {HEADER_SIMPLE_LINKS.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="rounded-md px-3 py-1 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-100"
-              >
-                {link.label}
-              </Link>
-            ))}
+            {HEADER_SIMPLE_LINKS.map((link) => {
+              const isSimpleActive = pathname === link.href || pathname.startsWith(link.href);
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={cn(
+                    "rounded-md px-3 py-1.5 text-sm font-semibold transition-colors",
+                    isSimpleActive
+                      ? "text-blue-700 bg-blue-50/90 font-bold border-b-2 border-blue-600 rounded-b-none"
+                      : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+                  )}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
           </nav>
 
           {/* Action CTAs */}
           <div className="hidden items-center gap-2.5 lg:flex">
             <Link
               href="/login"
-              className="rounded-md px-3 py-1 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900"
+              className={cn(
+                "rounded-md px-3 py-1 text-sm font-semibold transition-colors",
+                pathname === "/login"
+                  ? "bg-slate-100 text-slate-900 font-bold"
+                  : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+              )}
             >
               Log In
             </Link>
@@ -156,7 +213,8 @@ function Header() {
               href="/accreditation/apply"
               className={cn(
                 buttonVariants({ variant: "primary", size: "sm" }),
-                "h-8 px-3.5 bg-[#0B4DA2] font-semibold text-white shadow-md shadow-blue-900/10 hover:bg-[#083B7E] hover:shadow-blue-900/20"
+                "h-8 px-3.5 bg-blue-600 font-semibold text-white transition-all shadow-none hover:bg-blue-700",
+                isApplyActive && "ring-2 ring-blue-600 ring-offset-2 bg-blue-700 font-bold"
               )}
             >
               Apply for Accreditation
@@ -191,51 +249,78 @@ function Header() {
             <Link
               href="/verify"
               onClick={() => setMobileOpen(false)}
-              className="mb-6 flex items-center justify-between rounded-xl bg-blue-50 px-4 py-3 text-sm font-bold text-blue-900 border border-blue-200/60"
+              className={cn(
+                "mb-6 flex items-center justify-between rounded-xl px-4 py-3 text-sm font-bold border transition-colors",
+                isVerifyActive
+                  ? "bg-blue-600 text-white border-blue-600"
+                  : "bg-blue-50 text-blue-900 border-blue-200/60"
+              )}
             >
               <span className="flex items-center gap-2">
-                <Search className="size-4 text-blue-700" />
+                <Search className="size-4" />
                 Verify an Accreditation
               </span>
               <span className="rounded bg-blue-700 px-2 py-0.5 text-[10px] text-white">LIVE</span>
             </Link>
 
-            {HEADER_NAV.map((group) => (
-              <div key={group.label} className="mb-6">
-                <p className="mb-2 font-sans text-xs font-bold uppercase tracking-wider text-slate-400">
-                  {group.label}
-                </p>
-                <div className="flex flex-col gap-2.5">
-                  {group.links.map((link) => (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      onClick={() => setMobileOpen(false)}
-                      className="block rounded-lg px-2 py-1.5 hover:bg-slate-50"
-                    >
-                      <p className="text-sm font-semibold text-slate-900">
-                        {link.label}
-                      </p>
-                      {link.description && (
-                        <p className="text-xs text-slate-500">{link.description}</p>
-                      )}
-                    </Link>
-                  ))}
+            {HEADER_NAV.map((group) => {
+              const isGroupActive =
+                (group.href && pathname.startsWith(group.href)) ||
+                group.links.some((l) => pathname === l.href || pathname.startsWith(l.href));
+              return (
+                <div key={group.label} className="mb-6">
+                  <p className={cn(
+                    "mb-2 font-sans text-xs font-bold uppercase tracking-wider",
+                    isGroupActive ? "text-blue-600 font-extrabold" : "text-slate-400"
+                  )}>
+                    {group.label} {isGroupActive && "• ACTIVE"}
+                  </p>
+                  <div className="flex flex-col gap-2.5">
+                    {group.links.map((link) => {
+                      const isLinkActive = pathname === link.href;
+                      return (
+                        <Link
+                          key={link.href}
+                          href={link.href}
+                          onClick={() => setMobileOpen(false)}
+                          className={cn(
+                            "block rounded-lg px-2.5 py-1.5 transition-colors",
+                            isLinkActive
+                              ? "bg-blue-50 text-blue-900 font-bold border-l-4 border-blue-600 pl-3"
+                              : "hover:bg-slate-50"
+                          )}
+                        >
+                          <p className="text-sm font-semibold">
+                            {link.label}
+                          </p>
+                          {link.description && (
+                            <p className="text-xs text-slate-500">{link.description}</p>
+                          )}
+                        </Link>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
 
             <div className="flex flex-col gap-3 border-t border-slate-200 pt-4">
-              {HEADER_SIMPLE_LINKS.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMobileOpen(false)}
-                  className="text-sm font-semibold text-slate-800 hover:text-blue-700"
-                >
-                  {link.label}
-                </Link>
-              ))}
+              {HEADER_SIMPLE_LINKS.map((link) => {
+                const isSimpleActive = pathname === link.href || pathname.startsWith(link.href);
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setMobileOpen(false)}
+                    className={cn(
+                      "text-sm font-semibold transition-colors",
+                      isSimpleActive ? "text-blue-600 font-bold" : "text-slate-800 hover:text-blue-700"
+                    )}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
             </div>
           </div>
 
@@ -250,7 +335,10 @@ function Header() {
             <Link
               href="/accreditation/apply"
               onClick={() => setMobileOpen(false)}
-              className={cn(buttonVariants({ variant: "primary" }), "w-full justify-center bg-[#0B4DA2] text-white")}
+              className={cn(
+                buttonVariants({ variant: "primary" }),
+                "w-full justify-center bg-blue-600 text-white hover:bg-blue-700 font-bold"
+              )}
             >
               Apply for Accreditation
             </Link>
@@ -262,3 +350,4 @@ function Header() {
 }
 
 export { Header };
+

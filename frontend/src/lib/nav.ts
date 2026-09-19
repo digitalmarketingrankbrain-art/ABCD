@@ -13,114 +13,175 @@ export interface NavGroup {
 /** Primary header nav. "Verify" is a single link, not a dropdown — Phase 5. */
 export const HEADER_NAV: NavGroup[] = [
   {
-    label: "Accreditation",
-    href: "/accreditation",
-    links: [
-      {
-        label: "How It Works",
-        href: "/accreditation/how-it-works",
-        description: "The full process, from application to decision.",
-      },
-      {
-        label: "Programs",
-        href: "/accreditation/programs",
-        description: "Scopes we accredit and their eligibility criteria.",
-      },
-      {
-        label: "Fees",
-        href: "/accreditation/fees",
-        description: "Fee structure and guidance by program.",
-      },
-    ],
-  },
-  {
     label: "About",
     href: "/about/who-we-are",
     links: [
       {
-        label: "Who We Are",
+        label: "About SAAF",
         href: "/about/who-we-are",
-        description: "What we do and how we operate independently.",
+        description: "What SAAF does, non-profit status, and operational mandate.",
       },
       {
-        label: "Governance",
-        href: "/about/governance",
-        description: "Decision-making structure and oversight.",
+        label: "About Accreditation",
+        href: "/about/accreditation",
+        description: "The benefits of accreditation for CABs, businesses & consumers.",
       },
       {
-        label: "Impartiality & Ethics",
-        href: "/about/impartiality-and-ethics",
-        description: "Conflict-of-interest policy and safeguards.",
+        label: "International Recognition",
+        href: "/about/international-recognition",
+        description: "IAF MLA, APAC MRA & Global ACI international signatory status.",
       },
     ],
   },
   {
-    label: "Resources",
-    href: "/resources",
+    label: "Accreditation",
+    href: "/accreditation",
     links: [
       {
-        label: "Policies",
-        href: "/resources/policies",
-        description: "Governing policies, versioned and dated.",
+        label: "Programs",
+        href: "/accreditation/programs",
+        description: "Overview of all SAAF accreditation schemes & scopes.",
       },
       {
-        label: "Procedures",
-        href: "/resources/procedures",
-        description: "Operational procedures for applicants and assessors.",
+        label: "Management Systems",
+        href: "/accreditation/programs/management-systems",
+        description: "ISO 9001, 14001, 45001, 27001 & 22000 certification bodies.",
       },
       {
-        label: "Forms",
-        href: "/resources/forms",
-        description: "Application documents and templates.",
+        label: "Inspection Bodies",
+        href: "/accreditation/programs/inspection-bodies",
+        description: "ISO/IEC 17020 inspection & survey authorities.",
       },
       {
-        label: "Training",
-        href: "/training",
-        description: "Courses for assessors and client organisations.",
+        label: "Personnel Certification Bodies",
+        href: "/accreditation/programs/personnel-certification",
+        description: "ISO/IEC 17024 auditor & professional certifiers.",
+      },
+      {
+        label: "Laboratories",
+        href: "/accreditation/programs/laboratories",
+        description: "ISO/IEC 17025 testing, calibration & medical labs.",
+      },
+      {
+        label: "Product Certification Bodies",
+        href: "/accreditation/programs/product-certification",
+        description: "ISO/IEC 17065 product & process certifiers.",
+      },
+      {
+        label: "Validation and Verification Bodies",
+        href: "/accreditation/programs/validation-and-verification",
+        description: "ISO/IEC 17029 GHG & project verification.",
+      },
+    ],
+  },
+  {
+    label: "Directory",
+    href: "/directory/accredited-cabs",
+    links: [
+      {
+        label: "List Of Accredited CABS",
+        href: "/directory/accredited-cabs",
+        description: "Public register of all active accredited Conformity Assessment Bodies.",
+      },
+      {
+        label: "Organizations certified by SAAF Accredited CABs",
+        href: "/directory/certified-organizations",
+        description: "Search certified client organizations and scope validations.",
+      },
+      {
+        label: "False Claims Of Accreditation",
+        href: "/directory/false-claims",
+        description: "Public warnings and notices of unauthorized logo usage or false claims.",
+      },
+    ],
+  },
+  {
+    label: "Publications",
+    href: "/publications/documents",
+    links: [
+      {
+        label: "SAAF Documents",
+        href: "/publications/documents",
+        description: "Official accreditation criteria, requirements, and compliance standards.",
+      },
+      {
+        label: "SAAF Manual And Procedures",
+        href: "/publications/manual-and-procedures",
+        description: "Standard operating procedures and quality management manuals.",
+      },
+      {
+        label: "General Information",
+        href: "/publications/general-information",
+        description: "Overview of publication rules, rights, and document access.",
+      },
+      {
+        label: "Impartiality Policy",
+        href: "/publications/impartiality-policy",
+        description: "Ethics framework, independence policy, and safeguards.",
+      },
+      {
+        label: "Documents For Stakeholder's Comments",
+        href: "/publications/stakeholder-comments",
+        description: "Draft policies and proposals open for public stakeholder feedback.",
+      },
+      {
+        label: "Notice Of Change(s)",
+        href: "/publications/notice-of-changes",
+        description: "Official change notices, standard updates, and transition periods.",
       },
     ],
   },
 ];
 
 export const HEADER_SIMPLE_LINKS: NavLink[] = [
-  { label: "News", href: "/news" },
   { label: "Contact", href: "/contact" },
 ];
 
 export const FOOTER_GROUPS: NavGroup[] = [
   {
-    label: "Accreditation",
-    links: [
-      { label: "How It Works", href: "/accreditation/how-it-works" },
-      { label: "Programs", href: "/accreditation/programs" },
-      { label: "Fees", href: "/accreditation/fees" },
-      { label: "Verify an Accreditation", href: "/verify" },
-    ],
-  },
-  {
     label: "About",
     links: [
-      { label: "Who We Are", href: "/about/who-we-are" },
-      { label: "Governance", href: "/about/governance" },
-      { label: "Impartiality & Ethics", href: "/about/impartiality-and-ethics" },
-      { label: "Become an Assessor", href: "/assessors/become-an-assessor" },
+      { label: "About SAAF", href: "/about/who-we-are" },
+      { label: "About Accreditation", href: "/about/accreditation" },
+      { label: "International Recognition", href: "/about/international-recognition" },
+      { label: "Impartiality Policy", href: "/publications/impartiality-policy" },
     ],
   },
   {
-    label: "Resources",
+    label: "Accreditation",
     links: [
-      { label: "Policies", href: "/resources/policies" },
-      { label: "Procedures", href: "/resources/procedures" },
-      { label: "Forms", href: "/resources/forms" },
-      { label: "Training", href: "/training" },
-      { label: "News & Notices", href: "/news" },
+      { label: "Management Systems", href: "/accreditation/programs/management-systems" },
+      { label: "Inspection Bodies", href: "/accreditation/programs/inspection-bodies" },
+      { label: "Personnel Certification", href: "/accreditation/programs/personnel-certification" },
+      { label: "Laboratories (17025)", href: "/accreditation/programs/laboratories" },
+      { label: "Product Certification", href: "/accreditation/programs/product-certification" },
+      { label: "Validation & Verification", href: "/accreditation/programs/validation-and-verification" },
+    ],
+  },
+  {
+    label: "Directory",
+    links: [
+      { label: "Accredited CABs", href: "/directory/accredited-cabs" },
+      { label: "Certified Organizations", href: "/directory/certified-organizations" },
+      { label: "False Claims Warnings", href: "/directory/false-claims" },
+      { label: "Verify Certificate", href: "/verify" },
+    ],
+  },
+  {
+    label: "Publications",
+    links: [
+      { label: "SAAF Documents", href: "/publications/documents" },
+      { label: "Manual & Procedures", href: "/publications/manual-and-procedures" },
+      { label: "General Information", href: "/publications/general-information" },
+      { label: "Stakeholder Comments", href: "/publications/stakeholder-comments" },
+      { label: "Notice Of Change(s)", href: "/publications/notice-of-changes" },
     ],
   },
   {
     label: "Trust & Legal",
     links: [
       { label: "Complaints & Appeals", href: "/complaints-and-appeals" },
-      { label: "Report Fraud / Impersonation", href: "/report-fraud" },
+      { label: "Report Fraud", href: "/report-fraud" },
       { label: "Privacy Policy", href: "/legal/privacy-policy" },
       { label: "Terms of Use", href: "/legal/terms-of-use" },
       { label: "Accessibility Statement", href: "/legal/accessibility-statement" },
@@ -131,6 +192,8 @@ export const FOOTER_GROUPS: NavGroup[] = [
     links: [
       { label: "Contact Us", href: "/contact" },
       { label: "FAQs", href: "/faqs" },
+      { label: "Apply for Accreditation", href: "/accreditation/apply" },
     ],
   },
 ];
+

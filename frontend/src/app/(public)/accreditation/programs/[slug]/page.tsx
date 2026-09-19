@@ -1,9 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { PageHeader } from "@/components/layout/page-header";
-import { cn } from "@/lib/utils";
-import { buttonVariants } from "@/components/ui/button";
+import { ChevronRight, ShieldCheck, FileCheck2, ArrowRight, Award, CheckCircle2, Download } from "lucide-react";
 import { PROGRAMS } from "@/lib/programs";
 
 export function generateStaticParams() {
@@ -24,15 +22,6 @@ export async function generateMetadata({
   };
 }
 
-const SECTIONS = [
-  { id: "overview", label: "Overview" },
-  { id: "eligibility", label: "Eligibility" },
-  { id: "criteria", label: "Criteria" },
-  { id: "process", label: "Process" },
-  { id: "fees", label: "Fees" },
-  { id: "documents", label: "Documents" },
-];
-
 export default async function ProgramDetailPage({
   params,
 }: {
@@ -43,88 +32,118 @@ export default async function ProgramDetailPage({
   if (!program) notFound();
 
   return (
-    <>
-      <PageHeader
-        breadcrumbs={[
-          { label: "Accreditation", href: "/accreditation" },
-          { label: "Programs", href: "/accreditation/programs" },
-          { label: program.name },
-        ]}
-        title={program.name}
-        description={program.scopeDescription}
-      >
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Link href="/accreditation/apply" className={cn(buttonVariants({ variant: "primary" }))}>
-            Apply for this program
-          </Link>
-          <Link href="/resources/forms" className={cn(buttonVariants({ variant: "secondary" }))}>
-            Download program guide
-          </Link>
-        </div>
-      </PageHeader>
+    <div className="bg-slate-50/50 min-h-screen pb-16">
+      {/* Header Banner */}
+      <div className="border-b border-slate-200 bg-white py-8 sm:py-12">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6">
+          <nav className="mb-4 flex items-center gap-2 text-xs text-slate-500 font-medium">
+            <Link href="/" className="hover:text-slate-800 transition-colors">Home</Link>
+            <ChevronRight className="size-3 text-slate-400" />
+            <Link href="/accreditation" className="hover:text-slate-800 transition-colors">Accreditation</Link>
+            <ChevronRight className="size-3 text-slate-400" />
+            <span className="text-blue-600 font-semibold">{program.name}</span>
+          </nav>
 
-      <div className="mx-auto grid max-w-5xl grid-cols-1 gap-10 px-6 py-12 lg:grid-cols-[200px_1fr]">
-        <nav className="hidden lg:block">
-          <ul className="sticky top-24 flex flex-col gap-1 border-l border-border pl-4">
-            {SECTIONS.map((s) => (
-              <li key={s.id}>
-                <a href={`#${s.id}`} className="block py-1 font-sans text-sm text-text-muted hover:text-secondary">
-                  {s.label}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
-
-        <div className="flex flex-col gap-10">
-          <section id="overview" className="scroll-mt-24">
-            <h2 className="font-sans text-lg font-semibold text-text">Overview</h2>
-            <p className="mt-2 font-sans text-base text-text-muted">{program.scopeDescription}</p>
-          </section>
-          <section id="eligibility" className="scroll-mt-24">
-            <h2 className="font-sans text-lg font-semibold text-text">Eligibility</h2>
-            <p className="mt-2 font-sans text-base text-text-muted">
-              Detailed eligibility criteria for this program will be published here once finalized. In
-              the meantime, please{" "}
-              <Link href="/contact" className="text-secondary hover:underline">
-                contact us
-              </Link>{" "}
-              with any questions about whether your organisation qualifies.
-            </p>
-          </section>
-          <section id="criteria" className="scroll-mt-24">
-            <h2 className="font-sans text-lg font-semibold text-text">Standard / Criteria Referenced</h2>
-            <p className="mt-2 font-sans text-base text-text-muted">{program.standardReference}</p>
-          </section>
-          <section id="process" className="scroll-mt-24">
-            <h2 className="font-sans text-lg font-semibold text-text">Process &amp; Timeline</h2>
-            <p className="mt-2 font-sans text-base text-text-muted">
-              This program follows the standard accreditation process.{" "}
-              <Link href="/accreditation/how-it-works" className="text-secondary hover:underline">
-                Read the full process
-              </Link>
-              .
-            </p>
-          </section>
-          <section id="fees" className="scroll-mt-24">
-            <h2 className="font-sans text-lg font-semibold text-text">Fees</h2>
-            <p className="mt-2 font-sans text-base text-text-muted">
-              See{" "}
-              <Link href="/accreditation/fees" className="text-secondary hover:underline">
-                Fee guidance
-              </Link>{" "}
-              for this program&apos;s fee structure.
-            </p>
-          </section>
-          <section id="documents" className="scroll-mt-24">
-            <h2 className="font-sans text-lg font-semibold text-text">Required Documents</h2>
-            <p className="mt-2 font-sans text-base text-text-muted">
-              The full required-document checklist for this program is confirmed once you start an
-              application. A summary will be published here once finalized.
-            </p>
-          </section>
+          <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 mb-2">
+            <ShieldCheck className="size-3.5 text-blue-600" />
+            <span>SAAF Official Accreditation Scheme</span>
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+            {program.name}
+          </h1>
+          <div className="mt-2 font-mono text-xs font-bold text-blue-700 bg-blue-50 px-3 py-1 rounded-md inline-block border border-blue-200">
+            Standard Reference: {program.standardReference}
+          </div>
         </div>
       </div>
-    </>
+
+      {/* Main Content Area */}
+      <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-10 shadow-sm space-y-8 text-slate-700 leading-relaxed text-sm sm:text-base">
+          {/* Main Overview Paragraphs */}
+          <div className="space-y-4">
+            <p className="font-medium text-slate-800">
+              {program.details?.overview || program.scopeDescription}
+            </p>
+
+            {program.details?.fullDescription && (
+              <div className="space-y-4 pt-2 whitespace-pre-line text-slate-600 text-sm">
+                {program.details.fullDescription}
+              </div>
+            )}
+          </div>
+
+          {/* Sub-Heading & Inspection Scopes List (If Inspection Bodies) */}
+          {program.details?.subHeading && (
+            <div className="pt-6 border-t border-slate-100 space-y-4">
+              <h2 className="text-xl font-bold text-slate-900">
+                {program.details.subHeading}
+              </h2>
+              {program.details.inspectionScopes && (
+                <div className="space-y-2 pt-1">
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                    Types of Inspection, Surveys and Risk Assessments Covered:
+                  </p>
+                  <ul className="grid sm:grid-cols-2 gap-2 text-xs font-medium text-slate-700">
+                    {program.details.inspectionScopes.map((scope, idx) => (
+                      <li key={idx} className="flex items-start gap-2 p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                        <CheckCircle2 className="size-4 text-blue-600 shrink-0 mt-0.5" />
+                        <span>{scope}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Sub-Cards for Validation and Verification Bodies */}
+          {program.details?.subCards && (
+            <div className="pt-6 border-t border-slate-100 space-y-4">
+              <h2 className="text-lg font-bold text-slate-900">
+                Validation & Verification Sub-Program Schemes
+              </h2>
+              <div className="grid sm:grid-cols-3 gap-4">
+                {program.details.subCards.map((card) => (
+                  <div key={card.title} className="flex flex-col justify-between rounded-xl border border-slate-200 bg-slate-50/50 p-5 shadow-sm">
+                    <div>
+                      <h3 className="font-bold text-slate-900 text-sm mb-2">{card.title}</h3>
+                      <p className="text-xs text-slate-600 leading-relaxed">{card.desc}</p>
+                    </div>
+                    <div className="mt-4 pt-3 border-t border-slate-200/80">
+                      <Link
+                        href={card.href}
+                        className="inline-flex items-center gap-1 text-xs font-bold text-blue-700 hover:text-blue-800"
+                      >
+                        <span>Explore &gt;&gt;</span>
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Application Request Callout Box - Matching all reference images */}
+          <div className="pt-6 border-t border-slate-200">
+            <div className="rounded-xl border border-blue-200 bg-blue-50/70 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <p className="font-bold text-slate-900 text-sm">Documents for Accreditation & Application Request</p>
+                <p className="text-xs text-slate-600 mt-0.5">
+                  Conformity Assessment Bodies interested in applying for the Accreditation Scheme can request the application form online.
+                </p>
+              </div>
+
+              <Link
+                href="/accreditation/apply"
+                className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow hover:bg-blue-700 transition-colors shrink-0"
+              >
+                <span>Application Request &gt;&gt;</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ChevronDown, ShieldCheck, Globe, Award, CheckCircle2 } from "lucide-react";
+import { ChevronDown, ShieldCheck, Award, Globe2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FOOTER_GROUPS } from "@/lib/nav";
 import { SaafLogo } from "@/components/ui/saaf-logo";
@@ -14,70 +14,42 @@ function Footer() {
   const [openGroup, setOpenGroup] = React.useState<string | null>(null);
 
   return (
-    <footer className="border-t-4 border-amber-500 bg-[#062863] text-white">
-      {/* Top Banner inside Footer */}
-      <div className="border-b border-white/10 bg-[#03112B]/70 py-6">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-6 sm:flex-row">
-          <div className="flex items-center gap-3">
-            <Globe className="size-5 text-blue-300" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-blue-100">
-              South Asia Regional Accreditation Oversight & Integrity Network
-            </span>
-          </div>
-          <div className="flex items-center gap-4 text-xs font-medium text-blue-200">
-            <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="size-3.5 text-emerald-400" /> ISO/IEC 17011 Standards
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Award className="size-3.5 text-amber-400" /> Peer-Evaluated Rigor
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <div className="mx-auto max-w-7xl px-6 py-14">
-        <div className="mb-12 grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12">
+    <footer className="border-t border-slate-200 bg-slate-50/60 text-slate-700">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
           {/* Brand Column */}
-          <div className="lg:col-span-4">
-            <div className="mb-4">
-              <SaafLogo variant="horizontal" size="lg" lightMode={true} />
+          <div className="lg:col-span-3 flex flex-col justify-between">
+            <div>
+              <div className="mb-3">
+                <SaafLogo variant="horizontal" size="md" className="h-10" lightMode={false} />
+              </div>
+              <p className="text-xs leading-relaxed text-slate-600 font-medium">
+                South Asia Accreditation Foundation (SAAF) is an independent, non-profit accreditation body operating in full compliance with ISO/IEC 17011 standards across South Asia.
+              </p>
             </div>
-            <p className="max-w-sm text-sm leading-relaxed text-blue-100/80">
-              South Asia Accreditation Foundation (SAAF) is an independent, international
-              accreditation foundation. We evaluate, accredit, and continuously monitor testing laboratories,
-              inspection bodies, and certification authorities across South Asia.
-            </p>
 
-            <div className="mt-6 flex items-center gap-3">
-              <Link
-                href="/verify"
-                className="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-xs font-bold text-slate-950 transition-all hover:bg-amber-400 hover:shadow-lg"
-              >
-                <ShieldCheck className="size-4" />
-                Verify Certificate
-              </Link>
-              <Link
-                href="/about/who-we-are"
-                className="inline-flex items-center gap-2 rounded-lg border border-white/20 bg-white/5 px-4 py-2 text-xs font-semibold text-white hover:bg-white/10"
-              >
-                About SAAF
-              </Link>
+            {/* ISO Standard Compliance Badge */}
+            <div className="mt-4 flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-2.5 shadow-2xs">
+              <Award className="size-4 shrink-0 text-blue-600" />
+              <span className="text-[11px] font-semibold text-slate-700 leading-tight">
+                Operating as per ISO/IEC 17011 International Standards
+              </span>
             </div>
           </div>
 
-          {/* Links Columns */}
-          <div className="hidden grid-cols-4 gap-8 lg:col-span-8 sm:grid">
+          {/* Links Columns Grid */}
+          <div className="hidden grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 lg:col-span-9 sm:grid">
             {FOOTER_GROUPS.map((group) => (
-              <div key={group.label}>
-                <p className="mb-4 font-sans text-xs font-bold uppercase tracking-wider text-amber-400">
+              <div key={group.label} className="flex flex-col">
+                <p className="mb-3 text-[11px] font-extrabold uppercase tracking-wider text-slate-900 border-b border-slate-200 pb-1.5">
                   {group.label}
                 </p>
-                <ul className="flex flex-col gap-2.5">
+                <ul className="flex flex-col gap-2">
                   {group.links.map((link) => (
-                    <li key={link.href}>
+                    <li key={link.href + link.label}>
                       <Link
                         href={link.href}
-                        className="text-sm text-blue-100/75 transition-colors hover:text-white hover:underline"
+                        className="text-[12px] font-medium text-slate-600 transition-colors hover:text-blue-600 leading-tight block"
                       >
                         {link.label}
                       </Link>
@@ -89,7 +61,7 @@ function Footer() {
           </div>
 
           {/* Mobile Accordion */}
-          <div className="flex flex-col divide-y divide-white/10 border-y border-white/10 lg:hidden">
+          <div className="flex flex-col divide-y divide-slate-200 border-y border-slate-200 lg:hidden">
             {FOOTER_GROUPS.map((group) => {
               const isOpen = openGroup === group.label;
               return (
@@ -97,20 +69,20 @@ function Footer() {
                   <button
                     aria-expanded={isOpen}
                     onClick={() => setOpenGroup(isOpen ? null : group.label)}
-                    className="flex w-full items-center justify-between py-3.5 text-sm font-semibold text-white"
+                    className="flex w-full items-center justify-between py-2.5 text-xs font-bold text-slate-900"
                   >
-                    <span className="text-amber-300">{group.label}</span>
+                    <span>{group.label}</span>
                     <ChevronDown
-                      className={cn("size-4 text-blue-300 transition-transform", isOpen && "rotate-180")}
+                      className={cn("size-3.5 text-slate-500 transition-transform", isOpen && "rotate-180")}
                     />
                   </button>
                   {isOpen && (
-                    <ul className="flex flex-col gap-2.5 pb-4 pl-2">
+                    <ul className="flex flex-col gap-1.5 pb-3 pl-2">
                       {group.links.map((link) => (
-                        <li key={link.href}>
+                        <li key={link.href + link.label}>
                           <Link
                             href={link.href}
-                            className="text-sm text-blue-100/80 hover:text-white"
+                            className="text-xs text-slate-600 hover:text-blue-600"
                           >
                             {link.label}
                           </Link>
@@ -124,17 +96,19 @@ function Footer() {
           </div>
         </div>
 
-        {/* Legal & Copyright */}
-        <div className="flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 text-xs text-blue-200/60 sm:flex-row">
-          <p>© {new Date().getFullYear()} South Asia Accreditation Foundation (SAAF). All Rights Reserved.</p>
-          <div className="flex flex-wrap gap-4">
-            <Link href="/legal/privacy-policy" className="hover:text-white">Privacy Policy</Link>
-            <span>•</span>
-            <Link href="/legal/terms-of-use" className="hover:text-white">Terms of Use</Link>
-            <span>•</span>
-            <Link href="/complaints-and-appeals" className="hover:text-white">Complaints & Appeals</Link>
-            <span>•</span>
-            <Link href="/report-fraud" className="hover:text-white">Report Fraud</Link>
+        {/* Legal & Copyright Bar */}
+        <div className="mt-8 flex flex-col items-center justify-between gap-3 border-t border-slate-200 pt-5 text-[11px] text-slate-500 sm:flex-row">
+          <p className="font-medium">
+            © {new Date().getFullYear()} South Asia Accreditation Foundation (SAAF). All Rights Reserved.
+          </p>
+          <div className="flex flex-wrap items-center gap-3 font-medium">
+            <Link href="/legal/privacy-policy" className="hover:text-blue-600 transition-colors">Privacy Policy</Link>
+            <span className="text-slate-300">•</span>
+            <Link href="/legal/terms-of-use" className="hover:text-blue-600 transition-colors">Terms of Use</Link>
+            <span className="text-slate-300">•</span>
+            <Link href="/complaints-and-appeals" className="hover:text-blue-600 transition-colors">Complaints & Appeals</Link>
+            <span className="text-slate-300">•</span>
+            <Link href="/report-fraud" className="hover:text-blue-600 transition-colors">Report Fraud</Link>
           </div>
         </div>
       </div>
@@ -143,3 +117,4 @@ function Footer() {
 }
 
 export { Footer };
+
