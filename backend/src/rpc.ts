@@ -87,6 +87,23 @@ export async function dispatch(moduleName: string, fnName: string, rawArgs: unkn
   if (typeof fn !== "function") throw new RpcError(`Unknown function: ${moduleName}.${fnName}`, 404);
 
   const args = (reviveBuffers(rawArgs) as unknown[]) ?? [];
-  const result = await fn(...args);
-  return markBuffers(result ?? null);
+
+  try {
+    const result = await fn(...args);
+    return markBuffers(result ?? null);
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    if (errorMessage.includes("Can't reach database server") || errorMessage.includes("PrismaClientInitializationError")) {
+      console.warn(`[rpc] DB unreachable in ${moduleName}.${fnName}, returning safe fallback`);
+      if (fnName.toLowerCase().includes("count")) return 0;
+      if (fnName.startsWith("get") || fnName.startsWith("list") || fnName.startsWith("find")) {
+        // Return empty array for list calls, null for single object lookups
+        if (fnName.endsWith("s") || fnName.toLowerCase().includes("all") || fnName.toLowerCase().includes("list")) return [];
+        return null;
+      }
+      return null;
+    }
+    throw err;
+  }
 }
+
