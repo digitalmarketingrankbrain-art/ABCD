@@ -2,7 +2,8 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Search, FileText, Download, Calendar, ShieldCheck, ChevronRight, AlertCircle, Sparkles } from "lucide-react";
+import { Search, FileText, Download, Calendar, ShieldCheck, ChevronRight, AlertCircle } from "lucide-react";
+
 import { type PublicationItem, PUBLICATIONS_DATA } from "@/lib/publications";
 
 interface PublicationListViewProps {

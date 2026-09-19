@@ -259,12 +259,13 @@ const SCHEME_CONFIGS: Record<
 export default function SchemeCardImage({ slug, title, image }: SchemeImageProps) {
   const [imgError, setImgError] = React.useState(false);
 
-  const config = SCHEME_CONFIGS[slug] || SCHEME_CONFIGS.iso9001;
+  const config = (SCHEME_CONFIGS[slug] ?? SCHEME_CONFIGS.iso9001)!;
   const Icon = config.icon;
 
   if (image && !imgError) {
     return (
       <div className="relative h-44 w-full overflow-hidden bg-slate-900 group">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={image}
           alt={title}

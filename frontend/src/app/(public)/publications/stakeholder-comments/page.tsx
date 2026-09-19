@@ -22,7 +22,7 @@ export default function StakeholderCommentsPage() {
               Publications
             </Link>
             <ChevronRight className="size-3 text-slate-400" />
-            <span className="text-blue-600 font-semibold">Documents For Stakeholders' Comments</span>
+            <span className="text-blue-600 font-semibold">Documents For Stakeholders&apos; Comments</span>
           </nav>
 
           <div className="inline-flex items-center gap-2 rounded-full border border-blue-200/80 bg-blue-50/60 px-3 py-1 text-xs font-semibold text-blue-700 mb-2">
@@ -30,7 +30,7 @@ export default function StakeholderCommentsPage() {
             <span>Official SAAF Public Consultation</span>
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-            Documents For Stakeholders' Comments
+            Documents For Stakeholders&apos; Comments
           </h1>
         </div>
       </div>
@@ -43,7 +43,7 @@ export default function StakeholderCommentsPage() {
           </div>
           <h2 className="text-xl font-bold text-slate-900">Notice</h2>
           <p className="mt-3 text-base text-slate-600 max-w-xl mx-auto leading-relaxed">
-            At the moment, there is no document for which the stakeholders' comments are to be requested.
+            At the moment, there is no document for which the stakeholders&apos; comments are to be requested.
           </p>
 
           <div className="mt-8 pt-6 border-t border-slate-100 flex justify-center gap-4 text-xs font-semibold text-slate-500">

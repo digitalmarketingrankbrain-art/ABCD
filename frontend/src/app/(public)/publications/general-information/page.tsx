@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ChevronRight, ShieldCheck, Info, Award, Workflow, FileCheck, DollarSign, Image, Scale, MessageSquare, CheckCircle2, Download, ExternalLink, Mail, MapPin } from "lucide-react";
+import { ChevronRight, ShieldCheck, Info, Award, Workflow, FileCheck, DollarSign, Image as ImageIcon, Scale, MessageSquare, CheckCircle2, Download, Mail, MapPin } from "lucide-react";
 
 export default function GeneralInformationPage() {
   const [activeTab, setActiveTab] = React.useState("information");
@@ -50,7 +50,7 @@ export default function GeneralInformationPage() {
                   { id: "process", title: "Accreditation Process", icon: Workflow },
                   { id: "requirements", title: "Accreditation Requirements", icon: FileCheck },
                   { id: "fee", title: "Accreditation Fee", icon: DollarSign },
-                  { id: "symbol", title: "Use Of Accreditation Symbol", icon: Image },
+                  { id: "symbol", title: "Use Of Accreditation Symbol", icon: ImageIcon },
                   { id: "rights-obligations", title: "Rights And Obligations Of CABs", icon: Scale },
                   { id: "complaints-appeals", title: "Complaints, Appeals And Feedback", icon: MessageSquare },
                 ].map((item) => {
@@ -453,7 +453,7 @@ export default function GeneralInformationPage() {
               {activeTab === "symbol" && (
                 <div className="space-y-6 text-sm text-slate-700 leading-relaxed">
                   <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
-                    <Image className="size-6 text-blue-600" />
+                    <ImageIcon className="size-6 text-blue-600" />
                     <h2 className="text-xl font-bold text-slate-900">Use Of Accreditation Symbol</h2>
                   </div>
 
@@ -464,7 +464,7 @@ export default function GeneralInformationPage() {
                   <div className="rounded-xl border border-slate-200 bg-slate-50 p-5 space-y-3 text-xs sm:text-sm">
                     <h3 className="font-bold text-slate-900">Key Mark Rules & Guidelines:</h3>
                     <ul className="list-disc list-inside space-y-1 text-slate-600">
-                      <li>Symbol must always be displayed alongside CAB's own accreditation certificate number.</li>
+                      <li>Symbol must always be displayed alongside CAB&apos;s own accreditation certificate number.</li>
                       <li>Cannot be used on product packaging or directly on products in a way that implies product certification.</li>
                       <li>Must maintain correct aspect ratio and approved SAAF color specifications.</li>
                       <li>Must be immediately discontinued upon suspension or withdrawal of accreditation.</li>

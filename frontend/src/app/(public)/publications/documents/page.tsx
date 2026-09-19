@@ -2,7 +2,8 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ChevronRight, ShieldCheck, Download, FileText, Filter } from "lucide-react";
+import { ChevronRight, ShieldCheck, Download, Filter } from "lucide-react";
+
 
 const SAAF_DOCUMENT_CATEGORIES = [
   "All Categories",

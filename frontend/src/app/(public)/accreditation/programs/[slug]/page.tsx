@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { ChevronRight, ShieldCheck, FileCheck2, ArrowRight, Award, CheckCircle2, Download } from "lucide-react";
+import { ChevronRight, ShieldCheck, CheckCircle2 } from "lucide-react";
 import { PROGRAMS } from "@/lib/programs";
+
 
 export function generateStaticParams() {
   return PROGRAMS.map((program) => ({ slug: program.slug }));

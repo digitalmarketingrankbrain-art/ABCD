@@ -6,12 +6,10 @@ import {
   User,
   Building2,
   Mail,
-  Phone,
   MapPin,
   Globe,
   FileText,
   CheckCircle2,
-  Send,
   Printer,
   Upload,
   Calendar,
@@ -110,10 +108,11 @@ export function ApplicationRequestForm() {
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
+    const file = e.target.files?.[0];
+    if (file) {
       setFormData((prev) => ({
         ...prev,
-        licenseFileName: e.target.files![0].name,
+        licenseFileName: file.name,
       }));
     }
   };
@@ -255,7 +254,7 @@ export function ApplicationRequestForm() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-6">
+    <div className="mx-auto max-w-4xl px-4 py-6" suppressHydrationWarning>
       <form onSubmit={handleSubmit} className="space-y-6">
         
         {/* SECTION 1: Personal Info* */}
@@ -699,7 +698,7 @@ export function ApplicationRequestForm() {
             type="submit"
             disabled={isSubmitting}
             className={cn(
-              buttonVariants({ variant: "primary", size: "default" }),
+              buttonVariants({ variant: "primary", size: "md" }),
               "h-11 px-8 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all shadow-none"
             )}
           >

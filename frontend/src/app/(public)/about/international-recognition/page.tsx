@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import Link from "next/link";
-import { ChevronRight, ShieldCheck, CheckCircle2, Award, Globe, ExternalLink } from "lucide-react";
+import { ChevronRight, ShieldCheck, CheckCircle2, Award, Globe } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "International Recognition | SAAF",
@@ -99,7 +99,7 @@ export default function InternationalRecognitionPage() {
           </p>
 
           <p className="text-xs text-slate-500 leading-relaxed pt-2">
-            The Asia Pacific Accreditation Cooperation (APAC) was established on 1 January 2019 by the amalgamation of APLAC and PAC. APAC's primary role is to manage and expand a mutual recognition arrangement (MRA) among accreditation bodies in the Asia Pacific region. Conformity assessment results produced by SAAF-accredited bodies are accepted by all APAC MRA signatories globally.
+            The Asia Pacific Accreditation Cooperation (APAC) was established on 1 January 2019 by the amalgamation of APLAC and PAC. APAC&apos;s primary role is to manage and expand a mutual recognition arrangement (MRA) among accreditation bodies in the Asia Pacific region. Conformity assessment results produced by SAAF-accredited bodies are accepted by all APAC MRA signatories globally.
           </p>
         </div>
 
@@ -120,3 +120,4 @@ export default function InternationalRecognitionPage() {
     </div>
   );
 }
+

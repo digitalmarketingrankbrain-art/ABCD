@@ -2,7 +2,8 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ChevronDown, ShieldCheck, Award, Globe2 } from "lucide-react";
+import { ChevronDown, Award } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 import { FOOTER_GROUPS } from "@/lib/nav";
 import { SaafLogo } from "@/components/ui/saaf-logo";
@@ -98,7 +99,7 @@ function Footer() {
 
         {/* Legal & Copyright Bar */}
         <div className="mt-8 flex flex-col items-center justify-between gap-3 border-t border-slate-200 pt-5 text-[11px] text-slate-500 sm:flex-row">
-          <p className="font-medium">
+          <p className="font-medium" suppressHydrationWarning>
             © {new Date().getFullYear()} South Asia Accreditation Foundation (SAAF). All Rights Reserved.
           </p>
           <div className="flex flex-wrap items-center gap-3 font-medium">

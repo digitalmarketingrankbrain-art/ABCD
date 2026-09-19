@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import Link from "next/link";
-import { ChevronRight, ShieldCheck, CheckCircle2, Award, ExternalLink } from "lucide-react";
+import { ChevronRight, ShieldCheck, CheckCircle2, Award } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "About Accreditation | SAAF",
@@ -35,11 +35,11 @@ export default function AboutAccreditationPage() {
       <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
         <div className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-10 shadow-sm space-y-6 text-slate-700 leading-relaxed text-sm sm:text-base">
           <p>
-            Accreditation helps CABs deliver services with confidence. Accreditation demonstrates a CAB's competence to succeed and accomplish activities defined by its specific program scope of accreditation. CABs are able to obtain independent, third-party, credible outputs for themselves and for their customers.
+            Accreditation helps CABs deliver services with confidence. Accreditation demonstrates a CAB&apos;s competence to succeed and accomplish activities defined by its specific program scope of accreditation. CABs are able to obtain independent, third-party, credible outputs for themselves and for their customers.
           </p>
 
           <p>
-            SAAF Accreditation procedures and criteria's are strictly applied as per international standards and guidelines, Hence SAAF Accreditation Programs are internationally accepted.
+            SAAF Accreditation procedures and criteria&apos;s are strictly applied as per international standards and guidelines, Hence SAAF Accreditation Programs are internationally accepted.
           </p>
 
           <p>
@@ -71,3 +71,4 @@ export default function AboutAccreditationPage() {
     </div>
   );
 }
+

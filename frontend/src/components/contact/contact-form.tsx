@@ -4,15 +4,10 @@ import React, { useState } from "react";
 import Link from "next/link";
 import {
   Mail,
-  Phone,
   Building,
-  FileText,
-  Send,
   ShieldCheck,
   CheckCircle2,
   AlertCircle,
-  ArrowRight,
-  Printer,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
@@ -340,7 +335,7 @@ export function ContactForm() {
           type="submit"
           disabled={isSubmitting}
           className={cn(
-            buttonVariants({ variant: "primary", size: "default" }),
+            buttonVariants({ variant: "primary", size: "md" }),
             "h-11 px-7 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all shadow-none"
           )}
         >

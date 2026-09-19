@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
-import { Search, ChevronRight, ShieldCheck } from "lucide-react";
+import { Search, ShieldCheck } from "lucide-react";
+
 
 export default function CertifiedOrganizationsPage() {
   const [cab, setCab] = React.useState("");

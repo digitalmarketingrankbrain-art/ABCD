@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ChevronRight, ShieldCheck, Search, RotateCcw, ChevronLeft } from "lucide-react";
+import { ChevronRight, Search, RotateCcw } from "lucide-react";
 
 const CABS_MOCK = [
   { sr: 1, code: "ACUBE", name: "A CUBE TIC LIMITED TRADING AS ACT & A CUBE", status: "Active" },
@@ -23,14 +23,13 @@ export default function AccreditedCabsPage() {
   const [mgmtSystem, setMgmtSystem] = React.useState("Management Systems");
   const [scheme, setScheme] = React.useState("");
   const [country, setCountry] = React.useState("");
-  const [page, setPage] = React.useState(1);
+
 
   const handleReset = () => {
     setSearch("");
     setMgmtSystem("Management Systems");
     setScheme("");
     setCountry("");
-    setPage(1);
   };
 
   const filtered = CABS_MOCK.filter((cab) =>

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { ChevronRight, ShieldCheck, Award, Building2, FlaskConical, Users, PackageCheck, FileCheck2 } from "lucide-react";
+import { ChevronRight, Award, Building2, FlaskConical, Users, PackageCheck, FileCheck2 } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Accreditation Services | SAAF",

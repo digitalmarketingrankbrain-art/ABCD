@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ChevronRight, ShieldAlert, AlertTriangle, FileX, ExternalLink } from "lucide-react";
+import { ChevronRight, ShieldAlert, ExternalLink } from "lucide-react";
 
 export default function FalseClaimsPage() {
   return (
@@ -60,7 +60,7 @@ export default function FalseClaimsPage() {
                 </td>
                 <td className="py-5 px-4 sm:px-6 text-xs text-slate-700 leading-relaxed align-top">
                   <p>
-                    <strong className="text-slate-900">American Quality Standards Registrars (AQSR)</strong> has published a falsified version of SAAF's <em>International Recognition</em> certificate on its website. The document has been modified to misrepresent AQSR's status while still displaying the signature of SAAF's Chief Technical Officer, without authorization. This constitutes a deliberate act of misrepresentation and forgery. SAAF confirms that AQSR has <strong className="text-slate-900">no accreditation or recognition from SAAF</strong>. Any claims made by AQSR using SAAF's name, logo, or signatures are false and misleading.
+                    <strong className="text-slate-900">American Quality Standards Registrars (AQSR)</strong> has published a falsified version of SAAF&apos;s <em>International Recognition</em> certificate on its website. The document has been modified to misrepresent AQSR&apos;s status while still displaying the signature of SAAF&apos;s Chief Technical Officer, without authorization. This constitutes a deliberate act of misrepresentation and forgery. SAAF confirms that AQSR has <strong className="text-slate-900">no accreditation or recognition from SAAF</strong>. Any claims made by AQSR using SAAF&apos;s name, logo, or signatures are false and misleading.
                   </p>
                 </td>
               </tr>
@@ -88,3 +88,4 @@ export default function FalseClaimsPage() {
     </div>
   );
 }
+

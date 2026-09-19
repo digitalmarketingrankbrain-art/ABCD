@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/site-url";
 import { PROGRAMS } from "@/lib/programs";
 import { RESOURCES } from "@/lib/resources";
-import { NEWS_ITEMS } from "@/lib/news";
 import { TRAINING_COURSES } from "@/lib/training";
+
 
 const STATIC_ROUTES = [
   "/",

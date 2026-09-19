@@ -1,24 +1,10 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 
-const isDev = process.env.NODE_ENV !== "production";
-
-/**
- * Runs on every route (not just /portal) because the CSP nonce below has to
- * be issued per-request for every page — Next.js's App Router streams RSC
- * payloads through inline <script> tags on every route, so script-src can
- * only be locked down via a per-request nonce, not a static header.
- *
- * Within that, the /portal gate is unchanged: requires a session, then
- * confines each role to its own subtree (Phase 1/8/9/10: an Applicant can't
- * wander into /portal/admin, etc.). Login itself is single-step OTP now —
- * there's no separate MFA-enrollment gate to enforce here anymore.
- */
 export default auth((req) => {
   const { pathname } = req.nextUrl;
   const session = req.auth;
 
-  const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const csp = [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
