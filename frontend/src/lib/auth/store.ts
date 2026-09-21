@@ -52,9 +52,6 @@ export function getUsersByRoleSafe(role: Role): Promise<SafeUser[]> {
   return rpc(MODULE, "getUsersByRoleSafe", [role]);
 }
 
-export function createApplicantUser(input: { email: string; name: string; organisationName: string }): Promise<AuthUser> {
-  return rpc(MODULE, "createApplicantUser", [input]);
-}
 
 export function getUserOrganisationName(userId: string): Promise<string> {
   return rpc(MODULE, "getUserOrganisationName", [userId]);

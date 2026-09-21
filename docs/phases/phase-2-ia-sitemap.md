@@ -21,7 +21,7 @@ Builds on Phase 1 (approved 2026-09-09, proceeding with logged placeholder assum
   /accreditation/programs               (Programs index — cards linking to each scope)
   /accreditation/programs/[program-slug]  (One detail page per accreditation program/scope)
   /accreditation/fees                   (Fee structure or fee guidance)
-  /accreditation/apply                  (CTA landing → routes to portal application start / login)
+  /apply                  (CTA landing → routes to portal application start / login)
 
 /verify                                 (Verification search — see Phase 7)
 /verify/[reference]                     (Verification detail — dynamic, see Phase 7)
@@ -61,7 +61,7 @@ Builds on Phase 1 (approved 2026-09-09, proceeding with logged placeholder assum
 - **Verification gets top-level `/verify`**, not nested under Accreditation — it's the single highest-traffic, highest-trust page per Phase 1, and burying it under a sub-nav costs trust with a visitor who has ten seconds of patience.
 - **Governance and Impartiality/Ethics are separate pages under About**, not folded into one "About Us" wall of text — Phase 1 identified governance disclosure and impartiality safeguards as distinct trust signals visitors specifically look for.
 - **Fraud reporting is a first-class top-level page** (`/report-fraud`), not buried in Contact — Phase 1 problem #6 ("How do I report misuse?") needs to be findable without knowing it's a contact-form sub-option.
-- **`/accreditation/apply` is a routing page, not a form** — it explains what happens next and hands off to auth/portal, keeping the marketing site and the transactional portal cleanly separated.
+- **`/apply` is a routing page, not a form** — it explains what happens next and hands off to auth/portal, keeping the marketing site and the transactional portal cleanly separated.
 
 `[PLACEHOLDER — REQUIRES CONFIRMATION]` — program slugs under `/accreditation/programs/` are placeholders (see Section 1.1) pending real scope definitions.
 

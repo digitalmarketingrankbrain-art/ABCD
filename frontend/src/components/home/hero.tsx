@@ -33,7 +33,7 @@ function Hero() {
         <HeroMotif className="h-[560px] w-[560px]" tone="light" />
       </div>
 
-      <div className="relative mx-auto max-w-7xl px-4 pt-10 pb-12 sm:px-6 lg:pt-12 lg:pb-14">
+      <div className="relative mx-auto max-w-7xl px-4 pt-16 pb-20 sm:px-6 lg:pt-20 lg:pb-24">
         <div className="grid grid-cols-1 items-center gap-9 lg:grid-cols-12">
           
           {/* Left Hero Content */}
@@ -130,7 +130,7 @@ function Hero() {
         </div>
 
         {/* Bottom Trust Metrics Strip */}
-        <div className="mt-8 grid grid-cols-2 gap-4 rounded-2xl border border-slate-200 bg-white p-4.5 shadow-sm sm:grid-cols-4 lg:gap-8">
+        <div className="mt-12 grid grid-cols-2 gap-4 rounded-2xl border border-slate-200 bg-white p-4.5 shadow-sm sm:grid-cols-4 lg:gap-8">
           {TRUST_METRICS.map((metric) => {
             const Icon = metric.icon;
             return (

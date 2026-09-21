@@ -91,6 +91,7 @@ model User {
   assessmentAcknowledgements     AssessmentAcknowledgement[]  @relation("AcknowledgedBy")
   assessmentReportsFinalized     Assessment[]                 @relation("ReportFinalizedBy")
   certificatesIssued             AccreditationCertificate[]
+  applicationRequestsReviewed    ApplicationRequest[]         @relation("ApplicationRequestReviewedBy")
 
   @@map("users")
 }
@@ -700,6 +701,7 @@ enum VerificationStatus {
   ACTIVE
   SUSPENDED
   WITHDRAWN
+  CANCELLED
   EXPIRED
 }
 
@@ -1131,4 +1133,59 @@ model AccreditationCertificate {
   supersededBy             AccreditationCertificate? @relation("CertificateSupersedes")
 
   @@map("accreditation_certificates")
+}
+
+// --- 13. Public Application Request (org asks to become a certification body; Admin approves/rejects) ---
+
+enum ApplicationRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model ApplicationRequest {
+  id     String                   @id @default(cuid())
+  status ApplicationRequestStatus @default(PENDING)
+
+  // Personal Info
+  firstName      String  @map("first_name")
+  lastName       String  @map("last_name")
+  email          String
+  phoneCode      String  @map("phone_code")
+  phoneNumber    String  @map("phone_number")
+  address1       String  @map("address_line_1")
+  address2       String? @map("address_line_2")
+  addressDetails String? @map("address_details")
+  city           String
+  state          String?
+  zipCode        String? @map("zip_code")
+  country        String
+
+  // Company Info
+  companyName         String    @map("company_name")
+  companyWebsite      String?   @map("company_website")
+  directors           String?
+  responsiblePerson   String?   @map("responsible_person")
+  alreadyAccredited   Boolean   @default(false) @map("already_accredited")
+  dateOfEstablishment DateTime? @map("date_of_establishment")
+  licenseNumber       String?   @map("license_number")
+  licenseFileName     String?   @map("license_file_name")
+
+  applyFor String[] @map("apply_for")
+  remarks  String?
+
+  // Review outcome
+  rejectionReason String?   @map("rejection_reason")
+  reviewedById    String?   @map("reviewed_by_user_id")
+  reviewedBy      User?     @relation("ApplicationRequestReviewedBy", fields: [reviewedById], references: [id])
+  reviewedAt      DateTime? @map("reviewed_at")
+  /// Set on approval: the organisation and primary-contact user created for this request.
+  createdOrganisationId String? @map("created_organisation_id")
+  createdUserId         String? @map("created_user_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([status, createdAt])
+  @@index([email])
+  @@map("application_requests")
 }

@@ -1,5 +1,6 @@
 import { prisma } from "../prisma";
 import type { User as PrismaUser, Role } from "@prisma/client";
+import { isMailConfigured, sendMail } from "../mail";
 
 export type { Role };
 
@@ -135,35 +136,6 @@ export async function getUsersByRoleSafe(role: Role): Promise<SafeUser[]> {
   }
 }
 
-export async function createApplicantUser(input: {
-  email: string;
-  name: string;
-  organisationName: string;
-}): Promise<AuthUser> {
-  try {
-    const user = await prisma.user.create({
-      data: {
-        email: input.email,
-        name: input.name,
-        primaryRole: "APPLICANT",
-      },
-    });
-
-    const organisation = await prisma.organisation.create({
-      data: { legalName: input.organisationName, displayName: input.organisationName },
-    });
-    await prisma.organisationMembership.create({
-      data: { organisationId: organisation.id, userId: user.id, membershipRole: "PRIMARY_CONTACT" },
-    });
-
-    return user;
-  } catch (err) {
-    console.warn("[auth-store] DB unreachable, creating fallback applicant user");
-    const user = getOrCreateFallbackUser(input.email);
-    user.name = input.name;
-    return user;
-  }
-}
 
 export async function getUserOrganisationName(userId: string): Promise<string> {
   try {
@@ -178,12 +150,11 @@ export async function getUserOrganisationName(userId: string): Promise<string> {
 }
 
 export async function getUserOrganisationId(userId: string): Promise<string | null> {
-  try {
-    const membership = await prisma.organisationMembership.findFirst({ where: { userId } });
-    return membership?.organisationId ?? "org-demo";
-  } catch (err) {
-    return "org-demo";
-  }
+  // No membership means "no organisation" (null) — callers already handle
+  // that. Never invent an id: a fake one made getCabDetails crash with P2025,
+  // and swallowing DB errors here hid real outages behind the same fake id.
+  const membership = await prisma.organisationMembership.findFirst({ where: { userId } });
+  return membership?.organisationId ?? null;
 }
 
 function normalizeEmail(email: string): string {
@@ -202,6 +173,20 @@ export async function createLoginOtp(email: string): Promise<string> {
   } catch (err) {
     console.warn("[auth-store] DB unreachable, storing OTP in fallback memory map");
     fallbackOtps.set(key, { code, expiresAt: new Date(Date.now() + 10 * 60 * 1000) });
+  }
+
+  // With SMTP configured the code goes to the user's inbox only and is NOT
+  // returned (empty string = "emailed"). Without SMTP it is returned for
+  // local/demo use, as before — never do that in a real deployment.
+  if (isMailConfigured()) {
+    const mail = await sendMail({
+      to: key,
+      subject: "Your SAAF sign-in code",
+      text: `Your one-time sign-in code is ${code}. It expires in 10 minutes. If you did not request it, ignore this email.`,
+      html: `<p>Your one-time sign-in code is:</p><p style="font-size:24px;font-weight:bold;letter-spacing:4px">${code}</p><p>It expires in 10 minutes. If you did not request it, ignore this email.</p>`,
+    });
+    if (!mail.sent) throw new Error("Could not send the sign-in code email. Please try again.");
+    return "";
   }
   return code;
 }

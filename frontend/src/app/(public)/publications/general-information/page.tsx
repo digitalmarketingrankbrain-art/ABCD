@@ -331,7 +331,7 @@ export default function GeneralInformationPage() {
 
                   <div className="pt-4 text-center">
                     <Link
-                      href="/accreditation/apply"
+                      href="/apply"
                       className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-blue-700 transition-all shadow-sm"
                     >
                       <span>Apply For Accreditation Online</span>

@@ -1,4 +1,4 @@
-export type VerificationStatus = "ACTIVE" | "SUSPENDED" | "WITHDRAWN" | "EXPIRED";
+export type VerificationStatus = "ACTIVE" | "SUSPENDED" | "WITHDRAWN" | "CANCELLED" | "EXPIRED";
 
 export interface VerificationStatusHistoryEntry {
   from: VerificationStatus;
@@ -39,6 +39,8 @@ export const STATUS_EXPLANATION: Record<VerificationStatus, string> = {
     "This accreditation is currently suspended. The organisation may not represent this accreditation as active during suspension. Contact us if you need details on the reason or expected duration.",
   WITHDRAWN:
     "This accreditation has been withdrawn and is no longer valid. Any current claim of this accreditation by this organisation should not be relied upon.",
+  CANCELLED:
+    "This accreditation has been cancelled and is no longer valid. Any current claim of this accreditation by this organisation should not be relied upon.",
   EXPIRED: "This accreditation has expired and was not renewed.",
 };
 

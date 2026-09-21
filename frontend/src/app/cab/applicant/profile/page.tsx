@@ -10,7 +10,7 @@ import {
   getAwardedSchemes,
   getLocations,
   getCountryLists,
-  getTeamMembers,
+  getAssignedAssessors,
 } from "@/lib/portal/cab-info-data";
 import { getInvoicesForUser } from "@/lib/portal/applicant-data";
 import { getAssessmentsForUser } from "@/lib/portal/cb-assessments-data";
@@ -22,13 +22,14 @@ import { CabInfoTabs } from "@/components/portal/cab-info-tabs";
 import { InvoicesTable } from "@/components/portal/invoices-table";
 import { CbAssessmentsTable } from "@/components/portal/cb-assessments-table";
 import { NcTable } from "@/components/portal/nc-table";
+import { AssessorMembersTable } from "@/components/portal/assessor-members-table";
 import { CbDocumentsTabs, type OrgDocumentEntry } from "@/components/portal/cb-documents-tabs";
 
 export default async function ProfilePage() {
   const session = await auth();
   const userId = session!.user.id;
 
-  const [user, organisationId, details, appliedSchemes, awardedSchemes, locations, countryLists, teamMembers, invoices, assessments, nonConformities, referenceDocuments] =
+  const [user, organisationId, details, appliedSchemes, awardedSchemes, locations, countryLists, assignedAssessors, invoices, assessments, nonConformities, referenceDocuments] =
     await Promise.all([
       findUserById(userId),
       getUserOrganisationId(userId),
@@ -37,7 +38,7 @@ export default async function ProfilePage() {
       getAwardedSchemes(userId),
       getLocations(userId),
       getCountryLists(userId),
-      getTeamMembers(userId),
+      getAssignedAssessors(userId),
       getInvoicesForUser(userId),
       getAssessmentsForUser(userId),
       getNonConformitiesForUser(userId),
@@ -138,7 +139,6 @@ export default async function ProfilePage() {
                   locations={locations}
                   appliedCountries={countryLists.applied}
                   approvedCountries={countryLists.approved}
-                  teamMembers={teamMembers}
                 />
               ),
             },
@@ -156,6 +156,11 @@ export default async function ProfilePage() {
               value: "nc",
               label: "NC",
               content: <NcTable items={nonConformities} basePath="/cab/applicant/profile/nc" />,
+            },
+            {
+              value: "assessor-members",
+              label: "Assessor Members",
+              content: <AssessorMembersTable assessors={assignedAssessors} />,
             },
           ]}
         />

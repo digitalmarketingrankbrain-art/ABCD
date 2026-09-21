@@ -18,6 +18,25 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
+import { submitApplicationRequestAction } from "@/lib/portal/application-request-actions";
+import {
+  FIELD_ORDER,
+  normalizeWebsite,
+  validateAll,
+  validateField,
+  validateLicenseFile,
+  type ApplicationFormValues,
+  type FormErrors,
+} from "@/lib/application-request-validation";
+
+function FieldError({ name, message }: { name: string; message?: string }) {
+  if (!message) return null;
+  return (
+    <p id={`${name}-error`} role="alert" className="mt-1 text-[11px] font-medium text-red-600">
+      {message}
+    </p>
+  );
+}
 
 const COUNTRY_CODES = [
   { code: "+1", country: "US/CA" },
@@ -43,7 +62,7 @@ const APPLY_FOR_OPTIONS = [
 ];
 
 export function ApplicationRequestForm() {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ApplicationFormValues>({
     // Personal Info
     firstName: "",
     lastName: "",
@@ -79,6 +98,48 @@ export function ApplicationRequestForm() {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<FormErrors>({});
+
+  // Once a field has shown an error, re-check it as the user types so the message clears the moment it's fixed.
+  React.useEffect(() => {
+    setErrors((prev) => {
+      let changed = false;
+      const next: FormErrors = { ...prev };
+      for (const key of Object.keys(prev) as (keyof FormErrors)[]) {
+        if (key === "licenseFile") continue;
+        const message = validateField(key, formData) ?? undefined;
+        if (message !== prev[key]) {
+          changed = true;
+          if (message) next[key] = message;
+          else delete next[key];
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [formData]);
+
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const name = e.target.name as keyof ApplicationFormValues;
+    if (!FIELD_ORDER.includes(name)) return;
+    const message = validateField(name, formData) ?? undefined;
+    setErrors((prev) => {
+      const next = { ...prev };
+      if (message) next[name] = message;
+      else delete next[name];
+      return next;
+    });
+  };
+
+  /** Shared props for every text input / select: value, change + blur handlers, and the invalid state for styling and screen readers. */
+  const fp = (name: keyof ApplicationFormValues) => ({
+    name,
+    value: formData[name] as string,
+    onChange: handleInputChange,
+    onBlur: handleBlur,
+    "aria-invalid": errors[name] ? true : undefined,
+    "aria-describedby": errors[name] ? `${name}-error` : undefined,
+  });
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [referenceId, setReferenceId] = useState("");
   const [submittedDate, setSubmittedDate] = useState("");
@@ -109,39 +170,88 @@ export function ApplicationRequestForm() {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setFormData((prev) => ({
-        ...prev,
-        licenseFileName: file.name,
-      }));
+    if (!file) return;
+    const problem = validateLicenseFile(file);
+    if (problem) {
+      e.target.value = "";
+      setErrors((prev) => ({ ...prev, licenseFile: problem }));
+      return;
     }
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next.licenseFile;
+      return next;
+    });
+    setFormData((prev) => ({
+      ...prev,
+      licenseFileName: file.name,
+    }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitError(null);
+
+    const found = validateAll(formData);
+    setErrors((prev) => ({ ...found, ...(prev.licenseFile ? { licenseFile: prev.licenseFile } : {}) }));
+    const firstInvalid = FIELD_ORDER.find((name) => found[name]);
+    if (firstInvalid) {
+      setSubmitError("Please fix the highlighted fields and submit again.");
+      const el = document.querySelector<HTMLElement>(`[name="${firstInvalid}"], [data-field="${firstInvalid}"]`);
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+      el?.focus({ preventScroll: true });
+      return;
+    }
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      const randomNum = Math.floor(10000 + Math.random() * 90000);
-      const generatedId = `SAAF-APP-2026-${randomNum}`;
-      setReferenceId(generatedId);
-      setSubmittedDate(
-        new Date().toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        })
-      );
-      setIsSubmitting(false);
-      setIsSubmitted(true);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }, 600);
+    const result = await submitApplicationRequestAction({
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      email: formData.email,
+      phoneCode: formData.phoneCode,
+      phoneNumber: formData.phoneNumber,
+      address1: formData.address1,
+      address2: formData.address2,
+      addressDetails: formData.addressDetails,
+      city: formData.city,
+      state: formData.state,
+      zipCode: formData.zipCode,
+      country: formData.country,
+      companyName: formData.companyName,
+      companyWebsite: normalizeWebsite(formData.companyWebsite) ?? undefined,
+      directors: formData.directors,
+      responsiblePerson: formData.responsiblePerson,
+      isAlreadyAccredited: formData.isAlreadyAccredited === "Yes",
+      dateOfEstablishment: formData.dateOfEstablishment || undefined,
+      licenseNumber: formData.licenseNumber,
+      licenseFileName: formData.licenseFileName,
+      applyFor: formData.applyFor,
+      remarks: formData.remarks,
+    });
+
+    setIsSubmitting(false);
+    if (!result.ok) {
+      setSubmitError(result.error);
+      return;
+    }
+    setReferenceId(result.referenceId);
+    setSubmittedDate(
+      new Date().toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    );
+    setIsSubmitted(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleReset = () => {
     setIsSubmitted(false);
+    setErrors({});
+    setSubmitError(null);
     setFormData({
       firstName: "",
       lastName: "",
@@ -230,7 +340,7 @@ export function ApplicationRequestForm() {
               <Info className="size-3.5 text-blue-600" /> What happens next?
             </p>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Our Secretariat will review your request within 24-48 business hours. You will receive an email with institutional portal access instructions to complete your formal document submission.
+              Our team will review your request. You will receive an email at the address you provided once it is approved or rejected. If approved, you can then sign in as a Certification Body with that email address.
             </p>
           </div>
 
@@ -254,8 +364,8 @@ export function ApplicationRequestForm() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-6" suppressHydrationWarning>
-      <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="w-full" suppressHydrationWarning>
+      <form onSubmit={handleSubmit} noValidate className="space-y-6">
         
         {/* SECTION 1: Personal Info* */}
         <div className="rounded-xl border border-slate-200 bg-white p-6 sm:p-7 shadow-sm">
@@ -275,13 +385,11 @@ export function ApplicationRequestForm() {
                 </label>
                 <input
                   type="text"
-                  required
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleInputChange}
+                  {...fp("firstName")}
                   placeholder="First name"
-                  className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-600"
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50/50 aria-invalid:border-red-500 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-600"
                 />
+                <FieldError name="firstName" message={errors.firstName} />
               </div>
 
               <div>
@@ -290,13 +398,11 @@ export function ApplicationRequestForm() {
                 </label>
                 <input
                   type="text"
-                  required
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleInputChange}
+                  {...fp("lastName")}
                   placeholder="Last Name"
-                  className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-600"
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50/50 aria-invalid:border-red-500 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-600"
                 />
+                <FieldError name="lastName" message={errors.lastName} />
               </div>
             </div>
 
@@ -310,14 +416,12 @@ export function ApplicationRequestForm() {
                   <Mail className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                   <input
                     type="email"
-                    required
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
+                    {...fp("email")}
                     placeholder="Email address"
-                    className="w-full rounded-lg border border-slate-200 bg-slate-50/50 py-2.5 pl-9 pr-3.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-600"
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50/50 aria-invalid:border-red-500 py-2.5 pl-9 pr-3.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-600"
                   />
                 </div>
+                <FieldError name="email" message={errors.email} />
               </div>
 
               <div>
@@ -326,10 +430,8 @@ export function ApplicationRequestForm() {
                 </label>
                 <div className="flex gap-2">
                   <select
-                    name="phoneCode"
-                    value={formData.phoneCode}
-                    onChange={handleInputChange}
-                    className="rounded-lg border border-slate-200 bg-slate-50/50 px-2.5 py-2.5 text-sm font-medium text-slate-800 focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
+                    {...fp("phoneCode")}
+                    className="shrink-0 rounded-lg border border-slate-200 bg-slate-50/50 aria-invalid:border-red-500 px-2.5 py-2.5 text-sm font-medium text-slate-800 focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
                   >
                     {COUNTRY_CODES.map((item) => (
                       <option key={item.code + item.country} value={item.code}>
@@ -339,14 +441,12 @@ export function ApplicationRequestForm() {
                   </select>
                   <input
                     type="tel"
-                    required
-                    name="phoneNumber"
-                    value={formData.phoneNumber}
-                    onChange={handleInputChange}
+                    {...fp("phoneNumber")}
                     placeholder="Phone number"
-                    className="flex-1 rounded-lg border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-600"
+                    className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-slate-50/50 aria-invalid:border-red-500 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-600"
                   />
                 </div>
+                <FieldError name="phoneNumber" message={errors.phoneNumber} />
               </div>
             </div>
 
@@ -360,14 +460,12 @@ export function ApplicationRequestForm() {
                   <MapPin className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                   <input
                     type="text"
-                    required
-                    name="address1"
-                    value={formData.address1}
-                    onChange={handleInputChange}
+                    {...fp("address1")}
                     placeholder="Search and select address"
-                    className="w-full rounded-lg border border-slate-200 bg-slate-50/50 py-2.5 pl-9 pr-3.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-600"
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50/50 aria-invalid:border-red-500 py-2.5 pl-9 pr-3.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-600"
                   />
                 </div>
+                <FieldError name="address1" message={errors.address1} />
               </div>
 
               <div>
@@ -376,12 +474,11 @@ export function ApplicationRequestForm() {
                 </label>
                 <input
                   type="text"
-                  name="address2"
-                  value={formData.address2}
-                  onChange={handleInputChange}
+                  {...fp("address2")}
                   placeholder="Apartment/Suite/Building No."
-                  className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-600"
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50/50 aria-invalid:border-red-500 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-600"
                 />
+                <FieldError name="address2" message={errors.address2} />
               </div>
             </div>
 
@@ -393,15 +490,14 @@ export function ApplicationRequestForm() {
                 </label>
                 <input
                   type="text"
-                  name="addressDetails"
-                  value={formData.addressDetails}
-                  onChange={handleInputChange}
+                  {...fp("addressDetails")}
                   placeholder="Enter Address Details"
-                  className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-600"
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50/50 aria-invalid:border-red-500 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-600"
                 />
                 <p className="mt-1 text-[11px] text-red-500 font-medium">
                   Can&apos;t find your address in suggestions? Enter Address Details manually above.
                 </p>
+                <FieldError name="addressDetails" message={errors.addressDetails} />
               </div>
 
               <div>
@@ -410,13 +506,11 @@ export function ApplicationRequestForm() {
                 </label>
                 <input
                   type="text"
-                  required
-                  name="city"
-                  value={formData.city}
-                  onChange={handleInputChange}
+                  {...fp("city")}
                   placeholder="City"
-                  className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-600"
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50/50 aria-invalid:border-red-500 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-600"
                 />
+                <FieldError name="city" message={errors.city} />
               </div>
             </div>
 
@@ -428,13 +522,11 @@ export function ApplicationRequestForm() {
                 </label>
                 <input
                   type="text"
-                  required
-                  name="state"
-                  value={formData.state}
-                  onChange={handleInputChange}
+                  {...fp("state")}
                   placeholder="State"
-                  className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-600"
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50/50 aria-invalid:border-red-500 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-600"
                 />
+                <FieldError name="state" message={errors.state} />
               </div>
 
               <div>
@@ -443,13 +535,11 @@ export function ApplicationRequestForm() {
                 </label>
                 <input
                   type="text"
-                  required
-                  name="zipCode"
-                  value={formData.zipCode}
-                  onChange={handleInputChange}
+                  {...fp("zipCode")}
                   placeholder="Zip Code"
-                  className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-600"
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50/50 aria-invalid:border-red-500 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-600"
                 />
+                <FieldError name="zipCode" message={errors.zipCode} />
               </div>
 
               <div>
@@ -457,10 +547,8 @@ export function ApplicationRequestForm() {
                   Country <span className="text-red-500">*</span>
                 </label>
                 <select
-                  name="country"
-                  value={formData.country}
-                  onChange={handleInputChange}
-                  className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm font-medium text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
+                  {...fp("country")}
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50/50 aria-invalid:border-red-500 px-3.5 py-2.5 text-sm font-medium text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
                 >
                   <option value="United States">United States</option>
                   <option value="India">India</option>
@@ -496,13 +584,11 @@ export function ApplicationRequestForm() {
                 </label>
                 <input
                   type="text"
-                  required
-                  name="companyName"
-                  value={formData.companyName}
-                  onChange={handleInputChange}
+                  {...fp("companyName")}
                   placeholder="Company Name"
-                  className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-600"
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50/50 aria-invalid:border-red-500 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-600"
                 />
+                <FieldError name="companyName" message={errors.companyName} />
               </div>
 
               <div>
@@ -512,14 +598,14 @@ export function ApplicationRequestForm() {
                 <div className="relative">
                   <Globe className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                   <input
-                    type="url"
-                    name="companyWebsite"
-                    value={formData.companyWebsite}
-                    onChange={handleInputChange}
+                    type="text"
+                    inputMode="url"
+                    {...fp("companyWebsite")}
                     placeholder="Company Website"
-                    className="w-full rounded-lg border border-slate-200 bg-slate-50/50 py-2.5 pl-9 pr-3.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-600"
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50/50 aria-invalid:border-red-500 py-2.5 pl-9 pr-3.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-600"
                   />
                 </div>
+                <FieldError name="companyWebsite" message={errors.companyWebsite} />
               </div>
             </div>
 
@@ -531,12 +617,11 @@ export function ApplicationRequestForm() {
                 </label>
                 <input
                   type="text"
-                  name="directors"
-                  value={formData.directors}
-                  onChange={handleInputChange}
+                  {...fp("directors")}
                   placeholder="Directors/Managing Director"
-                  className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-600"
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50/50 aria-invalid:border-red-500 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-600"
                 />
+                <FieldError name="directors" message={errors.directors} />
               </div>
 
               <div>
@@ -545,12 +630,11 @@ export function ApplicationRequestForm() {
                 </label>
                 <input
                   type="text"
-                  name="responsiblePerson"
-                  value={formData.responsiblePerson}
-                  onChange={handleInputChange}
+                  {...fp("responsiblePerson")}
                   placeholder="Certification Manager /Operations Manager/Responsible Person"
-                  className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50/50 aria-invalid:border-red-500 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
                 />
+                <FieldError name="responsiblePerson" message={errors.responsiblePerson} />
               </div>
             </div>
 
@@ -561,10 +645,8 @@ export function ApplicationRequestForm() {
                   Is Already Accredited By another IAF MLA Accreditation Body
                 </label>
                 <select
-                  name="isAlreadyAccredited"
-                  value={formData.isAlreadyAccredited}
-                  onChange={handleInputChange}
-                  className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm font-medium text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
+                  {...fp("isAlreadyAccredited")}
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50/50 aria-invalid:border-red-500 px-3.5 py-2.5 text-sm font-medium text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
                 >
                   <option value="No">No</option>
                   <option value="Yes">Yes</option>
@@ -579,12 +661,11 @@ export function ApplicationRequestForm() {
                   <Calendar className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                   <input
                     type="date"
-                    name="dateOfEstablishment"
-                    value={formData.dateOfEstablishment}
-                    onChange={handleInputChange}
-                    className="w-full rounded-lg border border-slate-200 bg-slate-50/50 py-2.5 pl-9 pr-3.5 text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
+                    {...fp("dateOfEstablishment")}
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50/50 aria-invalid:border-red-500 py-2.5 pl-9 pr-3.5 text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
                   />
                 </div>
+                <FieldError name="dateOfEstablishment" message={errors.dateOfEstablishment} />
               </div>
             </div>
 
@@ -596,13 +677,11 @@ export function ApplicationRequestForm() {
                 </label>
                 <input
                   type="text"
-                  required
-                  name="licenseNumber"
-                  value={formData.licenseNumber}
-                  onChange={handleInputChange}
+                  {...fp("licenseNumber")}
                   placeholder="License/ Registration Number"
-                  className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-600"
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50/50 aria-invalid:border-red-500 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-600"
                 />
+                <FieldError name="licenseNumber" message={errors.licenseNumber} />
               </div>
 
               <div>
@@ -621,6 +700,7 @@ export function ApplicationRequestForm() {
                     accept=".pdf,.doc,.docx,.jpg,.png"
                   />
                 </label>
+                <FieldError name="licenseFile" message={errors.licenseFile} />
               </div>
             </div>
           </div>
@@ -635,7 +715,7 @@ export function ApplicationRequestForm() {
             </h3>
           </div>
 
-          <div className="divide-y divide-slate-100 border-y border-slate-100 py-1 space-y-2">
+          <div data-field="applyFor" tabIndex={-1} aria-invalid={errors.applyFor ? true : undefined} className="divide-y divide-slate-100 border-y border-slate-100 py-1 space-y-2 focus:outline-none aria-invalid:border-red-500">
             {APPLY_FOR_OPTIONS.map((option) => {
               const isChecked = formData.applyFor.includes(option.id);
               return (
@@ -654,6 +734,7 @@ export function ApplicationRequestForm() {
               );
             })}
           </div>
+          <FieldError name="applyFor" message={errors.applyFor} />
         </div>
 
         {/* SECTION 4: Remarks */}
@@ -664,12 +745,11 @@ export function ApplicationRequestForm() {
             </label>
             <textarea
               rows={4}
-              name="remarks"
-              value={formData.remarks}
-              onChange={handleInputChange}
+              {...fp("remarks")}
               placeholder="Remarks"
-              className="w-full rounded-lg border border-slate-200 bg-slate-50/50 p-3.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-600"
+              className="w-full rounded-lg border border-slate-200 bg-slate-50/50 aria-invalid:border-red-500 p-3.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-600"
             />
+            <FieldError name="remarks" message={errors.remarks} />
           </div>
 
           {/* Captcha Box */}
@@ -677,8 +757,8 @@ export function ApplicationRequestForm() {
             <label className="flex items-center gap-3 cursor-pointer">
               <input
                 type="checkbox"
-                required
                 name="isCaptchaChecked"
+                aria-invalid={errors.isCaptchaChecked ? true : undefined}
                 checked={formData.isCaptchaChecked}
                 onChange={handleInputChange}
                 className="size-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
@@ -690,7 +770,14 @@ export function ApplicationRequestForm() {
               <span className="text-[9px] text-slate-400">reCAPTCHA</span>
             </div>
           </div>
+          <FieldError name="isCaptchaChecked" message={errors.isCaptchaChecked} />
         </div>
+
+        {submitError && (
+          <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {submitError}
+          </p>
+        )}
 
         {/* Action Button */}
         <div className="flex items-center justify-center pt-2">

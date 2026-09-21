@@ -192,7 +192,7 @@ export const FOOTER_GROUPS: NavGroup[] = [
     links: [
       { label: "Contact Us", href: "/contact" },
       { label: "FAQs", href: "/faqs" },
-      { label: "Apply for Accreditation", href: "/accreditation/apply" },
+      { label: "Apply for Accreditation", href: "/apply" },
     ],
   },
 ];

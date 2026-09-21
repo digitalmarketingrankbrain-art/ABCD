@@ -118,3 +118,18 @@ export function getTeamMembers(userId: string): Promise<TeamMemberEntry[]> {
 export function getPrimaryContactUserId(organisationId: string): Promise<string | null> {
   return rpc(MODULE, "getPrimaryContactUserId", [organisationId]);
 }
+
+export interface AssignedAssessorEntry {
+  id: string;
+  assessorName: string;
+  assessorEmail: string;
+  applicationReference: string;
+  programName: string;
+  assignmentStatus: string;
+  assignedByName: string;
+  assignedAt: string;
+}
+
+export function getAssignedAssessors(userId: string): Promise<AssignedAssessorEntry[]> {
+  return rpc(MODULE, "getAssignedAssessors", [userId]);
+}

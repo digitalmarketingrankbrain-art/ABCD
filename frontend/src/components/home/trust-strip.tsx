@@ -8,7 +8,7 @@ const ITEMS = [
     icon: FileCheck2,
     label: "Apply for Accreditation",
     description: "Submit application for testing, calibration, or inspection scope",
-    href: "/accreditation/apply",
+    href: "/apply",
     accentBg: "bg-blue-50 text-blue-700",
   },
   {

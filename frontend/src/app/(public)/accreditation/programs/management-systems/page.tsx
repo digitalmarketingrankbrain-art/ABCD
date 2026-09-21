@@ -190,7 +190,7 @@ export default function ManagementSystemsPage() {
               {/* Bottom Action Button */}
               <div className="px-5 pb-5">
                 <Link
-                  href="/accreditation/apply"
+                  href="/apply"
                   className="inline-flex items-center gap-1.5 rounded bg-[#006699] px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-[#005580] transition-colors"
                 >
                   <span>Explore &gt;&gt;</span>

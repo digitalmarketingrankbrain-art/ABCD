@@ -271,3 +271,34 @@ export async function getPrimaryContactUserId(organisationId: string): Promise<s
   const any = await prisma.organisationMembership.findFirst({ where: { organisationId }, select: { userId: true } });
   return any?.userId ?? null;
 }
+
+export interface AssignedAssessorEntry {
+  id: string;
+  assessorName: string;
+  assessorEmail: string;
+  applicationReference: string;
+  programName: string;
+  assignmentStatus: string;
+  assignedByName: string;
+  assignedAt: string;
+}
+
+/** Assessors the accreditation body assigned to this organisation's applications (declined assignments are hidden). */
+export async function getAssignedAssessors(userId: string): Promise<AssignedAssessorEntry[]> {
+  const organisationId = await requireOrganisationId(userId);
+  const rows = await prisma.assignment.findMany({
+    where: { application: { organisationId }, status: { not: "DECLINED" } },
+    include: { assessor: { include: { user: true } }, application: { include: { program: true } }, assignedBy: true },
+    orderBy: { assignedAt: "desc" },
+  });
+  return rows.map((r) => ({
+    id: r.id,
+    assessorName: r.assessor.user.name,
+    assessorEmail: r.assessor.user.email,
+    applicationReference: r.application.referenceNumber,
+    programName: r.application.program.name,
+    assignmentStatus: r.status,
+    assignedByName: r.assignedBy.name,
+    assignedAt: r.assignedAt.toISOString(),
+  }));
+}

@@ -67,7 +67,7 @@ export default function HowItWorksPage() {
           <Link href="/accreditation/programs" className={cn(buttonVariants({ variant: "primary" }))}>
             View programs
           </Link>
-          <Link href="/accreditation/apply" className={cn(buttonVariants({ variant: "secondary" }))}>
+          <Link href="/apply" className={cn(buttonVariants({ variant: "secondary" }))}>
             Start an application
           </Link>
         </div>

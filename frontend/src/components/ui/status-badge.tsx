@@ -85,12 +85,13 @@ function StatusBadge({
 
 /** Verification statuses per Phase 7 — exact tone/label mapping. */
 export const VERIFICATION_STATUS: Record<
-  "ACTIVE" | "SUSPENDED" | "WITHDRAWN" | "EXPIRED",
+  "ACTIVE" | "SUSPENDED" | "WITHDRAWN" | "CANCELLED" | "EXPIRED",
   { tone: StatusTone; label: string }
 > = {
   ACTIVE: { tone: "success", label: "Active" },
   SUSPENDED: { tone: "warning", label: "Suspended" },
   WITHDRAWN: { tone: "error", label: "Withdrawn" },
+  CANCELLED: { tone: "error", label: "Cancelled" },
   EXPIRED: { tone: "info", label: "Expired" },
 };
 

@@ -144,17 +144,17 @@ export const PROGRAMS: Program[] = [
         {
           title: "GHG Programme(s)",
           desc: "Accreditation for validation and verification bodies conducting Greenhouse Gas (GHG) validation and verification activities.",
-          href: "/accreditation/apply",
+          href: "/apply",
         },
         {
           title: "Organization Verification (ISO 14064-1)",
           desc: "Accreditation for validation and verification bodies performing organizational greenhouse gas verification in accordance with ISO 14064-1.",
-          href: "/accreditation/apply",
+          href: "/apply",
         },
         {
           title: "Project Validation and Verification (ISO 14064-2)",
           desc: "Accreditation for validation and verification bodies performing project validation and verification in accordance with ISO 14064-2.",
-          href: "/accreditation/apply",
+          href: "/apply",
         },
       ],
       eligibility: [

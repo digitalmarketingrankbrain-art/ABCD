@@ -1,6 +1,6 @@
 "use server";
 
-import { findUserByEmail, createApplicantUser, createLoginOtp, type Role } from "./store";
+import { findUserByEmail, createLoginOtp, type Role } from "./store";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getClientIp } from "@/lib/request-ip";
 
@@ -50,27 +50,3 @@ export async function requestLoginOtp(email: string, allowedRoles?: Role[]) {
   }
 }
 
-export async function registerApplicant(input: {
-  email: string;
-  name: string;
-  organisationName: string;
-}) {
-  try {
-    const ip = await getClientIp();
-    const limit = checkRateLimit(`register:${ip}`, 5, 60 * 60 * 1000);
-    if (!limit.allowed) {
-      return { ok: false as const, error: "Too many attempts. Try again later." };
-    }
-    if (await findUserByEmail(input.email)) {
-      return { ok: false as const, error: "An account with this email already exists." };
-    }
-    await createApplicantUser(input);
-    return { ok: true as const };
-  } catch (err) {
-    console.error("[registerApplicant Error]", err);
-    return {
-      ok: false as const,
-      error: "Registration failed. Unable to connect to backend database.",
-    };
-  }
-}

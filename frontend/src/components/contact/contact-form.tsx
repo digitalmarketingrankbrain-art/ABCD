@@ -129,7 +129,7 @@ export function ContactForm() {
             Send Another Message
           </button>
           <Link
-            href="/accreditation/apply"
+            href="/apply"
             className={cn(
               buttonVariants({ variant: "tertiary", size: "sm" }),
               "text-slate-700 hover:text-slate-900"

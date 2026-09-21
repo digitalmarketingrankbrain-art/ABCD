@@ -16,6 +16,14 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // The apply page moved from /accreditation/apply to /apply; keep old links working.
+  async redirects() {
+    return [
+      { source: "/accreditation/apply", destination: "/apply", permanent: true },
+      // Self-registration was removed; organisations now apply and are approved by an admin.
+      { source: "/register", destination: "/apply", permanent: true },
+    ];
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

@@ -136,7 +136,7 @@ export default async function ProgramDetailPage({
               </div>
 
               <Link
-                href="/accreditation/apply"
+                href="/apply"
                 className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow hover:bg-blue-700 transition-colors shrink-0"
               >
                 <span>Application Request &gt;&gt;</span>

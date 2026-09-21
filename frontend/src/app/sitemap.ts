@@ -16,7 +16,7 @@ const STATIC_ROUTES = [
   "/accreditation/how-it-works",
   "/accreditation/programs",
   "/accreditation/fees",
-  "/accreditation/apply",
+  "/apply",
   "/directory/accredited-cabs",
   "/directory/certified-organizations",
   "/directory/false-claims",

@@ -5,11 +5,10 @@ import { cn } from "@/lib/utils";
 import { CabBasicDetailsForm } from "./cab-basic-details-form";
 import { CabLocations } from "./cab-locations";
 import { CountryPicker } from "./country-picker";
-import { TeamMembersTable } from "./team-members-table";
 import { countryName } from "@/lib/countries";
-import type { CabDetails, LocationEntry, TeamMemberEntry } from "@/lib/portal/cab-info-data";
+import type { CabDetails, LocationEntry } from "@/lib/portal/cab-info-data";
 
-const SUB_TABS = ["Basic Details", "Location", "Applied Countries", "Approved Countries", "Team Members"] as const;
+const SUB_TABS = ["Basic Details", "Location", "Applied Countries", "Approved Countries"] as const;
 type SubTab = (typeof SUB_TABS)[number];
 
 function CabInfoTabs({
@@ -17,13 +16,11 @@ function CabInfoTabs({
   locations,
   appliedCountries,
   approvedCountries,
-  teamMembers,
 }: {
   details: CabDetails;
   locations: LocationEntry[];
   appliedCountries: string[];
   approvedCountries: string[];
-  teamMembers: TeamMemberEntry[];
 }) {
   const [tab, setTab] = React.useState<SubTab>("Basic Details");
 
@@ -64,7 +61,6 @@ function CabInfoTabs({
           )}
         </div>
       )}
-      {tab === "Team Members" && <TeamMembersTable members={teamMembers} />}
     </div>
   );
 }

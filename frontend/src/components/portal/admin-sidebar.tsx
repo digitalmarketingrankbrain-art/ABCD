@@ -13,11 +13,13 @@ import {
   CalendarClock,
   AlertTriangle,
   ListChecks,
+  Inbox,
 } from "lucide-react";
 import { PortalSidebar } from "./portal-sidebar";
 
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/portal/admin/dashboard", icon: LayoutDashboard },
+  { label: "Application Requests", href: "/portal/admin/application-requests", icon: Inbox },
   { label: "Applications", href: "/portal/admin/applications", icon: FileText },
   { label: "Organisations", href: "/portal/admin/organisations", icon: Building2 },
   { label: "Assessors", href: "/portal/admin/assessors", icon: UserCog },

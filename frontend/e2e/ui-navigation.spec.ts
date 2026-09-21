@@ -38,7 +38,7 @@ test.describe('SAAF UI/UX Navigation & Page Load Tests', () => {
     { path: '/about/impartiality-and-ethics', title: 'Impartiality' },
     { path: '/accreditation/programs', title: 'Accreditation Programs' },
     { path: '/accreditation/how-it-works', title: 'How It Works' },
-    { path: '/accreditation/apply', title: 'Apply' },
+    { path: '/apply', title: 'Apply' },
     { path: '/accreditation/fees', title: 'Fees' },
     { path: '/verify', title: 'Verify' },
     { path: '/contact', title: 'Contact' },

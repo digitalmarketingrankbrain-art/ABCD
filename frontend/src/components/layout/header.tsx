@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, Search, Lock, ChevronDown, CheckCircle2 } from "lucide-react";
+import { Menu, X, Search, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { HEADER_NAV, HEADER_SIMPLE_LINKS } from "@/lib/nav";
@@ -46,43 +46,10 @@ function Header() {
   }, [mobileOpen]);
 
   const isVerifyActive = pathname === "/verify" || pathname.startsWith("/verify");
-  const isApplyActive = pathname === "/accreditation/apply";
+  const isApplyActive = pathname === "/apply";
 
   return (
     <header ref={headerRef} className="sticky top-0 z-40 bg-white">
-      {/* Top Utility & Trust Bar - Minimal & Refined */}
-      <div className="border-b border-slate-200/60 bg-slate-50/90 text-slate-600">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-1.5 text-[11px] font-medium sm:px-6">
-          <div className="flex items-center gap-2 text-slate-600">
-            <CheckCircle2 className="size-3.5 text-blue-600" />
-            <span>South Asia Accreditation Foundation — Official Institutional Portal</span>
-          </div>
-          <div className="hidden items-center gap-5 sm:flex">
-            <Link
-              href="/verify"
-              className={cn(
-                "flex items-center gap-1.5 transition-colors font-semibold",
-                isVerifyActive ? "text-blue-600 font-bold" : "text-slate-600 hover:text-slate-900"
-              )}
-            >
-              <Search className="size-3 text-slate-400" />
-              <span>Public Verification Register</span>
-            </Link>
-            <span className="text-slate-300">|</span>
-            <Link
-              href="/login"
-              className={cn(
-                "flex items-center gap-1 transition-colors",
-                pathname === "/login" ? "text-blue-600 font-bold" : "text-slate-600 hover:text-slate-900"
-              )}
-            >
-              <Lock className="size-3 text-slate-400" />
-              <span>Portal Sign In</span>
-            </Link>
-          </div>
-        </div>
-      </div>
-
       {/* Main Slim Navbar */}
       <div className="border-b border-slate-200/70 bg-white">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
@@ -210,7 +177,7 @@ function Header() {
               Log In
             </Link>
             <Link
-              href="/accreditation/apply"
+              href="/apply"
               className={cn(
                 buttonVariants({ variant: "primary", size: "sm" }),
                 "h-8 px-3.5 bg-blue-600 font-semibold text-white transition-all shadow-none hover:bg-blue-700",
@@ -333,7 +300,7 @@ function Header() {
               Portal Log In
             </Link>
             <Link
-              href="/accreditation/apply"
+              href="/apply"
               onClick={() => setMobileOpen(false)}
               className={cn(
                 buttonVariants({ variant: "primary" }),

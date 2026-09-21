@@ -195,8 +195,8 @@ function LoginForm() {
       {portal === "cb" && (
         <p className="mt-4 font-sans text-sm text-text-muted">
           New applicant organisation?{" "}
-          <Link href="/register" className="text-secondary hover:underline">
-            Create an account
+          <Link href="/apply" className="text-secondary hover:underline">
+            Apply for accreditation
           </Link>
         </p>
       )}

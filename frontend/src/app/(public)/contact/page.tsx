@@ -108,7 +108,7 @@ export default function ContactPage() {
                     </span>
                     <ExternalLink className="size-3 text-slate-400" />
                   </Link>
-                  <Link href="/accreditation/apply" className="flex items-center justify-between rounded-lg bg-white p-2.5 border border-slate-200 font-semibold text-slate-800 hover:border-blue-500 hover:text-blue-600">
+                  <Link href="/apply" className="flex items-center justify-between rounded-lg bg-white p-2.5 border border-slate-200 font-semibold text-slate-800 hover:border-blue-500 hover:text-blue-600">
                     <span className="flex items-center gap-2">
                       <FileCheck2 className="size-4 text-blue-600" /> Apply for Accreditation
                     </span>

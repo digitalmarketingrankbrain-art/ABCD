@@ -22,7 +22,7 @@ function FinalCta() {
 
           <div className="flex shrink-0 flex-col gap-3 sm:flex-row w-full lg:w-auto">
             <Link
-              href="/accreditation/apply"
+              href="/apply"
               className={cn(
                 buttonVariants({ variant: "primary", size: "lg" }),
                 "bg-blue-600 text-white font-semibold hover:bg-blue-700 justify-center rounded-xl px-6"
