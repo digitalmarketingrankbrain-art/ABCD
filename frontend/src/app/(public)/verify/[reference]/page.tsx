@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { VerificationCard } from "@/components/verify/verification-card";
 import { NotFoundCard } from "@/components/verify/not-found-card";
-import { findByReference } from "@/lib/verification-records";
+import { getPublicAccreditationRecord } from "@/lib/portal/accreditation-record-data";
 
 export async function generateMetadata({
   params,
@@ -9,7 +9,7 @@ export async function generateMetadata({
   params: Promise<{ reference: string }>;
 }): Promise<Metadata> {
   const { reference } = await params;
-  const record = findByReference(reference);
+  const record = await getPublicAccreditationRecord(reference);
   return {
     title: record
       ? `${record.organisationName} — ${reference} | SAAF`
@@ -33,7 +33,7 @@ export default async function VerificationDetailPage({
   params: Promise<{ reference: string }>;
 }) {
   const { reference } = await params;
-  const record = findByReference(reference);
+  const record = await getPublicAccreditationRecord(reference);
   const lastVerifiedAt = new Date().toISOString().replace("T", " ").slice(0, 19) + " UTC";
 
   return (

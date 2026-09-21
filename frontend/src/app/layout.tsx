@@ -1,20 +1,15 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import { ToastProvider } from "@/components/ui/toast";
 import { AuthSessionProvider } from "@/components/auth/session-provider";
 import { SITE_URL } from "@/lib/site-url";
 import "./globals.css";
 
-const ibmPlexSans = IBM_Plex_Sans({
-  variable: "--font-ibm-plex-sans",
+// The one typeface for the whole site (variable font, so every weight is available).
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
-
-const ibmPlexMono = IBM_Plex_Mono({
-  variable: "--font-ibm-plex-mono",
-  subsets: ["latin"],
-  weight: ["400", "500"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -43,7 +38,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="scroll-smooth">
       <body
-        className={`${ibmPlexSans.variable} ${ibmPlexMono.variable} font-sans antialiased selection:bg-blue-600 selection:text-white`}
+        className={`${inter.variable} font-sans antialiased selection:bg-blue-600 selection:text-white`}
       >
         <AuthSessionProvider>
           <ToastProvider>{children}</ToastProvider>

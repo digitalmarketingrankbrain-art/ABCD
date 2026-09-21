@@ -66,7 +66,7 @@ export async function addNcAssessorRemark(ncId: string, body: string) {
   const ok = await addAssessorRemark(ncId, admin.id, body.trim());
   if (!ok) return { ok: false as const, error: "Couldn't add this remark." };
   await logAction({ actorUserId: admin.id, actorRole: "ADMIN", ipAddress: admin.ip, action: "nc.assessor_remark_added", targetType: "NonConformity", targetId: ncId, reason: body.trim() });
-  revalidatePath(`/portal/admin/non-conformities/${ncId}`);
+  revalidatePath(`/admin/non-conformities/${ncId}`);
   return { ok: true as const };
 }
 
@@ -76,7 +76,7 @@ export async function acceptNc(ncId: string, note: string) {
   if (!ok) return { ok: false as const, error: "Couldn't accept this NC." };
   await logAction({ actorUserId: admin.id, actorRole: "ADMIN", ipAddress: admin.ip, action: "nc.accepted", targetType: "NonConformity", targetId: ncId, reason: note.trim() || undefined });
   await notifyNcOrganisation(ncId, "nc.accepted");
-  revalidatePath(`/portal/admin/non-conformities/${ncId}`);
+  revalidatePath(`/admin/non-conformities/${ncId}`);
   return { ok: true as const };
 }
 
@@ -87,7 +87,7 @@ export async function rejectNc(ncId: string, note: string) {
   if (!ok) return { ok: false as const, error: "Couldn't reject this response." };
   await logAction({ actorUserId: admin.id, actorRole: "ADMIN", ipAddress: admin.ip, action: "nc.rejected", targetType: "NonConformity", targetId: ncId, reason: note.trim() });
   await notifyNcOrganisation(ncId, "nc.rejected");
-  revalidatePath(`/portal/admin/non-conformities/${ncId}`);
+  revalidatePath(`/admin/non-conformities/${ncId}`);
   return { ok: true as const };
 }
 
@@ -97,7 +97,7 @@ export async function closeNc(ncId: string, note: string) {
   if (!ok) return { ok: false as const, error: "An NC can only be closed after it's been accepted." };
   await logAction({ actorUserId: admin.id, actorRole: "ADMIN", ipAddress: admin.ip, action: "nc.closed", targetType: "NonConformity", targetId: ncId, reason: note.trim() || undefined });
   await notifyNcOrganisation(ncId, "nc.closed");
-  revalidatePath(`/portal/admin/non-conformities/${ncId}`);
-  revalidatePath(`/portal/admin/non-conformities`);
+  revalidatePath(`/admin/non-conformities/${ncId}`);
+  revalidatePath(`/admin/non-conformities`);
   return { ok: true as const };
 }

@@ -53,7 +53,7 @@ export async function reviewDocument(
   }
 
   revalidatePath(`/cab/applicant/applications/${applicationId}`);
-  revalidatePath(`/portal/admin/applications/${applicationId}`);
-  revalidatePath("/portal/admin/documents");
+  revalidatePath(`/admin/applications/${applicationId}`);
+  revalidatePath("/admin/documents");
   return { ok: true as const };
 }

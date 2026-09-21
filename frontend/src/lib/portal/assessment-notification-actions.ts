@@ -59,7 +59,7 @@ export async function sendNotification(input: SendNotificationInput) {
     }
   }
 
-  revalidatePath(`/portal/admin/assessments/${input.assignmentId}`);
+  revalidatePath(`/admin/assessments/${input.assignmentId}`);
   return { ok: true as const, id };
 }
 

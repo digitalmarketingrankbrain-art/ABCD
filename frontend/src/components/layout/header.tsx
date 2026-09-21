@@ -52,14 +52,14 @@ function Header() {
     <header ref={headerRef} className="sticky top-0 z-40 bg-white">
       {/* Main Slim Navbar */}
       <div className="border-b border-slate-200/70 bg-white">
-        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
           {/* SAAF Official Brand Logo */}
           <Link href="/" className="flex items-center gap-3 shrink-0">
-            <SaafLogo variant="horizontal" size="md" className="h-[39px] sm:h-[49px]" />
+            <SaafLogo variant="emblem" size="md" className="h-[42px] sm:h-[50px]" />
           </Link>
 
           {/* Desktop Nav */}
-          <nav className="hidden items-center gap-1 lg:flex">
+          <nav className="hidden items-center gap-1 xl:flex">
             {HEADER_NAV.map((group) => {
               const isGroupActive =
                 (group.href && pathname.startsWith(group.href)) ||
@@ -77,7 +77,7 @@ function Header() {
                     aria-expanded={isOpen}
                     onClick={() => setOpenMenu(isOpen ? null : group.label)}
                     className={cn(
-                      "flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors relative",
+                      "flex items-center gap-1 whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-semibold transition-colors relative",
                       isGroupActive
                         ? "text-blue-700 bg-blue-50/90 font-bold border-b-2 border-blue-600 rounded-b-none"
                         : "text-slate-700 hover:bg-slate-100 hover:text-slate-900",
@@ -135,7 +135,7 @@ function Header() {
             <Link
               href="/verify"
               className={cn(
-                "rounded-md px-3 py-1.5 text-sm font-bold transition-colors",
+                "whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-bold transition-colors",
                 isVerifyActive
                   ? "bg-blue-50 text-blue-700 border-b-2 border-blue-600 rounded-b-none"
                   : "text-blue-700 hover:bg-blue-50"
@@ -151,7 +151,7 @@ function Header() {
                   key={link.href}
                   href={link.href}
                   className={cn(
-                    "rounded-md px-3 py-1.5 text-sm font-semibold transition-colors",
+                    "whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-semibold transition-colors",
                     isSimpleActive
                       ? "text-blue-700 bg-blue-50/90 font-bold border-b-2 border-blue-600 rounded-b-none"
                       : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
@@ -164,11 +164,11 @@ function Header() {
           </nav>
 
           {/* Action CTAs */}
-          <div className="hidden items-center gap-2.5 lg:flex">
+          <div className="hidden items-center gap-2.5 xl:flex">
             <Link
               href="/login"
               className={cn(
-                "rounded-md px-3 py-1 text-sm font-semibold transition-colors",
+                "whitespace-nowrap rounded-md px-3 py-1 text-sm font-semibold transition-colors",
                 pathname === "/login"
                   ? "bg-slate-100 text-slate-900 font-bold"
                   : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
@@ -180,7 +180,7 @@ function Header() {
               href="/apply"
               className={cn(
                 buttonVariants({ variant: "primary", size: "sm" }),
-                "h-8 px-3.5 bg-blue-600 font-semibold text-white transition-all shadow-none hover:bg-blue-700",
+                "h-8 whitespace-nowrap px-3.5 bg-blue-600 font-semibold text-white transition-all shadow-none hover:bg-blue-700",
                 isApplyActive && "ring-2 ring-blue-600 ring-offset-2 bg-blue-700 font-bold"
               )}
             >
@@ -192,7 +192,7 @@ function Header() {
           <button
             onClick={() => setMobileOpen(true)}
             aria-label="Open menu"
-            className="rounded-lg p-1.5 text-slate-700 hover:bg-slate-100 lg:hidden"
+            className="rounded-lg p-1.5 text-slate-700 hover:bg-slate-100 xl:hidden"
           >
             <Menu className="size-6" strokeWidth={2} />
           </button>
@@ -201,7 +201,7 @@ function Header() {
 
       {/* Mobile Drawer */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-white lg:hidden">
+        <div className="fixed inset-0 z-50 flex flex-col bg-white xl:hidden">
           <div className="flex h-14 items-center justify-between border-b border-slate-200 px-6">
             <SaafLogo variant="horizontal" size="md" className="h-10" />
             <button

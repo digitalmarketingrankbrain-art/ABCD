@@ -30,7 +30,7 @@ export async function issueCertificateForApplication(input: IssueCertificateInpu
   await createNotification({ userId: app.applicantUserId, type: "certificate.issued", relatedType: "AccreditationCertificate", relatedId: id, channel: "IN_APP" });
   await createNotification({ userId: app.applicantUserId, type: "certificate.issued", relatedType: "AccreditationCertificate", relatedId: id, channel: "EMAIL" });
 
-  revalidatePath(`/portal/admin/applications/${input.applicationId}`);
+  revalidatePath(`/admin/applications/${input.applicationId}`);
   revalidatePath("/cab/applicant/accreditation");
   return { ok: true as const, certificateNumber };
 }
@@ -40,6 +40,6 @@ export async function revokeIssuedCertificate(certificateId: string, application
   const ok = await revokeCertificate(certificateId);
   if (!ok) return { ok: false as const, error: "Couldn't revoke this certificate." };
   await logAction({ actorUserId: admin.id, actorRole: "ADMIN", ipAddress: admin.ip, action: "certificate.revoked", targetType: "AccreditationCertificate", targetId: certificateId });
-  revalidatePath(`/portal/admin/applications/${applicationId}`);
+  revalidatePath(`/admin/applications/${applicationId}`);
   return { ok: true as const };
 }

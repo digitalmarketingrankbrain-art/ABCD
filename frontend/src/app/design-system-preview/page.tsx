@@ -242,9 +242,9 @@ export default function DesignSystemPreview() {
         <h2 className="font-sans text-sm font-semibold uppercase tracking-[0.02em] text-text-muted">Type &amp; Colour Reference</h2>
         <div className="flex flex-col gap-1">
           <p className="font-display text-4xl font-semibold text-text">Display / H1 — Source Serif 4</p>
-          <p className="font-sans text-2xl font-semibold text-text">H2 — IBM Plex Sans</p>
-          <p className="font-sans text-base text-text">Body — IBM Plex Sans</p>
-          <p className="font-mono text-sm text-text">SAAF-2026-00417 — IBM Plex Mono (reference data)</p>
+          <p className="font-sans text-2xl font-semibold text-text">H2 — Inter</p>
+          <p className="font-sans text-base text-text">Body — Inter</p>
+          <p className="font-mono text-sm text-text">SAAF-2026-00417 — Inter, tabular figures (reference data)</p>
         </div>
         <div className="flex items-center gap-2 text-text-muted">
           <FileText className="size-4" strokeWidth={1.5} />

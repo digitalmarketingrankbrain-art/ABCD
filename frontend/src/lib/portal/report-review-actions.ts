@@ -20,7 +20,7 @@ export async function startReportReview(assignmentId: string) {
   const ok = await markReportUnderReview(assignmentId);
   if (!ok) return { ok: false as const, error: "Report isn't in a submitted state." };
   await logAction({ actorUserId: admin.id, actorRole: "ADMIN", ipAddress: admin.ip, action: "assessment.report_under_review", targetType: "Assignment", targetId: assignmentId });
-  revalidatePath(`/portal/admin/assessments/${assignmentId}`);
+  revalidatePath(`/admin/assessments/${assignmentId}`);
   return { ok: true as const };
 }
 
@@ -45,6 +45,6 @@ export async function finalizeReport(assignmentId: string) {
     }
   }
 
-  revalidatePath(`/portal/admin/assessments/${assignmentId}`);
+  revalidatePath(`/admin/assessments/${assignmentId}`);
   return { ok: true as const };
 }

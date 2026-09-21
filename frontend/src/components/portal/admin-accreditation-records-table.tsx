@@ -10,7 +10,7 @@ const columns: DataTableColumn<VerificationRecord>[] = [
     key: "organisationName",
     header: "Organisation",
     render: (r) => (
-      <Link href={`/portal/admin/accreditation-records/${r.reference}`} className="font-medium text-secondary hover:underline">
+      <Link href={`/admin/accreditation-records/${r.reference}`} className="font-medium text-secondary hover:underline">
         {r.organisationName}
       </Link>
     ),

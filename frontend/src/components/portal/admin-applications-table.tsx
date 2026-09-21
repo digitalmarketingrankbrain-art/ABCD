@@ -45,7 +45,7 @@ function AdminApplicationsTable({ rows }: { rows: Row[] }) {
       columns={columns}
       rows={rows}
       getRowKey={(a) => a.id}
-      onRowClick={(a) => router.push(`/portal/admin/applications/${a.id}`)}
+      onRowClick={(a) => router.push(`/admin/applications/${a.id}`)}
     />
   );
 }

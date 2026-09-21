@@ -72,7 +72,7 @@ export async function linkTeamMemberToAssessor(memberId: string, linkedAssessorI
   await requireAdmin();
   const ok = await linkMemberToAssessor(memberId, linkedAssessorId);
   if (!ok) return { ok: false as const, error: "Couldn't link this member." };
-  revalidatePath(`/portal/admin/assessor-teams/${proposalId}`);
+  revalidatePath(`/admin/assessor-teams/${proposalId}`);
   return { ok: true as const };
 }
 
@@ -101,8 +101,8 @@ export async function approveTeamProposal(proposalId: string, dueDate: string, n
     await createNotification({ userId: app.applicantUserId, type: "assessorteam.approved", relatedType: "AssessorTeamProposal", relatedId: proposalId, channel: "EMAIL" });
   }
 
-  revalidatePath(`/portal/admin/applications/${proposal.applicationId}`);
-  revalidatePath("/portal/admin/assessor-teams");
+  revalidatePath(`/admin/applications/${proposal.applicationId}`);
+  revalidatePath("/admin/assessor-teams");
   return { ok: true as const, assignmentsCreated: result.assignmentsCreated };
 }
 
@@ -123,8 +123,8 @@ export async function requestTeamChanges(proposalId: string, note: string) {
     await createNotification({ userId: app.applicantUserId, type: "assessorteam.changes_requested", relatedType: "AssessorTeamProposal", relatedId: proposalId, channel: "EMAIL" });
   }
 
-  revalidatePath(`/portal/admin/applications/${proposal.applicationId}`);
-  revalidatePath("/portal/admin/assessor-teams");
+  revalidatePath(`/admin/applications/${proposal.applicationId}`);
+  revalidatePath("/admin/assessor-teams");
   return { ok: true as const };
 }
 
@@ -145,7 +145,7 @@ export async function rejectTeamProposal(proposalId: string, note: string) {
     await createNotification({ userId: app.applicantUserId, type: "assessorteam.rejected", relatedType: "AssessorTeamProposal", relatedId: proposalId, channel: "EMAIL" });
   }
 
-  revalidatePath(`/portal/admin/applications/${proposal.applicationId}`);
-  revalidatePath("/portal/admin/assessor-teams");
+  revalidatePath(`/admin/applications/${proposal.applicationId}`);
+  revalidatePath("/admin/assessor-teams");
   return { ok: true as const };
 }

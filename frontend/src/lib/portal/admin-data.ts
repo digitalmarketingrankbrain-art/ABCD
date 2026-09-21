@@ -1,7 +1,7 @@
 import { getUsersByRoleSafe, getUserOrganisationName } from "@/lib/auth/store";
 import { getAllApplications } from "./applicant-data";
 import { getAllAssignments, getAllCompetence } from "./assessor-data";
-import { VERIFICATION_RECORDS } from "@/lib/verification-records";
+import { listAccreditationRecords } from "./accreditation-record-data";
 
 export interface AssessorSummary {
   userId: string;
@@ -38,6 +38,7 @@ export interface OrganisationSummary {
 export async function getOrganisations(): Promise<OrganisationSummary[]> {
   const applicantUsers = await getUsersByRoleSafe("APPLICANT");
   const applications = await getAllApplications();
+  const accreditationRecords = await listAccreditationRecords();
 
   const summaries: OrganisationSummary[] = [];
   for (const u of applicantUsers) {
@@ -49,7 +50,7 @@ export async function getOrganisations(): Promise<OrganisationSummary[]> {
       contactName: u.name,
       contactEmail: u.email,
       applicationCount: applications.filter((a) => a.applicantUserId === u.id).length,
-      accreditationCount: VERIFICATION_RECORDS.filter((r) => r.organisationName === organisationName).length,
+      accreditationCount: accreditationRecords.filter((r) => r.organisationName === organisationName).length,
     });
   }
   return summaries;

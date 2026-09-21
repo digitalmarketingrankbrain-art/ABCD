@@ -31,7 +31,7 @@ export async function saveRequiredForm(id: string | null, input: RequiredFormInp
     const created = await createRequiredForm(input);
     await logAction({ actorUserId: admin.id, actorRole: "ADMIN", ipAddress: admin.ip, action: "requiredform.created", targetType: "RequiredDocumentType", targetId: created.id });
   }
-  revalidatePath("/portal/admin/required-forms");
+  revalidatePath("/admin/required-forms");
   return { ok: true as const };
 }
 
@@ -40,6 +40,6 @@ export async function removeRequiredForm(id: string) {
   const ok = await deactivateRequiredForm(id);
   if (!ok) return { ok: false as const, error: "Couldn't deactivate this form." };
   await logAction({ actorUserId: admin.id, actorRole: "ADMIN", ipAddress: admin.ip, action: "requiredform.deactivated", targetType: "RequiredDocumentType", targetId: id });
-  revalidatePath("/portal/admin/required-forms");
+  revalidatePath("/admin/required-forms");
   return { ok: true as const };
 }

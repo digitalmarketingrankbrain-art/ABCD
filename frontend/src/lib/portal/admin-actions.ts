@@ -10,13 +10,12 @@ import {
   assignAssessorToApplication,
   recordApplicationDecision,
 } from "./applicant-data";
+import type { VerificationStatus } from "@/lib/verification-records";
 import {
-  updateVerificationStatus,
+  changeAccreditationRecordStatus,
   setVerificationPublished,
   setCertificateVisible,
-  findByReferenceAdmin,
-  type VerificationStatus,
-} from "@/lib/verification-records";
+} from "./accreditation-record-data";
 import { logAction } from "./audit-log";
 import { createNotification } from "@/lib/notifications";
 import { getClientIp } from "@/lib/request-ip";
@@ -65,7 +64,7 @@ export async function markInitialReviewComplete(applicationId: string) {
   });
   await createNotification({ userId: app.applicantUserId, type: "application.approved", relatedType: "Application", relatedId: applicationId, channel: "IN_APP" });
   await createNotification({ userId: app.applicantUserId, type: "application.approved", relatedType: "Application", relatedId: applicationId, channel: "EMAIL" });
-  revalidatePath(`/portal/admin/applications/${applicationId}`);
+  revalidatePath(`/admin/applications/${applicationId}`);
   return { ok: true as const };
 }
 
@@ -98,7 +97,7 @@ export async function requestApplicationInfo(applicationId: string, note: string
     relatedId: applicationId,
     channel: "EMAIL",
   });
-  revalidatePath(`/portal/admin/applications/${applicationId}`);
+  revalidatePath(`/admin/applications/${applicationId}`);
   return { ok: true as const };
 }
 
@@ -115,7 +114,7 @@ export async function clearApplicationInfoRequest(applicationId: string) {
     targetType: "Application",
     targetId: applicationId,
   });
-  revalidatePath(`/portal/admin/applications/${applicationId}`);
+  revalidatePath(`/admin/applications/${applicationId}`);
   return { ok: true as const };
 }
 
@@ -135,7 +134,7 @@ export async function assignAssessor(applicationId: string, assessorUserId: stri
     targetId: applicationId,
     after: assessorUser?.name ?? assessorUserId,
   });
-  revalidatePath(`/portal/admin/applications/${applicationId}`);
+  revalidatePath(`/admin/applications/${applicationId}`);
   return { ok: true as const };
 }
 
@@ -179,18 +178,17 @@ export async function recordDecision(
     relatedId: applicationId,
     channel: "EMAIL",
   });
-  revalidatePath(`/portal/admin/applications/${applicationId}`);
-  revalidatePath("/portal/admin/applications");
+  revalidatePath(`/admin/applications/${applicationId}`);
+  revalidatePath("/admin/applications");
   return { ok: true as const };
 }
 
 export async function changeAccreditationStatus(reference: string, newStatus: VerificationStatus, reason: string) {
   const admin = await requireAdmin();
   if (!reason.trim()) return { ok: false as const, error: "A reason is required for every status change." };
-  const record = findByReferenceAdmin(reference);
-  if (!record) return { ok: false as const, error: "Record not found." };
-  const before = record.status;
-  updateVerificationStatus(reference, newStatus, reason.trim(), admin.name ?? admin.email ?? "Admin");
+  const changed = await changeAccreditationRecordStatus(admin.id, reference, newStatus, reason.trim());
+  if (!changed.ok) return { ok: false as const, error: changed.error };
+  const before = changed.from;
   await logAction({
     actorUserId: admin.id,
     actorRole: "ADMIN",
@@ -202,14 +200,14 @@ export async function changeAccreditationStatus(reference: string, newStatus: Ve
     before,
     after: newStatus,
   });
-  revalidatePath(`/portal/admin/accreditation-records/${reference}`);
+  revalidatePath(`/admin/accreditation-records/${reference}`);
   revalidatePath(`/verify/${reference}`);
   return { ok: true as const };
 }
 
 export async function toggleVerificationPublished(reference: string, published: boolean) {
   const admin = await requireAdmin();
-  const ok = setVerificationPublished(reference, published);
+  const ok = await setVerificationPublished(admin.id, reference, published);
   if (!ok) return { ok: false as const, error: "Record not found." };
   await logAction({
     actorUserId: admin.id,
@@ -219,14 +217,14 @@ export async function toggleVerificationPublished(reference: string, published: 
     targetType: "VerificationRecord",
     targetId: reference,
   });
-  revalidatePath(`/portal/admin/accreditation-records/${reference}`);
+  revalidatePath(`/admin/accreditation-records/${reference}`);
   revalidatePath(`/verify/${reference}`);
   return { ok: true as const };
 }
 
 export async function toggleCertificateVisible(reference: string, visible: boolean) {
   const admin = await requireAdmin();
-  const ok = setCertificateVisible(reference, visible);
+  const ok = await setCertificateVisible(admin.id, reference, visible);
   if (!ok) return { ok: false as const, error: "Record not found." };
   await logAction({
     actorUserId: admin.id,
@@ -236,7 +234,7 @@ export async function toggleCertificateVisible(reference: string, visible: boole
     targetType: "VerificationRecord",
     targetId: reference,
   });
-  revalidatePath(`/portal/admin/accreditation-records/${reference}`);
+  revalidatePath(`/admin/accreditation-records/${reference}`);
   revalidatePath(`/verify/${reference}`);
   return { ok: true as const };
 }

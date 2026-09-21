@@ -9,7 +9,7 @@ const columns: DataTableColumn<AssessorSummary>[] = [
     key: "name",
     header: "Name",
     render: (a) => (
-      <Link href={`/portal/admin/assessors/${a.userId}`} className="font-medium text-secondary hover:underline">
+      <Link href={`/admin/assessors/${a.userId}`} className="font-medium text-secondary hover:underline">
         {a.name}
       </Link>
     ),

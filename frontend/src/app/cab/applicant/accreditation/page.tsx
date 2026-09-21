@@ -2,7 +2,8 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { StatusBadge, VERIFICATION_STATUS } from "@/components/ui/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { STATUS_EXPLANATION, findByReferenceAdmin } from "@/lib/verification-records";
+import { STATUS_EXPLANATION } from "@/lib/verification-records";
+import { getAccreditationRecordsForUser } from "@/lib/portal/accreditation-record-data";
 import { getCertificatesForUser } from "@/lib/portal/certificate-data";
 
 /**
@@ -12,7 +13,7 @@ import { getCertificatesForUser } from "@/lib/portal/certificate-data";
  */
 export default async function AccreditationPage() {
   const session = await auth();
-  const accreditation = findByReferenceAdmin("SAAF-2026-00417");
+  const [accreditation] = await getAccreditationRecordsForUser(session!.user.id);
   const certificates = await getCertificatesForUser(session!.user.id);
 
   return (

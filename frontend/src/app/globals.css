@@ -58,9 +58,10 @@
   --color-info-text: var(--color-info-text);
   --color-info-surface: var(--color-info-surface);
 
-  --font-display: var(--font-ibm-plex-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-sans: var(--font-ibm-plex-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-mono: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  /* One typeface everywhere: display, body and "mono" (reference numbers, dates) all resolve to Inter. */
+  --font-display: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
 
 body {
@@ -194,3 +195,7 @@ body {
   }
 }
 
+/* Reference numbers, dates and figures use .font-mono; keep digits equal-width so columns still line up in a single non-monospace typeface. */
+.font-mono {
+  font-variant-numeric: tabular-nums;
+}

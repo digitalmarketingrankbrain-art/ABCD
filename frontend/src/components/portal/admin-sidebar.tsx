@@ -18,19 +18,19 @@ import {
 import { PortalSidebar } from "./portal-sidebar";
 
 const NAV_ITEMS = [
-  { label: "Dashboard", href: "/portal/admin/dashboard", icon: LayoutDashboard },
-  { label: "Application Requests", href: "/portal/admin/application-requests", icon: Inbox },
-  { label: "Applications", href: "/portal/admin/applications", icon: FileText },
-  { label: "Organisations", href: "/portal/admin/organisations", icon: Building2 },
-  { label: "Assessors", href: "/portal/admin/assessors", icon: UserCog },
-  { label: "Assessor Teams", href: "/portal/admin/assessor-teams", icon: ClipboardCheck },
-  { label: "Assessments", href: "/portal/admin/assessments", icon: CalendarClock },
-  { label: "Non-Conformities", href: "/portal/admin/non-conformities", icon: AlertTriangle },
-  { label: "Required Forms", href: "/portal/admin/required-forms", icon: ListChecks },
-  { label: "Accreditation Records", href: "/portal/admin/accreditation-records", icon: ShieldCheck },
-  { label: "Documents", href: "/portal/admin/documents", icon: FolderOpen },
-  { label: "Users", href: "/portal/admin/users", icon: Users },
-  { label: "Audit Logs", href: "/portal/admin/audit-logs", icon: ScrollText },
+  { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+  { label: "Application Requests", href: "/admin/application-requests", icon: Inbox },
+  { label: "Applications", href: "/admin/applications", icon: FileText },
+  { label: "Organisations", href: "/admin/organisations", icon: Building2 },
+  { label: "Assessors", href: "/admin/assessors", icon: UserCog },
+  { label: "Assessor Teams", href: "/admin/assessor-teams", icon: ClipboardCheck },
+  { label: "Assessments", href: "/admin/assessments", icon: CalendarClock },
+  { label: "Non-Conformities", href: "/admin/non-conformities", icon: AlertTriangle },
+  { label: "Required Forms", href: "/admin/required-forms", icon: ListChecks },
+  { label: "Accreditation Records", href: "/admin/accreditation-records", icon: ShieldCheck },
+  { label: "Documents", href: "/admin/documents", icon: FolderOpen },
+  { label: "Users", href: "/admin/users", icon: Users },
+  { label: "Audit Logs", href: "/admin/audit-logs", icon: ScrollText },
 ];
 
 function AdminSidebar() {

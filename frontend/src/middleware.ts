@@ -31,9 +31,18 @@ export default auth((req) => {
     return response;
   };
 
-  if (pathname.startsWith("/portal") || pathname.startsWith("/cab") || pathname.startsWith("/assessor")) {
+  // Dedicated admin sign-in page: an admin who is already signed in goes straight to their portal.
+  if (pathname === "/admin" && session?.user?.role === "ADMIN") {
+    return withCsp(NextResponse.redirect(new URL("/admin/dashboard", req.nextUrl.origin)));
+  }
+
+  // "/admin" itself is the public sign-in page; everything under "/admin/" is the protected admin area.
+  const isAdminArea = pathname.startsWith("/admin/");
+
+  if (pathname.startsWith("/portal") || pathname.startsWith("/cab") || pathname.startsWith("/assessor") || isAdminArea) {
     if (!session?.user) {
-      const loginUrl = new URL("/login", req.nextUrl.origin);
+      // Admin pages send visitors to the dedicated admin sign-in, everyone else to the shared /login.
+      const loginUrl = new URL(isAdminArea ? "/admin" : "/login", req.nextUrl.origin);
       loginUrl.searchParams.set("callbackUrl", pathname);
       return withCsp(NextResponse.redirect(loginUrl));
     }
@@ -43,13 +52,13 @@ export default auth((req) => {
     const roleHome: Record<string, string> = {
       APPLICANT: "/cab/applicant",
       ASSESSOR: "/assessor",
-      ADMIN: "/portal/admin",
+      ADMIN: "/admin/dashboard",
     };
 
     const subtreesByRole: Record<string, string> = {
       "/cab/applicant": "APPLICANT",
       "/assessor": "ASSESSOR",
-      "/portal/admin": "ADMIN",
+      "/admin/": "ADMIN",
     };
     for (const [prefix, requiredRole] of Object.entries(subtreesByRole)) {
       if (pathname.startsWith(prefix) && role !== requiredRole) {

@@ -20,7 +20,7 @@ const columns: DataTableColumn<NonConformityAdminSummary>[] = [
     header: "NC#",
     mono: true,
     render: (n) => (
-      <Link href={`/portal/admin/non-conformities/${n.id}`} className="font-medium text-secondary hover:underline">
+      <Link href={`/admin/non-conformities/${n.id}`} className="font-medium text-secondary hover:underline">
         {n.ncNumber}
       </Link>
     ),

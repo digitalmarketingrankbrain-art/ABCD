@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 const ROLE_HOME: Record<string, string> = {
   APPLICANT: "/cab/applicant",
   ASSESSOR: "/assessor",
-  ADMIN: "/portal/admin",
+  ADMIN: "/admin/dashboard",
 };
 
 export default async function PortalIndexPage() {

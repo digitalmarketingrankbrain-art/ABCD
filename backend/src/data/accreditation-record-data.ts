@@ -71,3 +71,157 @@ export async function getAccreditationRecordForApplication(applicationId: string
     expiryDate: row.expiryDate ? fmtDate(row.expiryDate) : null,
   };
 }
+
+// ---------------------------------------------------------------------------
+// Register view + admin status changes — real DB (replaces the frontend's
+// in-memory placeholder store for the admin records pages and public /verify).
+// ---------------------------------------------------------------------------
+
+export type RecordStatus = "ACTIVE" | "SUSPENDED" | "WITHDRAWN" | "CANCELLED" | "EXPIRED";
+
+export interface RegisterRecord {
+  /** Accreditation number — also the public URL slug at /verify/[reference]. */
+  reference: string;
+  organisationName: string;
+  programSlug: string;
+  programName: string;
+  status: RecordStatus;
+  effectiveDate: string;
+  expiryDate: string | null;
+  lastSurveillanceDate: string | null;
+  nextRenewalDate: string | null;
+  certificateVisible: boolean;
+  isPublished: boolean;
+  statusHistory: { from: RecordStatus; to: RecordStatus; reason: string; changedBy: string; changedAt: string }[];
+}
+
+const RECORD_INCLUDE = {
+  organisation: true,
+  program: true,
+  verificationRecord: true,
+  statusHistory: { include: { changedBy: true }, orderBy: { changedAt: "asc" as const } },
+} as const;
+
+type RecordRow = NonNullable<Awaited<ReturnType<typeof prisma.accreditationRecord.findFirst<{ include: typeof RECORD_INCLUDE }>>>>;
+
+function toRegisterRecord(r: RecordRow): RegisterRecord {
+  return {
+    reference: r.accreditationNumber,
+    organisationName: r.organisation.displayName,
+    programSlug: r.program.slug,
+    programName: r.program.name,
+    status: r.status,
+    effectiveDate: fmtDate(r.effectiveDate),
+    expiryDate: r.expiryDate ? fmtDate(r.expiryDate) : null,
+    lastSurveillanceDate: r.lastSurveillanceDate ? fmtDate(r.lastSurveillanceDate) : null,
+    nextRenewalDate: r.nextRenewalDate ? fmtDate(r.nextRenewalDate) : null,
+    // Rows with no VerificationRecord yet follow the model defaults: published, certificate hidden.
+    certificateVisible: r.verificationRecord?.certificateDocumentVisible ?? false,
+    isPublished: r.verificationRecord?.isPublished ?? true,
+    statusHistory: r.statusHistory.map((h) => ({
+      from: h.fromStatus,
+      to: h.toStatus,
+      reason: h.reason,
+      changedBy: h.changedBy.name,
+      changedAt: fmtDate(h.changedAt),
+    })),
+  };
+}
+
+/** Admin: every accreditation record, published or not. */
+export async function listAccreditationRecords(): Promise<RegisterRecord[]> {
+  const rows = await prisma.accreditationRecord.findMany({ include: RECORD_INCLUDE, orderBy: { effectiveDate: "desc" } });
+  return rows.map(toRegisterRecord);
+}
+
+/** Admin lookup by accreditation number (case-insensitive) — sees unpublished records too. */
+export async function getAccreditationRecordByReference(reference: string): Promise<RegisterRecord | null> {
+  const row = await prisma.accreditationRecord.findFirst({
+    where: { accreditationNumber: { equals: reference.trim(), mode: "insensitive" } },
+    include: RECORD_INCLUDE,
+  });
+  return row ? toRegisterRecord(row) : null;
+}
+
+/** Public /verify lookup — unpublished records are treated as not found. */
+export async function getPublicAccreditationRecord(reference: string): Promise<RegisterRecord | null> {
+  const record = await getAccreditationRecordByReference(reference);
+  return record && record.isPublished ? record : null;
+}
+
+/** A CAB's own accreditation records (via their organisation membership), newest first. */
+export async function getAccreditationRecordsForUser(userId: string): Promise<RegisterRecord[]> {
+  const membership = await prisma.organisationMembership.findFirst({ where: { userId } });
+  if (!membership) return [];
+  const rows = await prisma.accreditationRecord.findMany({
+    where: { organisationId: membership.organisationId },
+    include: RECORD_INCLUDE,
+    orderBy: { effectiveDate: "desc" },
+  });
+  return rows.map(toRegisterRecord);
+}
+
+/** Admin-initiated changes only: suspend, withdraw or cancel. (Active/Expired are not something an admin sets by hand.) */
+const VALID_STATUSES: RecordStatus[] = ["SUSPENDED", "WITHDRAWN", "CANCELLED"];
+
+/** Only an active ADMIN may change an accreditation's status — enforced here, not just in the UI. */
+async function requireAdminUser(userId: string) {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  return user && user.status === "ACTIVE" && user.primaryRole === "ADMIN" ? user : null;
+}
+
+export async function changeAccreditationStatus(
+  adminUserId: string,
+  reference: string,
+  newStatus: RecordStatus,
+  reason: string,
+): Promise<{ ok: true; from: RecordStatus } | { ok: false; error: string }> {
+  const admin = await requireAdminUser(adminUserId);
+  if (!admin) return { ok: false, error: "Only an administrator can change an accreditation's status." };
+  if (!VALID_STATUSES.includes(newStatus)) return { ok: false, error: "Invalid status." };
+  const cleanReason = (reason ?? "").trim();
+  if (!cleanReason) return { ok: false, error: "A reason is required for every status change." };
+
+  const record = await prisma.accreditationRecord.findFirst({
+    where: { accreditationNumber: { equals: reference.trim(), mode: "insensitive" } },
+  });
+  if (!record) return { ok: false, error: "Record not found." };
+  if (record.status === newStatus) return { ok: false, error: `This accreditation is already ${newStatus.toLowerCase()}.` };
+
+  await prisma.$transaction([
+    prisma.accreditationRecord.update({ where: { id: record.id }, data: { status: newStatus } }),
+    prisma.accreditationStatusHistory.create({
+      data: {
+        accreditationRecordId: record.id,
+        fromStatus: record.status,
+        toStatus: newStatus,
+        reason: cleanReason,
+        changedById: admin.id,
+      },
+    }),
+  ]);
+  return { ok: true, from: record.status };
+}
+
+async function upsertVerificationRecord(reference: string, data: { isPublished?: boolean; certificateDocumentVisible?: boolean }) {
+  const record = await prisma.accreditationRecord.findFirst({
+    where: { accreditationNumber: { equals: reference.trim(), mode: "insensitive" } },
+  });
+  if (!record) return false;
+  await prisma.verificationRecord.upsert({
+    where: { accreditationRecordId: record.id },
+    create: { accreditationRecordId: record.id, ...data },
+    update: data,
+  });
+  return true;
+}
+
+export async function setVerificationPublished(adminUserId: string, reference: string, published: boolean): Promise<boolean> {
+  if (!(await requireAdminUser(adminUserId))) return false;
+  return upsertVerificationRecord(reference, { isPublished: published });
+}
+
+export async function setCertificateVisible(adminUserId: string, reference: string, visible: boolean): Promise<boolean> {
+  if (!(await requireAdminUser(adminUserId))) return false;
+  return upsertVerificationRecord(reference, { certificateDocumentVisible: visible });
+}

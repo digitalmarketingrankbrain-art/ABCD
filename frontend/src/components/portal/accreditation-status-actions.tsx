@@ -10,7 +10,6 @@ import { changeAccreditationStatus } from "@/lib/portal/admin-actions";
 
 const ACTIONS: { target: VerificationStatus; label: string; variant: "destructive" | "destructive-outline" | "secondary" }[] = [
   { target: "SUSPENDED", label: "Suspend", variant: "destructive-outline" },
-  { target: "ACTIVE", label: "Reinstate", variant: "secondary" },
   { target: "WITHDRAWN", label: "Withdraw", variant: "destructive" },
   { target: "CANCELLED", label: "Cancel", variant: "destructive" },
 ];

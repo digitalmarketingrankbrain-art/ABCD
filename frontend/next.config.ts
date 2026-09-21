@@ -20,6 +20,9 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       { source: "/accreditation/apply", destination: "/apply", permanent: true },
+      // Admin area moved from /portal/admin to /admin.
+      { source: "/portal/admin", destination: "/admin/dashboard", permanent: true },
+      { source: "/portal/admin/:path*", destination: "/admin/:path*", permanent: true },
       // Self-registration was removed; organisations now apply and are approved by an admin.
       { source: "/register", destination: "/apply", permanent: true },
     ];

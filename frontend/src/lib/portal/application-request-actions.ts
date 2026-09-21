@@ -41,7 +41,7 @@ async function requireAdminUserId(): Promise<string> {
 export async function approveApplicationRequestAction(id: string): Promise<ReviewResult> {
   try {
     const result = await approveApplicationRequest(await requireAdminUserId(), id);
-    revalidatePath("/portal/admin/application-requests");
+    revalidatePath("/admin/application-requests");
     return result;
   } catch (err) {
     console.error("[approveApplicationRequestAction]", err);
@@ -52,7 +52,7 @@ export async function approveApplicationRequestAction(id: string): Promise<Revie
 export async function rejectApplicationRequestAction(id: string, reason: string): Promise<ReviewResult> {
   try {
     const result = await rejectApplicationRequest(await requireAdminUserId(), id, reason);
-    revalidatePath("/portal/admin/application-requests");
+    revalidatePath("/admin/application-requests");
     return result;
   } catch (err) {
     console.error("[rejectApplicationRequestAction]", err);

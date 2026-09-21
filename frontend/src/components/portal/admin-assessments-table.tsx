@@ -19,7 +19,7 @@ const columns: DataTableColumn<Assignment>[] = [
     key: "organisationName",
     header: "Organisation",
     render: (a) => (
-      <Link href={`/portal/admin/assessments/${a.id}`} className="font-medium text-secondary hover:underline">
+      <Link href={`/admin/assessments/${a.id}`} className="font-medium text-secondary hover:underline">
         {a.organisationName}
       </Link>
     ),

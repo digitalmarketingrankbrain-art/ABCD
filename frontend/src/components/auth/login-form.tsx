@@ -13,27 +13,36 @@ import { requestLoginOtp } from "@/lib/auth/actions";
 import type { Role } from "@/lib/auth/store";
 
 type Step = "email" | "otp";
-type Portal = "cb" | "ab";
+type Portal = "cb" | "assessor" | "admin";
 
+/** /login shows Certification Body + Assessor; the Admin sign-in lives on its own page at /admin. */
+const DEFAULT_PORTALS: Portal[] = ["cb", "assessor"];
+
+/** One sign-in tab per role. The tab only decides which accounts may request a code here; real access control is the /portal RBAC in middleware. */
 const PORTAL_CONFIG: Record<Portal, { label: string; allowedRoles: Role[]; wrongPortalMessage: string }> = {
   cb: {
     label: "Certification Body",
     allowedRoles: ["APPLICANT"],
-    wrongPortalMessage: "This isn't a Certification Body account. Switch to “Assessor” above.",
+    wrongPortalMessage: "This isn't a Certification Body account. Assessors, use the Assessor tab above.",
   },
-  ab: {
+  assessor: {
     label: "Assessor",
-    allowedRoles: ["ADMIN", "ASSESSOR"],
-    wrongPortalMessage: "This isn't an Accreditation Body staff or assessor account. Switch to “Certification Body” above.",
+    allowedRoles: ["ASSESSOR"],
+    wrongPortalMessage: "This isn't an Assessor account. Certification Bodies, use the Certification Body tab above.",
+  },
+  admin: {
+    label: "Admin",
+    allowedRoles: ["ADMIN"],
+    wrongPortalMessage: "This isn't an Admin account.",
   },
 };
 
-function LoginForm() {
+function LoginForm({ portals = DEFAULT_PORTALS }: { portals?: Portal[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/portal";
 
-  const [portal, setPortal] = React.useState<Portal>("cb");
+  const [portal, setPortal] = React.useState<Portal>(portals[0] ?? "cb");
   const [step, setStep] = React.useState<Step>("email");
   const [email, setEmail] = React.useState("");
   const [otp, setOtp] = React.useState("");
@@ -88,10 +97,12 @@ function LoginForm() {
     router.push(callbackUrl);
   }
 
-  const portalToggle = (
+  // A single portal (the /admin page) needs no switcher.
+  const portalToggle = portals.length < 2 ? null : (
     <div className="mb-6" role="radiogroup" aria-label="Login as">
-      <div className="grid grid-cols-2 gap-2 rounded-lg border border-border bg-background p-1">
-        {(Object.keys(PORTAL_CONFIG) as Portal[]).map((key) => (
+      <p className="mb-2 font-sans text-xs font-medium text-text-muted">Login as</p>
+      <div className={cn("grid gap-1.5 rounded-lg border border-border bg-background p-1", portals.length === 3 ? "grid-cols-3" : "grid-cols-2")}>
+        {portals.map((key) => (
           <button
             key={key}
             type="button"
@@ -99,13 +110,13 @@ function LoginForm() {
             aria-checked={portal === key}
             onClick={() => selectPortal(key)}
             className={cn(
-              "rounded-md px-3 py-2 font-sans text-sm font-medium transition",
+              "rounded-md px-2 py-2 text-center font-sans text-sm font-medium leading-tight transition",
               portal === key
                 ? "bg-surface text-text shadow-sm"
                 : "text-text-muted hover:text-text",
             )}
           >
-            Login as {PORTAL_CONFIG[key].label}
+            {PORTAL_CONFIG[key].label}
           </button>
         ))}
       </div>

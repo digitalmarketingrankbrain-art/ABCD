@@ -9,7 +9,7 @@ const columns: DataTableColumn<OrganisationSummary>[] = [
     key: "organisationName",
     header: "Organisation",
     render: (o) => (
-      <Link href={`/portal/admin/organisations/${o.userId}`} className="font-medium text-secondary hover:underline">
+      <Link href={`/admin/organisations/${o.userId}`} className="font-medium text-secondary hover:underline">
         {o.organisationName}
       </Link>
     ),

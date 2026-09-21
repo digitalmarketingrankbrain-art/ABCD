@@ -7,6 +7,12 @@ import { getMyNotifications } from "@/lib/notifications-actions";
 import { BackendUnavailableError } from "@/lib/rpc-client";
 import { SaafLogo } from "@/components/ui/saaf-logo";
 
+const PORTAL_LABEL: Record<string, string> = {
+  APPLICANT: "CAB Portal",
+  ASSESSOR: "Assessor Portal",
+  ADMIN: "Admin Portal",
+};
+
 export async function PortalShell({ children }: { children: React.ReactNode }) {
   const session = await auth();
   let notifications: Awaited<ReturnType<typeof getMyNotifications>>["notifications"] = [];
@@ -28,10 +34,13 @@ export async function PortalShell({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/90 backdrop-blur-md shadow-xs">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
           <Link href="/" className="flex items-center gap-3 group">
-            <SaafLogo variant="horizontal" size="sm" />
-            <span className="hidden sm:inline-block rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-bold text-blue-700 uppercase tracking-wider border border-blue-200/60">
-              CAB Portal
-            </span>
+            <SaafLogo variant="emblem" size="sm" className="sm:hidden" />
+            <SaafLogo variant="horizontal" size="sm" className="hidden sm:inline-flex" />
+            {session?.user && (
+              <span className="hidden sm:inline-block rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-bold text-blue-700 uppercase tracking-wider border border-blue-200/60">
+                {PORTAL_LABEL[session.user.role] ?? "Portal"}
+              </span>
+            )}
           </Link>
 
           {session?.user && (

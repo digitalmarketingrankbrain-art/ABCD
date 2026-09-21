@@ -20,7 +20,7 @@ export async function grantPermission(userId: string, permission: AdminPermissio
   const admin = await requireFullAdmin();
   await grantAdminPermission(userId, permission, admin.id);
   await logAction({ actorUserId: admin.id, actorRole: "ADMIN", ipAddress: admin.ip, action: "permission.granted", targetType: "User", targetId: userId, after: permission });
-  revalidatePath("/portal/admin/users");
+  revalidatePath("/admin/users");
   return { ok: true as const };
 }
 
@@ -28,6 +28,6 @@ export async function revokePermission(userId: string, permission: AdminPermissi
   const admin = await requireFullAdmin();
   await revokeAdminPermission(userId, permission);
   await logAction({ actorUserId: admin.id, actorRole: "ADMIN", ipAddress: admin.ip, action: "permission.revoked", targetType: "User", targetId: userId, before: permission });
-  revalidatePath("/portal/admin/users");
+  revalidatePath("/admin/users");
   return { ok: true as const };
 }
