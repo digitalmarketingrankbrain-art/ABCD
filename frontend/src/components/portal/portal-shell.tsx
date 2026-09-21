@@ -4,13 +4,22 @@ import { LogoutButton } from "@/components/auth/logout-button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { NotificationBell } from "@/components/portal/notification-bell";
 import { getMyNotifications } from "@/lib/notifications-actions";
+import { BackendUnavailableError } from "@/lib/rpc-client";
 import { SaafLogo } from "@/components/ui/saaf-logo";
 
 export async function PortalShell({ children }: { children: React.ReactNode }) {
   const session = await auth();
-  const { notifications, unreadCount } = session?.user
-    ? await getMyNotifications()
-    : { notifications: [], unreadCount: 0 };
+  let notifications: Awaited<ReturnType<typeof getMyNotifications>>["notifications"] = [];
+  let unreadCount = 0;
+  let serviceIssue = false;
+  if (session?.user) {
+    try {
+      ({ notifications, unreadCount } = await getMyNotifications());
+    } catch (err) {
+      if (!(err instanceof BackendUnavailableError)) throw err;
+      serviceIssue = true;
+    }
+  }
 
   const userInitial = session?.user?.name ? session.user.name.charAt(0).toUpperCase() : "U";
 
@@ -47,6 +56,11 @@ export async function PortalShell({ children }: { children: React.ReactNode }) {
           )}
         </div>
       </header>
+      {serviceIssue && (
+        <div role="alert" className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-center text-sm text-amber-900">
+          We&apos;re having a database connection issue right now. Some information may be unavailable — please try again shortly.
+        </div>
+      )}
       <div className="flex-1">{children}</div>
     </div>
   );

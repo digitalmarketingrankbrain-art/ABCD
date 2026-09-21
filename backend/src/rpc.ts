@@ -75,9 +75,20 @@ export class RpcError extends Error {
   constructor(
     message: string,
     public status: number,
+    public code?: string,
   ) {
     super(message);
   }
+}
+
+function isDatabaseUnreachable(err: unknown): boolean {
+  const name = err instanceof Error ? err.name : "";
+  const message = err instanceof Error ? err.message : String(err);
+  return (
+    name === "PrismaClientInitializationError" ||
+    message.includes("Can't reach database server") ||
+    message.includes("PrismaClientInitializationError")
+  );
 }
 
 export async function dispatch(moduleName: string, fnName: string, rawArgs: unknown[]): Promise<unknown> {
@@ -92,16 +103,12 @@ export async function dispatch(moduleName: string, fnName: string, rawArgs: unkn
     const result = await fn(...args);
     return markBuffers(result ?? null);
   } catch (err: unknown) {
-    const errorMessage = err instanceof Error ? err.message : String(err);
-    if (errorMessage.includes("Can't reach database server") || errorMessage.includes("PrismaClientInitializationError")) {
-      console.warn(`[rpc] DB unreachable in ${moduleName}.${fnName}, returning safe fallback`);
-      if (fnName.toLowerCase().includes("count")) return 0;
-      if (fnName.startsWith("get") || fnName.startsWith("list") || fnName.startsWith("find")) {
-        // Return empty array for list calls, null for single object lookups
-        if (fnName.endsWith("s") || fnName.toLowerCase().includes("all") || fnName.toLowerCase().includes("list")) return [];
-        return null;
-      }
-      return null;
+    // Report the outage honestly instead of returning a guessed null/[]/0 —
+    // a wrong-shaped fake result crashed callers (e.g. null.map) and hid the
+    // real problem.
+    if (isDatabaseUnreachable(err)) {
+      console.error(`[rpc] DB unreachable in ${moduleName}.${fnName}`);
+      throw new RpcError("Database connection issue — the backend cannot reach the database.", 503, "DATABASE_UNAVAILABLE");
     }
     throw err;
   }

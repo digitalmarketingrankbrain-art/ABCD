@@ -54,7 +54,11 @@ app.post("/rpc", async (req: Request, res: Response) => {
   } catch (err) {
     const status = err instanceof RpcError ? err.status : 500;
     console.error(`[rpc] ${module}.${fn} failed:`, err);
-    res.status(status).json({ ok: false, error: err instanceof Error ? err.message : "Internal error" });
+    res.status(status).json({
+      ok: false,
+      code: err instanceof RpcError ? err.code : undefined,
+      error: err instanceof Error ? err.message : "Internal error",
+    });
   }
 });
 

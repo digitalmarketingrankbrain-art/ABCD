@@ -30,6 +30,14 @@ function reviveBuffers(value: unknown): unknown {
   return value;
 }
 
+/** Thrown when the backend (or the database behind it) can't be reached, so callers can degrade gracefully instead of crashing. */
+export class BackendUnavailableError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "BackendUnavailableError";
+  }
+}
+
 /**
  * Calls one exported function of a backend/src/data/*.ts module over the
  * internal RPC bridge (see backend/src/rpc.ts) — the only way the frontend
@@ -43,17 +51,28 @@ export async function rpc<T = unknown>(module: string, fn: string, args: unknown
     throw new Error("BACKEND_URL is not configured — the frontend can't reach the backend for data access.");
   }
 
-  const res = await fetch(`${BACKEND_URL}/rpc`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(INTERNAL_API_KEY ? { "x-internal-key": INTERNAL_API_KEY } : {}),
-    },
-    body: JSON.stringify({ module, fn, args: markBuffers(args) }),
-    cache: "no-store",
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${BACKEND_URL}/rpc`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(INTERNAL_API_KEY ? { "x-internal-key": INTERNAL_API_KEY } : {}),
+      },
+      body: JSON.stringify({ module, fn, args: markBuffers(args) }),
+      cache: "no-store",
+    });
+  } catch {
+    throw new BackendUnavailableError("Could not reach the backend server.");
+  }
 
-  const body = (await res.json().catch(() => null)) as { ok: boolean; result?: unknown; error?: string } | null;
+  const body = (await res.json().catch(() => null)) as
+    | { ok: boolean; result?: unknown; error?: string; code?: string }
+    | null;
+
+  if (body?.code === "DATABASE_UNAVAILABLE") {
+    throw new BackendUnavailableError(body.error ?? "Database connection issue.");
+  }
 
   if (!res.ok || !body?.ok) {
     throw new Error(body?.error ?? `Backend RPC call ${module}.${fn} failed with status ${res.status}.`);
