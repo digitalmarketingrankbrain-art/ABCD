@@ -7,6 +7,10 @@
  * proactively here instead of discovered via a build error.
  */
 const NOTIFICATION_COPY: Record<string, { title: string; body: string }> = {
+  "applicationrequest.submitted": {
+    title: "New application request submitted",
+    body: "A new organisation has submitted an application request awaiting your review.",
+  },
   "application.submitted": {
     title: "New application submitted",
     body: "A certification body has submitted a new accreditation application for review.",

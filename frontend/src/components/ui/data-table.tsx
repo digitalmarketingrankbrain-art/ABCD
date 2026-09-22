@@ -36,32 +36,32 @@ function DataTable<T>({
   className,
 }: DataTableProps<T>) {
   return (
-    <div className={cn("overflow-x-auto rounded-lg border border-border", className)}>
+    <div className={cn("overflow-x-auto rounded-2xl border border-slate-200/80 bg-white shadow-2xs", className)}>
       <table className="w-full border-collapse text-sm">
-        <thead className="sticky top-0 bg-background-portal">
+        <thead className="sticky top-0 bg-slate-50/90 backdrop-blur-xs z-10">
           <tr>
             {columns.map((col) => (
               <th
                 key={col.key}
                 scope="col"
                 className={cn(
-                  "border-b border-border px-4 py-3 font-sans text-xs font-medium uppercase tracking-[0.02em] text-text-muted",
+                  "border-b border-slate-200/80 px-4.5 py-3 font-sans text-[11px] font-bold uppercase tracking-wider text-slate-400",
                   col.align === "right" ? "text-right" : "text-left",
                 )}
               >
                 {col.sortable ? (
                   <button
                     onClick={() => onSort?.(col.key)}
-                    className="inline-flex items-center gap-1 hover:text-text"
+                    className="inline-flex items-center gap-1.5 hover:text-slate-800 transition-colors"
                   >
                     {col.header}
                     <ArrowUpDown
                       className={cn(
                         "size-3 transition-transform",
-                        sortKey === col.key ? "text-primary" : "text-text-muted/60",
+                        sortKey === col.key ? "text-blue-600" : "text-slate-400",
                         sortKey === col.key && sortDirection === "desc" && "rotate-180",
                       )}
-                      strokeWidth={1.75}
+                      strokeWidth={2}
                     />
                   </button>
                 ) : (
@@ -71,7 +71,7 @@ function DataTable<T>({
             ))}
           </tr>
         </thead>
-        <tbody>
+        <tbody className="divide-y divide-slate-100">
           {rows.map((row) => (
             <tr
               key={getRowKey(row)}
@@ -88,18 +88,18 @@ function DataTable<T>({
                   : undefined
               }
               className={cn(
-                "border-b border-border last:border-b-0",
+                "transition-colors duration-150",
                 onRowClick &&
-                  "cursor-pointer hover:bg-background-portal focus-visible:outline-none focus-visible:bg-background-portal focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary",
+                  "cursor-pointer hover:bg-slate-50/80 focus-visible:outline-none focus-visible:bg-slate-50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-600",
               )}
             >
               {columns.map((col) => (
                 <td
                   key={col.key}
                   className={cn(
-                    "px-4 py-3 text-text",
+                    "px-4.5 py-3.5 text-slate-800 font-medium",
                     col.align === "right" ? "text-right" : "text-left",
-                    col.mono && "font-mono text-xs",
+                    col.mono && "font-mono text-xs text-slate-600",
                   )}
                 >
                   {col.render(row)}

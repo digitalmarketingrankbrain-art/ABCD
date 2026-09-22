@@ -153,7 +153,7 @@ function toSummary(r: Row): ApplicationRequestSummary {
 /** Public: an organisation submits the Application Request Form. */
 export async function submitApplicationRequest(
   input: ApplicationRequestInput,
-): Promise<{ ok: true; referenceId: string } | { ok: false; error: string }> {
+): Promise<{ ok: true; id: string; referenceId: string } | { ok: false; error: string }> {
   const email = normalizeEmail(input.email ?? "");
   const required: [string, string | undefined][] = [
     ["First name", input.firstName],
@@ -222,7 +222,7 @@ export async function submitApplicationRequest(
     after: { companyName: created.companyName, email: created.email },
   });
 
-  return { ok: true, referenceId: referenceIdFor(created.id, created.createdAt) };
+  return { ok: true, id: created.id, referenceId: referenceIdFor(created.id, created.createdAt) };
 }
 
 export async function listApplicationRequests(status?: ApplicationRequestStatus): Promise<ApplicationRequestSummary[]> {

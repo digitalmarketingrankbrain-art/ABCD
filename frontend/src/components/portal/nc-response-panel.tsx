@@ -17,7 +17,7 @@ export function NcResponseThread({ responses }: { responses: NcResponseEntryRow[
       {responses.map((r) => (
         <div key={r.id} className="rounded-md border border-border bg-surface p-4">
           <p className="font-sans text-xs font-medium text-text-muted">
-            {NC_RESPONSE_TYPE_LABEL[r.type]} — {r.submittedByName}, {new Date(r.submittedAt).toLocaleString()}
+            {NC_RESPONSE_TYPE_LABEL[r.type]} — {r.submittedByName}, {new Date(r.submittedAt).toLocaleString("en-US", { timeZone: "UTC" })}
           </p>
           <p className="mt-1 font-sans text-sm text-text">{r.body}</p>
         </div>

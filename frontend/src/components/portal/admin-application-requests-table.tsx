@@ -141,12 +141,12 @@ function AdminApplicationRequestsTable({ rows, tabs, empty }: Props) {
             icon={SearchX}
             title={`No requests match “${query.trim()}”`}
             description="Check the spelling, or try an organisation name, contact name, email or reference number."
-            className="bg-surface"
+            className="bg-white rounded-2xl border border-slate-200/80 p-8"
             action={
               <button
                 type="button"
                 onClick={() => setQuery("")}
-                className="rounded-sm font-sans text-sm font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1"
+                className="rounded-xl bg-blue-50 px-3.5 py-1.5 font-sans text-xs font-semibold text-blue-700 hover:bg-blue-100 transition-colors"
               >
                 Clear search
               </button>
@@ -154,9 +154,9 @@ function AdminApplicationRequestsTable({ rows, tabs, empty }: Props) {
           />
         ) : (
           <>
-            <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-xs">
+            <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-2xs">
               {/* Column headers (wide screens) */}
-              <div className={cn("hidden border-b border-border bg-background-portal px-5 py-2.5 font-sans text-xs font-medium uppercase tracking-[0.02em] text-text-muted", GRID)}>
+              <div className={cn("hidden border-b border-slate-200/80 bg-slate-50/80 px-5 py-3 font-sans text-[11px] font-bold uppercase tracking-wider text-slate-400", GRID)}>
                 <span>Organisation</span>
                 <span>Contact</span>
                 <span>Applying for</span>
@@ -165,14 +165,14 @@ function AdminApplicationRequestsTable({ rows, tabs, empty }: Props) {
                 <span />
               </div>
 
-              <ul className="divide-y divide-border">
+              <ul className="divide-y divide-slate-100">
                 {visible.map((r) => {
                   const ago = now === null ? null : timeAgo(r.createdAt, now);
                   return (
                     <li key={r.id}>
                       <Link
                         href={`/admin/application-requests/${r.id}`}
-                        className={cn("group block px-4 py-4 transition-colors duration-150 hover:bg-background-portal md:px-5", GRID, FOCUS_RING)}
+                        className={cn("group block px-4 py-4 transition-colors duration-150 hover:bg-slate-50/80 md:px-5", GRID, FOCUS_RING)}
                       >
                         {/* Phones: organisation + status on the first line, the rest stacked beneath. */}
                         <div className="flex items-start justify-between gap-3 md:contents">
@@ -183,8 +183,8 @@ function AdminApplicationRequestsTable({ rows, tabs, empty }: Props) {
                         </div>
 
                         <div className="mt-2 min-w-0 md:mt-0">
-                          <p className="truncate font-sans text-sm text-text">{r.contactName}</p>
-                          <p className="truncate font-sans text-xs text-text-muted">{r.email}</p>
+                          <p className="truncate font-sans text-sm font-semibold text-slate-800 group-hover:text-blue-700 transition-colors">{r.contactName}</p>
+                          <p className="truncate font-sans text-xs text-slate-500">{r.email}</p>
                         </div>
 
                         <div className="mt-2 md:mt-0">
@@ -199,16 +199,16 @@ function AdminApplicationRequestsTable({ rows, tabs, empty }: Props) {
                           <time
                             dateTime={r.createdAt}
                             suppressHydrationWarning
-                            className="block font-sans text-sm text-text md:whitespace-nowrap"
+                            className="block font-sans text-sm font-medium text-slate-800 md:whitespace-nowrap"
                           >
                             {ago ?? formatShortDate(r.createdAt)}
                           </time>
-                          {ago && <span className="font-sans text-xs text-text-muted md:block">{formatShortDate(r.createdAt)}</span>}
+                          {ago && <span className="font-mono text-xs text-slate-400 md:block">{formatShortDate(r.createdAt)}</span>}
                         </div>
 
                         <ChevronRight
-                          className="hidden size-4 text-text-muted transition-transform duration-150 group-hover:translate-x-0.5 group-hover:text-text md:block"
-                          strokeWidth={1.75}
+                          className="hidden size-4 text-slate-400 transition-transform duration-150 group-hover:translate-x-1 group-hover:text-blue-700 md:block"
+                          strokeWidth={2}
                           aria-hidden
                         />
                       </Link>

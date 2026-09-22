@@ -21,7 +21,7 @@ export function AssessmentAcknowledgementPanel({ notification }: { notification:
   if (notification.acknowledgement) {
     return (
       <Alert tone="success" title="Assessment notification acknowledged" className="mb-6">
-        Signed by {notification.acknowledgement.signatureName} on {new Date(notification.acknowledgement.acknowledgedAt).toLocaleString()}.
+        Signed by {notification.acknowledgement.signatureName} on {new Date(notification.acknowledgement.acknowledgedAt).toLocaleString("en-US", { timeZone: "UTC" })}.
       </Alert>
     );
   }
@@ -39,7 +39,7 @@ export function AssessmentAcknowledgementPanel({ notification }: { notification:
     <div className="mb-6 rounded-lg border border-warning-text/30 bg-warning-surface p-5">
       <h2 className="font-sans text-sm font-semibold text-warning-text">Assessment notification — acknowledgement required</h2>
       <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-        <p className="font-sans text-sm text-text"><span className="text-text-muted">Date:</span> {new Date(notification.assessmentDate).toLocaleDateString()}</p>
+        <p className="font-sans text-sm text-text"><span className="text-text-muted">Date:</span> {new Date(notification.assessmentDate).toLocaleDateString("en-US", { timeZone: "UTC" })}</p>
         <p className="font-sans text-sm text-text"><span className="text-text-muted">Location:</span> {notification.location}</p>
         <p className="font-sans text-sm text-text sm:col-span-2"><span className="text-text-muted">Scope:</span> {notification.scopeText}</p>
         {notification.instructions && <p className="font-sans text-sm text-text sm:col-span-2"><span className="text-text-muted">Instructions:</span> {notification.instructions}</p>}

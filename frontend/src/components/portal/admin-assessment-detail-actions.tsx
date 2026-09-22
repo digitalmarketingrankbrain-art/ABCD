@@ -102,12 +102,12 @@ export function NotificationStatusCard({ notification }: { notification: Assessm
   return (
     <div className="rounded-md border border-border bg-surface p-4">
       <p className="font-sans text-sm text-text">
-        v{notification.version} · {new Date(notification.assessmentDate).toLocaleDateString()} · {notification.location}
+        v{notification.version} · {new Date(notification.assessmentDate).toLocaleDateString("en-US", { timeZone: "UTC" })} · {notification.location}
       </p>
       <p className="font-sans text-xs text-text-muted">{notification.scopeText}</p>
       {notification.acknowledgement ? (
         <Alert tone="success" title="Acknowledged" className="mt-3">
-          Signed by {notification.acknowledgement.signatureName} on {new Date(notification.acknowledgement.acknowledgedAt).toLocaleString()}
+          Signed by {notification.acknowledgement.signatureName} on {new Date(notification.acknowledgement.acknowledgedAt).toLocaleString("en-US", { timeZone: "UTC" })}
         </Alert>
       ) : (
         <Alert tone="warning" title="Awaiting acknowledgement" className="mt-3">

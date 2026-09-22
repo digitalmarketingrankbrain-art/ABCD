@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getClientIp } from "@/lib/request-ip";
 import { BackendUnavailableError } from "@/lib/rpc-client";
+import { notifyAllAdmins } from "@/lib/notify-admins";
 import {
   submitApplicationRequest,
   approveApplicationRequest,
@@ -24,7 +25,15 @@ export async function submitApplicationRequestAction(
     if (!checkRateLimit(`application-request:${ip}`, 5, 60 * 60 * 1000).allowed) {
       return { ok: false, error: "Too many submissions from this network. Please try again later." };
     }
-    return await submitApplicationRequest(input);
+    const result = await submitApplicationRequest(input);
+    if (result.ok) {
+      // The request is already saved at this point — a notify failure shouldn't make a
+      // successful submission look like it failed to the applicant.
+      notifyAllAdmins({ type: "applicationrequest.submitted", relatedType: "ApplicationRequest", relatedId: result.id }).catch(
+        (notifyErr) => console.error("[submitApplicationRequestAction] notifyAllAdmins failed", notifyErr),
+      );
+    }
+    return result;
   } catch (err) {
     console.error("[submitApplicationRequestAction]", err);
     if (err instanceof BackendUnavailableError) return { ok: false, error: UNAVAILABLE };

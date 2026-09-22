@@ -13,6 +13,7 @@ function isBufferMarker(value: unknown): value is BufferMarker {
 /** Converts real Buffers in call arguments into {__rpcBuffer, base64} markers so they survive JSON.stringify over the wire to the backend. */
 function markBuffers(value: unknown): unknown {
   if (Buffer.isBuffer(value)) return { __rpcBuffer: true, base64: value.toString("base64") } satisfies BufferMarker;
+  if (value instanceof Date) return value;
   if (Array.isArray(value)) return value.map(markBuffers);
   if (value && typeof value === "object") {
     return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, markBuffers(v)]));

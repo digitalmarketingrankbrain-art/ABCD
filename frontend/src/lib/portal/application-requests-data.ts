@@ -68,7 +68,7 @@ export type ReviewResult = { ok: true; mailSent: boolean; mailError?: string } |
 
 export function submitApplicationRequest(
   input: ApplicationRequestInput,
-): Promise<{ ok: true; referenceId: string } | { ok: false; error: string }> {
+): Promise<{ ok: true; id: string; referenceId: string } | { ok: false; error: string }> {
   return rpc(MODULE, "submitApplicationRequest", [input]);
 }
 

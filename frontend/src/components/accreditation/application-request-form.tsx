@@ -20,6 +20,12 @@ import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { submitApplicationRequestAction } from "@/lib/portal/application-request-actions";
 import {
+  DEFAULT_CALLING_ISO,
+  OTHER_CALLING_CODES,
+  SOUTH_ASIA_CALLING_CODES,
+  findCallingCode,
+} from "@/lib/calling-codes";
+import {
   FIELD_ORDER,
   normalizeWebsite,
   validateAll,
@@ -37,20 +43,6 @@ function FieldError({ name, message }: { name: string; message?: string }) {
     </p>
   );
 }
-
-const COUNTRY_CODES = [
-  { code: "+1", country: "US/CA" },
-  { code: "+91", country: "IN" },
-  { code: "+92", country: "PK" },
-  { code: "+880", country: "BD" },
-  { code: "+94", country: "LK" },
-  { code: "+977", country: "NP" },
-  { code: "+975", country: "BT" },
-  { code: "+960", country: "MV" },
-  { code: "+44", country: "UK" },
-  { code: "+971", country: "UAE" },
-  { code: "+65", country: "SG" },
-];
 
 const APPLY_FOR_OPTIONS = [
   { id: "ms", label: "Management Systems" },
@@ -100,6 +92,15 @@ export function ApplicationRequestForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [errors, setErrors] = useState<FormErrors>({});
+  // The selected country is tracked by ISO code because many countries share one calling code (e.g. +1).
+  const [phoneIso, setPhoneIso] = useState(DEFAULT_CALLING_ISO);
+
+  const handlePhoneCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const entry = findCallingCode(e.target.value);
+    if (!entry) return;
+    setPhoneIso(entry.iso);
+    setFormData((prev) => ({ ...prev, phoneCode: entry.code }));
+  };
 
   // Once a field has shown an error, re-check it as the user types so the message clears the moment it's fixed.
   React.useEffect(() => {
@@ -252,6 +253,7 @@ export function ApplicationRequestForm() {
     setIsSubmitted(false);
     setErrors({});
     setSubmitError(null);
+    setPhoneIso(DEFAULT_CALLING_ISO);
     setFormData({
       firstName: "",
       lastName: "",
@@ -430,14 +432,26 @@ export function ApplicationRequestForm() {
                 </label>
                 <div className="flex gap-2">
                   <select
-                    {...fp("phoneCode")}
-                    className="shrink-0 rounded-lg border border-slate-200 bg-slate-50/50 aria-invalid:border-red-500 px-2.5 py-2.5 text-sm font-medium text-slate-800 focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
+                    name="phoneCode"
+                    value={phoneIso}
+                    onChange={handlePhoneCountryChange}
+                    aria-label="Country calling code"
+                    className="w-[8.5rem] shrink-0 rounded-lg border border-slate-200 bg-slate-50/50 px-2.5 py-2.5 text-sm font-medium text-slate-800 focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
                   >
-                    {COUNTRY_CODES.map((item) => (
-                      <option key={item.code + item.country} value={item.code}>
-                        {item.country} {item.code}
-                      </option>
-                    ))}
+                    <optgroup label="South Asia">
+                      {SOUTH_ASIA_CALLING_CODES.map((c) => (
+                        <option key={c.iso} value={c.iso}>
+                          {c.code} {c.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="All countries">
+                      {OTHER_CALLING_CODES.map((c) => (
+                        <option key={c.iso} value={c.iso}>
+                          {c.code} {c.name}
+                        </option>
+                      ))}
+                    </optgroup>
                   </select>
                   <input
                     type="tel"
@@ -550,16 +564,20 @@ export function ApplicationRequestForm() {
                   {...fp("country")}
                   className="w-full rounded-lg border border-slate-200 bg-slate-50/50 aria-invalid:border-red-500 px-3.5 py-2.5 text-sm font-medium text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
                 >
-                  <option value="United States">United States</option>
-                  <option value="India">India</option>
-                  <option value="Pakistan">Pakistan</option>
-                  <option value="Bangladesh">Bangladesh</option>
-                  <option value="Sri Lanka">Sri Lanka</option>
-                  <option value="Nepal">Nepal</option>
-                  <option value="Bhutan">Bhutan</option>
-                  <option value="Maldives">Maldives</option>
-                  <option value="United Arab Emirates">United Arab Emirates</option>
-                  <option value="United Kingdom">United Kingdom</option>
+                  <optgroup label="South Asia">
+                    {SOUTH_ASIA_CALLING_CODES.map((c) => (
+                      <option key={c.iso} value={c.name}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="All countries">
+                    {OTHER_CALLING_CODES.map((c) => (
+                      <option key={c.iso} value={c.name}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </optgroup>
                 </select>
               </div>
             </div>
