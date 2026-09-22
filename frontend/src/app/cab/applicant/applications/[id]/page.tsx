@@ -10,6 +10,7 @@ import { ApplicationMessagesThread } from "@/components/portal/application-messa
 import { ApplicationInvoicesTab } from "@/components/portal/application-invoices-tab";
 import { SubmitApplicationButton } from "@/components/portal/submit-application-button";
 import { AssessorTeamPanel } from "@/components/portal/assessor-team-panel";
+import { ApplicationDetailsForm } from "@/components/portal/application-details-form";
 import {
   getApplicationById,
   getMessagesForApplication,
@@ -17,6 +18,7 @@ import {
   STAGE_LABEL,
   type Application,
 } from "@/lib/portal/applicant-data";
+import { getApplicationDetails } from "@/lib/portal/application-details-data";
 import { loadOrCreateTeamProposal } from "@/lib/portal/assessor-team-actions";
 import { getWorkflowProgressForApplication, type WorkflowStep } from "@/lib/portal/workflow-progress-data";
 import { WorkflowProgressTracker } from "@/components/portal/workflow-progress-tracker";
@@ -128,11 +130,12 @@ export default async function ApplicationDetailPage({
 
   const showAssessorTeamTab = !["DRAFT", "SUBMITTED", "INITIAL_REVIEW"].includes(application.stage);
 
-  const [messages, userInvoices, teamProposalResult, workflowSteps] = await Promise.all([
+  const [messages, userInvoices, teamProposalResult, workflowSteps, applicationDetails] = await Promise.all([
     getMessagesForApplication(application.id),
     getInvoicesForUser(session!.user.id),
     showAssessorTeamTab ? loadOrCreateTeamProposal(application.id) : Promise.resolve(null),
     getWorkflowProgressForApplication(application.id),
+    getApplicationDetails(application.id, session!.user.id),
   ]);
 
   return (
@@ -163,6 +166,17 @@ export default async function ApplicationDetailPage({
         <Tabs
           items={[
             { value: "overview", label: "Overview", content: <OverviewTab application={application} workflowSteps={workflowSteps} /> },
+            {
+              value: "application-form",
+              label: "Application Form",
+              content: (
+                <ApplicationDetailsForm
+                  applicationId={application.id}
+                  initialDetails={applicationDetails}
+                  locked={application.stage !== "DRAFT"}
+                />
+              ),
+            },
             {
               value: "documents",
               label: "Documents",

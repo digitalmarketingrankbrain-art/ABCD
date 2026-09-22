@@ -97,7 +97,16 @@ export default async function ProfilePage() {
             </div>
           </div>
 
-          <div className="shrink-0">
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
+            {organisationId && (
+              <a
+                href={`/api/agreement/${organisationId}`}
+                download
+                className="inline-flex items-center gap-2 rounded-xl border border-border bg-surface px-4 py-2.5 text-xs sm:text-sm font-bold text-text hover:bg-background transition-all active:scale-95"
+              >
+                Agreement for Accreditation
+              </a>
+            )}
             <Link
               href="/cab/applicant/profile/add-certificate"
               className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 px-4 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md shadow-emerald-900/10 hover:from-emerald-700 hover:to-teal-800 transition-all active:scale-95 border border-emerald-500/30"

@@ -4,22 +4,59 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
+import { Alert } from "@/components/ui/alert";
 import { useToast } from "@/components/ui/toast";
 import { respondToNc } from "@/lib/portal/nc-actions";
 import { NC_RESPONSE_TYPE_LABEL, type NcResponseEntryRow, type NcResponseType } from "@/lib/portal/nc-data";
+
+const TYPE_TONE: Record<NcResponseType, "info" | "warning" | "success"> = {
+  ROOT_CAUSE: "info",
+  CORRECTION: "info",
+  CORRECTIVE_ACTION: "warning",
+  ASSESSOR_REMARK: "success",
+};
+
+interface ResponseSession {
+  key: string;
+  submittedByName: string;
+  submittedAt: string;
+  entries: NcResponseEntryRow[];
+}
+
+/** Entries submitted in the same call (same author + exact same timestamp) are grouped under one dated header — matches how the AB's own NC report groups RCA/Correction/Corrective Action together. */
+function groupIntoSessions(responses: NcResponseEntryRow[]): ResponseSession[] {
+  const sessions: ResponseSession[] = [];
+  for (const r of responses) {
+    const key = `${r.submittedByName}__${r.submittedAt}`;
+    const last = sessions[sessions.length - 1];
+    if (last && last.key === key) {
+      last.entries.push(r);
+    } else {
+      sessions.push({ key, submittedByName: r.submittedByName, submittedAt: r.submittedAt, entries: [r] });
+    }
+  }
+  return sessions;
+}
 
 export function NcResponseThread({ responses }: { responses: NcResponseEntryRow[] }) {
   if (responses.length === 0) {
     return <p className="font-sans text-sm text-text-muted">No responses submitted yet.</p>;
   }
+  const sessions = groupIntoSessions(responses);
   return (
-    <div className="flex flex-col gap-3">
-      {responses.map((r) => (
-        <div key={r.id} className="rounded-md border border-border bg-surface p-4">
+    <div className="flex flex-col gap-5">
+      {sessions.map((session) => (
+        <div key={session.key} className="rounded-md border border-border bg-surface p-4">
           <p className="font-sans text-xs font-medium text-text-muted">
-            {NC_RESPONSE_TYPE_LABEL[r.type]} — {r.submittedByName}, {new Date(r.submittedAt).toLocaleString("en-US", { timeZone: "UTC" })}
+            {session.submittedByName} — {new Date(session.submittedAt).toLocaleString("en-US", { timeZone: "UTC" })}
           </p>
-          <p className="mt-1 font-sans text-sm text-text">{r.body}</p>
+          <div className="mt-3 flex flex-col gap-2.5">
+            {session.entries.map((r) => (
+              <Alert key={r.id} tone={TYPE_TONE[r.type]} title={NC_RESPONSE_TYPE_LABEL[r.type]}>
+                <p className="whitespace-pre-wrap">{r.body}</p>
+              </Alert>
+            ))}
+          </div>
         </div>
       ))}
     </div>

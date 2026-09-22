@@ -91,12 +91,18 @@ export interface Application {
 
 export type InvoiceStatus = "DRAFT" | "ISSUED" | "PAID" | "OVERDUE" | "VOID";
 
+export interface InvoiceLineItem {
+  description: string;
+  amount: number;
+}
+
 export interface Invoice {
   id: string;
   invoiceNumber: string;
   applicantUserId: string;
   applicationId: string | null;
   description: string;
+  lineItems: InvoiceLineItem[];
   amount: number;
   currency: string;
   status: InvoiceStatus;
@@ -241,6 +247,7 @@ function mapInvoice(row: Prisma.InvoiceGetPayload<{ include: { lineItems: true }
     applicantUserId,
     applicationId: row.applicationId,
     description: row.lineItems[0]?.description ?? "",
+    lineItems: row.lineItems.map((li) => ({ description: li.description, amount: Number(li.amount) })),
     amount: Number(row.amount),
     currency: row.currency,
     status: row.status,

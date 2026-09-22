@@ -19,14 +19,31 @@ export const ASSIGNMENT_STATUS_LABEL: Record<AssignmentStatus, string> = {
   COMPLETED: "Completed",
 };
 
-export type FindingStatus = "CONFORMS" | "NON_CONFORMANCE" | "OBSERVATION" | "NOT_APPLICABLE" | "UNANSWERED";
+export type FindingStatus =
+  | "CONFORMS"
+  | "NON_CONFORMANCE"
+  | "OBSERVATION"
+  | "OPPORTUNITY_FOR_IMPROVEMENT"
+  | "NOT_APPLICABLE"
+  | "UNANSWERED";
 
 export const FINDING_STATUS_LABEL: Record<FindingStatus, string> = {
   CONFORMS: "Conforms",
   NON_CONFORMANCE: "Non-conformance",
   OBSERVATION: "Observation",
+  OPPORTUNITY_FOR_IMPROVEMENT: "Opportunity for improvement",
   NOT_APPLICABLE: "Not applicable",
   UNANSWERED: "Not yet assessed",
+};
+
+/** Short codes matching the AB's real checklist blueprint: C / NC / O / OFI / N/A. */
+export const FINDING_STATUS_CODE: Record<FindingStatus, string> = {
+  CONFORMS: "C",
+  NON_CONFORMANCE: "NC",
+  OBSERVATION: "O",
+  OPPORTUNITY_FOR_IMPROVEMENT: "OFI",
+  NOT_APPLICABLE: "N/A",
+  UNANSWERED: "—",
 };
 
 export interface AssessmentCriterion {

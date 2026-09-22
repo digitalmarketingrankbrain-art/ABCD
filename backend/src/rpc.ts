@@ -19,6 +19,9 @@ import * as accreditationRecordData from "./data/accreditation-record-data";
 import * as requiredFormsData from "./data/required-forms-data";
 import * as workflowProgressData from "./data/workflow-progress-data";
 import * as applicationRequests from "./data/application-requests";
+import * as invoicePdf from "./data/invoice-pdf";
+import * as applicationDetailsData from "./data/application-details-data";
+import * as agreementPdf from "./data/agreement-pdf";
 
 const MODULES: Record<string, Record<string, unknown>> = {
   "auth-store": authStore,
@@ -42,6 +45,9 @@ const MODULES: Record<string, Record<string, unknown>> = {
   "required-forms-data": requiredFormsData,
   "workflow-progress-data": workflowProgressData,
   "application-requests": applicationRequests,
+  "invoice-pdf": invoicePdf,
+  "application-details-data": applicationDetailsData,
+  "agreement-pdf": agreementPdf,
 };
 
 interface BufferMarker {

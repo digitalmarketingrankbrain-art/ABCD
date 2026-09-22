@@ -300,6 +300,13 @@ model Application {
    * In-progress wizard answers (existing-accreditation info, etc.) for a DRAFT Scope Extension application, cleared on submit.
    */
   draftData            Json?            @map("draft_data")
+  /**
+   * Detailed applicant-body form data (chief/contact details, other accreditations
+   * held, auditor/staff counts, financial summary, minimum-eligibility checklist —
+   * aligned to the AB's real application form blueprint). Persists across submission,
+   * unlike draftData.
+   */
+  detailsData          Json?            @map("details_data")
   stage                ApplicationStage @default(DRAFT)
   infoRequested        Boolean          @default(false) @map("info_requested")
   infoRequestNote      String?          @map("info_request_note")
@@ -484,6 +491,7 @@ enum FindingStatus {
   CONFORMS
   NON_CONFORMANCE
   OBSERVATION
+  OPPORTUNITY_FOR_IMPROVEMENT
   NOT_APPLICABLE
 }
 

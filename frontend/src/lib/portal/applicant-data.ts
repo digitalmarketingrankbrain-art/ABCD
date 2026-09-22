@@ -94,12 +94,18 @@ export interface Application {
 
 export type InvoiceStatus = "DRAFT" | "ISSUED" | "PAID" | "OVERDUE" | "VOID";
 
+export interface InvoiceLineItem {
+  description: string;
+  amount: number;
+}
+
 export interface Invoice {
   id: string;
   invoiceNumber: string;
   applicantUserId: string;
   applicationId: string | null;
   description: string;
+  lineItems: InvoiceLineItem[];
   amount: number;
   currency: string;
   status: InvoiceStatus;

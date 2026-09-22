@@ -46,7 +46,11 @@ export default async function AssignmentDetailPage({
 
   const nonConformances = assignment.criteria
     .map((c) => ({ criterion: c, finding: assignment.findings[c.id] }))
-    .filter((f) => f.finding && (f.finding.status === "NON_CONFORMANCE" || f.finding.status === "OBSERVATION"));
+    .filter(
+      (f) =>
+        f.finding &&
+        (f.finding.status === "NON_CONFORMANCE" || f.finding.status === "OBSERVATION" || f.finding.status === "OPPORTUNITY_FOR_IMPROVEMENT"),
+    );
 
   return (
     <div className="px-6 py-8">

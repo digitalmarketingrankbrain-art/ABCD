@@ -4,7 +4,9 @@ import { StatusBadge, type StatusTone } from "@/components/ui/status-badge";
 import { Alert } from "@/components/ui/alert";
 import { AdminApplicationActions } from "@/components/portal/admin-application-actions";
 import { AdminCertificateActions } from "@/components/portal/admin-certificate-actions";
+import { ApplicationDetailsForm } from "@/components/portal/application-details-form";
 import { getApplicationByIdAdmin, STAGE_LABEL, type ApplicationStage } from "@/lib/portal/applicant-data";
+import { getApplicationDetailsAdmin } from "@/lib/portal/application-details-data";
 import { getUserOrgName } from "@/lib/portal/admin-data";
 import { getUsersByRoleSafe } from "@/lib/auth/store";
 import { getAuditLogForTarget } from "@/lib/portal/audit-log";
@@ -38,11 +40,12 @@ export default async function AdminApplicationDetailPage({
   const assessorUsers = await getUsersByRoleSafe("ASSESSOR");
   const assessorOptions = assessorUsers.map((u) => ({ id: u.id, name: u.name }));
   const auditEntries = await getAuditLogForTarget("Application", application.id);
-  const [openNcCount, unfinalizedReportCount, certificates, workflowSteps] = await Promise.all([
+  const [openNcCount, unfinalizedReportCount, certificates, workflowSteps, applicationDetails] = await Promise.all([
     countOpenNonConformitiesForApplication(application.id),
     countUnfinalizedReportsForApplication(application.id),
     getCertificatesForApplication(application.id),
     getWorkflowProgressForApplication(application.id),
+    getApplicationDetailsAdmin(application.id),
   ]);
 
   return (
@@ -98,6 +101,11 @@ export default async function AdminApplicationDetailPage({
       <div className="mt-8 max-w-xl">
         <h2 className="mb-4 font-sans text-sm font-semibold text-text">Workflow Progress</h2>
         <WorkflowProgressTracker steps={workflowSteps} />
+      </div>
+
+      <div className="mt-8 max-w-3xl">
+        <h2 className="mb-3 font-sans text-sm font-semibold text-text">Application Form</h2>
+        <ApplicationDetailsForm applicationId={application.id} initialDetails={applicationDetails} locked />
       </div>
 
       <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
